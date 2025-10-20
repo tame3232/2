@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="appTitle">ኢትዮፔይ ጨዋታ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --et-yellow: #FFD700;
+            --et-blue: #007bff;
+            --et-green: #28a745;
+            --et-red: #dc3545;
+            --et-dark: #343a40;
+            --et-light: #f8f9fa;
+            --et-gray: #6c757d;
+            --et-bg: #e9ecef;
+            --et-card-bg: #ffffff;
+            --et-shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--et-bg);
+            color: var(--et-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--et-light);
+            box-shadow: 0 0 20px var(--et-shadow);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--et-blue);
+            color: var(--et-light);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Language Switcher Style (Updated for Profile Page) */
+        .lang-switcher-button { /* Name changed to avoid conflict with Header styles */
+            background-color: var(--et-blue);
+            color: var(--et-light);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+
+        .score-display {
+            background-color: var(--et-dark);
+            color: var(--et-yellow);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 1em;
+        }
+
+        /* Main Content */
+        main {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .page-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--et-card-bg);
+            border-top: 1px solid var(--et-gray);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -5px 10px var(--et-shadow);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--et-gray);
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--et-blue);
+        }
+
+        .nav-item i {
+            font-size: 1.5em;
+            margin-bottom: 3px;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--et-card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px var(--et-shadow);
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* Home Page */
+        .welcome-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .welcome-card h2 {
+            color: var(--et-blue);
+            margin-bottom: 15px;
+        }
+
+        .quick-actions {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            background-color: var(--et-green);
+            color: var(--et-light);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .action-button:hover {
+            background-color: #1e7e34;
+        }
+
+        /* Tasks/Earning Page */
+        .task-card h3 {
+            color: var(--et-dark);
+            border-bottom: 1px solid var(--et-bg);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .task-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--et-bg);
+        }
+
+        .task-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-info .reward {
+            color: var(--et-green);
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .task-button {
+            background-color: var(--et-blue);
+            color: var(--et-light);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .task-button:disabled {
+            background-color: var(--et-gray);
+            cursor: not-allowed;
+        }
+        
+        /* Referral Button Style */
+        .referral-button {
+            background-color: var(--et-blue);
+            color: var(--et-light);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+
+        /* Leaderboard Page */
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background-color: var(--et-bg);
+        }
+
+        .stat-item span {
+            display: block;
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            background-color: var(--et-card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--et-shadow);
+        }
+
+        .current-user-item {
+            background-color: var(--et-yellow);
+            color: var(--et-dark);
+            font-weight: bold;
+            border: 2px solid var(--et-blue);
+        }
+
+        .leaderboard-item-rank {
+            width: 10%;
+            font-weight: bold;
+        }
+
+        .leaderboard-item-name {
+            width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .leaderboard-item-score {
+            width: 30%;
+            text-align: right;
+            color: var(--et-green);
+            font-weight: bold;
+        }
+
+        /* Profile Page */
+        .profile-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .profile-card i {
+            font-size: 4em;
+            color: var(--et-blue);
+            margin-bottom: 15px;
+        }
+
+        .profile-card h3 {
+            margin-bottom: 5px;
+        }
+        
+        /* Profile Stats Grid */
+        .profile-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .profile-stat-box {
+            background-color: var(--et-bg);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .profile-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--et-bg);
+        }
+
+        .balance-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--et-gray);
+        }
+
+        .balance-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--et-green);
+        }
+        
+        .withdraw-button {
+            background-color: var(--et-green);
+            color: var(--et-light);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .exchange-button {
+             background-color: var(--et-red);
+            color: var(--et-light);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .profile-stat-box .balance-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--et-green);
+            margin-top: 5px;
+        }
+        
+        /* Connect Wallet Styling */
+        .connect-wallet-link {
+            text-decoration: none;
+            color: var(--et-blue);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <i class="fas fa-wallet" style="color: var(--et-yellow);"></i>
+            <span data-key="appName">ኢትዮፔይ ሚኒ አፕ</span>
+            <div class="score-display" id="header-score-display">
+                0 💰
+            </div>
+        </header>
+
+        <main id="app-main">
+            <section id="home-page" class="page-content active">
+                <div class="welcome-card card">
+                    <h2 data-key="welcomeTitle">እንኳን ደህና መጡ!</h2>
+                    <p data-key="welcomeMessage">ነጥቦችን ያግኙ፣ ከጓደኞችዎ ጋር ይወዳደሩ፣ እና ሽልማቶችን ያሸንፉ።</p>
+                    <div class="quick-actions">
+                        <button class="action-button" onclick="navigateTo('tasks-page')" data-key="earnPointsButton">
+                            <i class="fas fa-star"></i> ነጥብ ያግኙ
+                        </button>
+                        <button class="action-button" onclick="navigateTo('leaderboard-page')" data-key="viewRankButton">
+                            <i class="fas fa-trophy"></i> ደረጃ ይመልከቱ
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 data-key="newsTitle">አዲስ ነገር</h3>
+                    <p data-key="newsMessage">በየቀኑ የሚደረጉ ተግባራት አሁን ይገኛሉ። በቶሎ ይጫወቱ!</p>
+                </div>
+            </section>
+
+            <section id="tasks-page" class="page-content">
+                <a href="https://t.me/Smartgame21_bot" target="_blank" class="referral-button" data-key="inviteFriendButton">
+                    <i class="fas fa-user-plus"></i> ጓደኛ ይጋብዙ እና ነጥብ ያግኙ
+                </a>
+                
+                <div class="card task-card">
+                    <h3 data-key="dailyTasksTitle"><i class="fas fa-star"></i> የዕለታዊ ተግባራት</h3>
+                    <div class="task-list" id="daily-tasks-list">
+                        </div>
+                </div>
+
+                <div class="card task-card">
+                    <h3 data-key="moreWaysTitle"><i class="fas fa-ad"></i> ተጨማሪ የማግኛ መንገዶች</h3>
+                    <div class="task-list">
+                        <div class="task-list-item">
+                            <div class="task-info">
+                                <strong data-key="watchVideoTask">ቪዲዮ ይመልከቱ</strong>
+                                <span class="reward">+200 💰</span>
+                            </div>
+                            <button class="task-button" data-task-id="watch_video" data-key="watchButton">ይመልከቱ</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="leaderboard-page" class="page-content">
+                <div class="leaderboard-header">
+                    <div class="stat-item" style="color: var(--et-green);">
+                        <span id="top-score-display">0 💰</span> 
+                        <span data-key="yourScoreLabel">የእርስዎ ነጥብ</span>
+                    </div>
+                    <div class="stat-item" style="color: var(--et-blue);">
+                        <span id="top-rank-display">#N/A</span> 
+                        <span data-key="yourRankLabel">የእርስዎ ደረጃ</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 data-key="top20PlayersTitle"><i class="fas fa-trophy"></i> የ20 ከፍተኛ ተጫዋቾች</h3>
+                    <ul class="leaderboard-list" id="leaderboard-list">
+                        </ul>
+                </div>
+            </section>
+
+            <section id="profile-page" class="page-content">
+                <div class="card profile-card">
+                    <i class="fas fa-user-circle"></i>
+                    <h3 id="profile-username">ያልታወቀ ተጠቃሚ</h3>
+                    <p id="profile-telegram-id"><span data-key="profileIDLabel">መለያ</span>: N/A</p>
+                    
+                    <hr style="margin: 15px 0;">
+                    
+                    <div class="balance-box">
+                        <div>
+                            <strong><i class="fas fa-money-bill-wave" style="color: var(--et-green);"></i> <span data-key="balanceLabel">ሂሳብ</span></strong>
+                            <div class="balance-value" id="profile-birr-display">0.00 ብር</div>
+                        </div>
+                        <button class="withdraw-button" onclick="handleWithdraw()" data-key="withdrawButton">አውጣ</button>
+                    </div>
+                    
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-star" style="color: var(--et-yellow);"></i> <span data-key="pointsLabel">ነጥቦች</span></strong>
+                        <span class="balance-value" id="profile-score-display">0</span>
+                    </div>
+
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-ticket-alt" style="color: var(--et-blue);"></i> <span data-key="ticketsLabel">ቲኬቶች</span></strong>
+                        <span class="balance-value">0</span>
+                    </div>
+                    
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-exchange-alt" style="color: var(--et-red);"></i> <span data-key="exchangeLabel">ቀይር</span></strong>
+                         <button class="exchange-button" onclick="handleExchange()" data-key="exchangeButton">ቀይር</button>
+                    </div>
+                    
+                    <hr style="margin: 15px 0;">
+
+                    <div class="profile-action-row" onclick="handleConnectWallet()">
+                        <strong><i class="fas fa-briefcase" style="color: var(--et-blue);"></i> <span data-key="connectWalletLabel">Wallet ያገናኙ</span></strong>
+                        <a href="https://t.me/wallet" target="_blank" class="connect-wallet-link" data-key="connectLink">ያገናኙ ></a>
+                    </div>
+                    
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-language" style="color: var(--et-gray);"></i> <span data-key="languageLabel">ቋንቋ</span></strong>
+                        <button class="lang-switcher-button" onclick="toggleLanguage()" id="lang-switcher-btn">En</button>
+                    </div>
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-question-circle" style="color: var(--et-red);"></i> <span data-key="supportLabel">ድጋፍ</span></strong>
+                        <span data-key="contactLink">ያግኙን ></span>
+                    </div>
+                    
+                    <div class="profile-action-row">
+                        <strong><i class="fas fa-times-circle" style="color: var(--et-dark);"></i> <span data-key="closeAppLabel">ዝጋ (መተግበሪያውን)</span></strong>
+                        <span data-key="closeLink">ዝጋ ></span>
+                    </div>
+
+                    <button class="action-button" style="background-color: var(--et-red); margin-top: 20px;" onclick="handleLogout()" data-key="logoutButton">
+                        <i class="fas fa-sign-out-alt"></i> ውጣ
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <nav>
+            <a href="#" class="nav-item active" data-page="home-page">
+                <i class="fas fa-home"></i>
+                <span data-key="navHome">መነሻ</span>
+            </a>
+            <a href="#" class="nav-item" data-page="tasks-page">
+                <i class="fas fa-tasks"></i>
+                <span data-key="navTasks">ተግባራት</span>
+            </a>
+            <a href="#" class="nav-item" data-page="leaderboard-page">
+                <i class="fas fa-trophy"></i>
+                <span data-key="navLeaderboard">ደረጃ</span>
+            </a>
+            <a href="#" class="nav-item" data-page="profile-page">
+                <i class="fas fa-user"></i>
+                <span data-key="navProfile">መገለጫ</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // ቋንቋዎችን የሚይዝ ግሎባል ኦብጀክት
+        const translations = {
+            am: {
+                appTitle: "ኢትዮፔይ ጨዋታ",
+                appName: "ኢትዮፔይ ሚኒ አፕ",
+                welcomeTitle: "እንኳን ደህና መጡ!",
+                welcomeMessage: "ነጥቦችን ያግኙ፣ ከጓደኞችዎ ጋር ይወዳደሩ፣ እና ሽልማቶችን ያሸንፉ።",
+                earnPointsButton: "ነጥብ ያግኙ",
+                viewRankButton: "ደረጃ ይመልከቱ",
+                newsTitle: "አዲስ ነገር",
+                newsMessage: "በየቀኑ የሚደረጉ ተግባራት አሁን ይገኛሉ። በቶሎ ይጫወቱ!",
+                
+                inviteFriendButton: "ጓደኛ ይጋብዙ እና ነጥብ ያግኙ",
+                dailyTasksTitle: "የዕለታዊ ተግባራት",
+                moreWaysTitle: "ተጨማሪ የማግኛ መንገዶች",
+                watchVideoTask: "ቪዲዮ ይመልከቱ",
+                watchButton: "ይመልከቱ",
+                
+                dailyRewardTask: "ዕለታዊ ሽልማት",
+                dailyRewardAction: "አግኝ",
+                spinTask: "ዊል ያሽከርክሩ",
+                spinAction: "ተጫወት",
+                scratchTask: "ካርድ ይፈረፍሩ",
+                scratchAction: "አግኝ",
+                
+                taskWait: "24 ሰዓት ይጠብቁ",
+                timeLeft: "(ይቀራል:",
+                hours: "ሰ",
+                minutes: "ደ)",
+                specialReward: "ልዩ ሽልማት",
+                alert24Hours: "ይህንን ተግባር በድጋሚ ለመፈጸም 24 ሰዓት መጠበቅ አለብዎት።",
+                alertPointsAdded: (points) => `+${points} ነጥብ አግኝተዋል!`,
+                
+                yourScoreLabel: "የእርስዎ ነጥብ",
+                yourRankLabel: "የእርስዎ ደረጃ",
+                top20PlayersTitle: "የ20 ከፍተኛ ተጫዋቾች",
+                
+                profileIDLabel: "መለያ",
+                balanceLabel: "ሂሳብ",
+                withdrawButton: "አውጣ",
+                pointsLabel: "ነጥቦች",
+                ticketsLabel: "ቲኬቶች",
+                exchangeLabel: "ቀይር",
+                exchangeButton: "ቀይር",
+                connectWalletLabel: "Wallet ያገናኙ",
+                connectLink: "ያገናኙ >",
+                languageLabel: "ቋንቋ", // NEW
+                supportLabel: "ድጋፍ",
+                contactLink: "ያግኙን >",
+                closeAppLabel: "ዝጋ (መተግበሪያውን)",
+                closeLink: "ዝጋ >",
+                logoutButton: "ውጣ",
+                
+                navHome: "መነሻ",
+                navTasks: "ተግባራት",
+                navLeaderboard: "ደረጃ",
+                navProfile: "መገለጫ",
+                
+                spinReady: "ለመጫወት ዝግጁ!",
+                spinSpin: "አሽከርክር",
+                spinBack: "← ወደ ኋላ ተመለስ",
+                spinAlert: "እሽክርክሪቱ ተጀምሯል። (በእውነተኛው ኮድዎ ውስጥ የነጥብ አሰጣጥ አመክንዮ ይኖራል!)",
+                soonAlert: "በቅርብ ቀን ይጠብቁ!",
+                birrUnit: "ብር", // NEW
+                unknownPlayer: "ያልታወቀ ተጫዋች", // NEW
+            },
+            en: {
+                appTitle: "Etiopay Game",
+                appName: "Etiopay Mini App",
+                welcomeTitle: "Welcome!",
+                welcomeMessage: "Earn points, compete with friends, and win prizes.",
+                earnPointsButton: "Earn Points",
+                viewRankButton: "View Rank",
+                newsTitle: "What's New",
+                newsMessage: "Daily tasks are now available. Play soon!",
+                
+                inviteFriendButton: "Invite Friend and Earn Points",
+                dailyTasksTitle: "Daily Tasks",
+                moreWaysTitle: "More Ways to Earn",
+                watchVideoTask: "Watch Video",
+                watchButton: "Watch",
+                
+                dailyRewardTask: "Daily Reward",
+                dailyRewardAction: "Claim",
+                spinTask: "Spin the Wheel",
+                spinAction: "Play",
+                scratchTask: "Scratch Card",
+                scratchAction: "Claim",
+                
+                taskWait: "Wait 24 Hrs",
+                timeLeft: "(Remaining:",
+                hours: "h",
+                minutes: "m)",
+                specialReward: "Special Reward",
+                alert24Hours: "You must wait 24 hours to perform this task again.",
+                alertPointsAdded: (points) => `+${points} points earned!`,
+                
+                yourScoreLabel: "Your Score",
+                yourRankLabel: "Your Rank",
+                top20PlayersTitle: "Top 20 Players",
+                
+                profileIDLabel: "ID",
+                balanceLabel: "Balance",
+                withdrawButton: "Withdraw",
+                pointsLabel: "Points",
+                ticketsLabel: "Tickets",
+                exchangeLabel: "Exchange",
+                exchangeButton: "Exchange",
+                connectWalletLabel: "Connect Wallet",
+                connectLink: "Connect >",
+                languageLabel: "Language", // NEW
+                supportLabel: "Support",
+                contactLink: "Contact >",
+                closeAppLabel: "Close (App)",
+                closeLink: "Close >",
+                logoutButton: "Logout",
+                
+                navHome: "Home",
+                navTasks: "Tasks",
+                navLeaderboard: "Rank",
+                navProfile: "Profile",
+                
+                spinReady: "Ready to Play!",
+                spinSpin: "Spin",
+                spinBack: "← Go Back",
+                spinAlert: "The spin has started. (The actual point logic is in your backend code!)",
+                soonAlert: "Coming Soon!",
+                birrUnit: "ETB", // NEW
+                unknownPlayer: "Unknown Player", // NEW
+            }
+        };
+
+        let currentLanguage = 'am'; // የመነሻ ቋንቋ አማርኛ ይሁን
+
+        
+        /**
+         * ሁሉንም ቋንቋ-ነክ የሆኑ የ HTML ኤለመንቶችን ያዘምናል
+         */
+        window.updateLanguage = () => {
+            const lang = currentLanguage;
+            const t = translations[lang];
+
+            // 1. የገጽ ርዕሶችን እና ሌሎች 'data-key' ያላቸውን ያዘምናል
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const key = element.dataset.key;
+                if (t[key] && typeof t[key] === 'string') {
+                    element.innerText = t[key];
+                }
+            });
+            
+            // 2. የ Title Tag ማዘመን
+            document.title = t.appTitle;
+            
+            // 3. የ Profile Birr Display (ምክንያቱም አሃድ ስለሚቀይር)
+            const profileBirrDisplay = document.getElementById('profile-birr-display');
+            if (profileBirrDisplay) {
+                const safeScore = currentScore || 0; 
+                const birrEquivalent = (safeScore / 1000).toFixed(2); // 1000 ነጥብ = 1 ብር
+                profileBirrDisplay.innerText = `${birrEquivalent} ${t.birrUnit}`;
+            }
+
+            // 4. የ Tasks Page ውስጥ ያሉትን ተለዋዋጭ ጽሁፎች ማዘመን (በተናጠል)
+            if (document.getElementById('tasks-page').classList.contains('active')) {
+                renderTasksPage();
+            }
+            
+            // 5. የ Spin Page ላይ ያሉ ጽሑፎችን ማዘመን (ከተከፈተ)
+            const spinReadyElement = document.querySelector('[data-key="spinReady"]');
+            if (spinReadyElement) {
+                spinReadyElement.innerText = t.spinReady;
+                document.querySelector('[data-key="spinSpin"]').innerText = t.spinSpin;
+                document.querySelector('[data-key="spinBack"]').innerText = t.spinBack;
+                document.querySelector('h3').innerText = t.spinTask + (lang === 'am' ? " (Spin)" : " (Spin)"); // for title
+                document.querySelector('p').innerText = lang === 'am' ? "ዕለታዊ ሽልማት ለማግኘት ጎማውን ያሽከርክሩ!" : "Spin the wheel to get your daily prize!";
+            }
+            
+            // 6. የቋንቋ መቀየሪያ አዝራርን ማዘመን (በ Profile Page ውስጥ ያለውን)
+            const langSwitcherBtn = document.getElementById('lang-switcher-btn');
+            if(langSwitcherBtn) {
+                 langSwitcherBtn.innerText = lang === 'am' ? 'En' : 'Am';
+            }
+        };
+
+        /**
+         * ቋንቋውን ከአማርኛ ወደ እንግሊዝኛ ወይም ከእንግሊዝኛ ወደ አማርኛ ይቀይራል።
+         */
+        window.toggleLanguage = () => {
+            currentLanguage = currentLanguage === 'am' ? 'en' : 'am';
+            updateLanguage();
+        };
+
+
+        // --- Spin Wheel Code (Simplified) ---
+        function drawSpinWheel(canvasId) {
+            // ... (Your previous drawSpinWheel logic remains the same)
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const center = canvas.width / 2;
+            const radius = center - 5;
+            const sections = [
+                { color: 'green', value: 500 },
+                { color: 'red', value: 0 },
+                { color: 'yellow', value: 100 },
+                { color: 'orange', value: 10 },
+                { color: 'red', value: 0 },
+                { color: 'purple', value: 50 },
+                { color: 'blue', value: 0 },
+                { color: 'darkred', value: 200 },
+                { color: 'lime', value: 100 },
+                { color: 'darkblue', value: 0 },
+                { color: 'teal', value: 50 },
+                { color: 'magenta', value: 10 }
+            ];
+            const arcSize = (2 * Math.PI) / sections.length;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            sections.forEach((section, index) => {
+                const startAngle = index * arcSize;
+                const endAngle = (index + 1) * arcSize;
+
+                ctx.beginPath();
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = section.color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text (score)
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate(startAngle + arcSize / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(section.value, radius - 10, 5);
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.arc(center, center, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'gray';
+            ctx.stroke();
+        }
+
+        // Dummy function to simulate navigating to the spin wheel page
+        window.openSpinPage = () => {
+             const t = translations[currentLanguage];
+             const spinPageContent = `
+                <div class="card" style="text-align: center;">
+                    <h3>${t.spinTask} (Spin)</h3>
+                    <p>${currentLanguage === 'am' ? "ዕለታዊ ሽልማት ለማግኘት ጎማውን ያሽከርክሩ!" : "Spin the wheel to get your daily prize!"}</p>
+                    <p style="color: var(--et-red); font-weight: bold;" data-key="spinReady">${t.spinReady}</p>
+                    
+                    <canvas id="spinWheelCanvas" width="280" height="280" style="margin: 20px auto; display: block;"></canvas>
+                    
+                    <button class="action-button" style="background-color: var(--et-green);" onclick="simulateSpin()" data-key="spinSpin">
+                        ${t.spinSpin}
+                    </button>
+                    <button class="action-button" style="background-color: var(--et-dark); margin-top: 10px;" onclick="navigateTo('tasks-page')" data-key="spinBack">
+                        ${t.spinBack}
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('app-main').innerHTML = `<section id="spin-page" class="page-content active">${spinPageContent}</section>`;
+            
+            setTimeout(() => {
+                 drawSpinWheel('spinWheelCanvas');
+            }, 50); 
+        };
+        
+        window.simulateSpin = () => {
+             alert(translations[currentLanguage].spinAlert);
+             // Example: call updateScore(random_points, 'last_spin_time'); after spin animation
+        };
+    </script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { 
+            getFirestore, doc, setDoc, updateDoc, 
+            getDoc, collection, query, orderBy, 
+            limit, onSnapshot, serverTimestamp, 
+            increment 
+        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // Firebase Configuration (Replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global State Variables
+        let currentFirebaseUserId = null;
+        let currentUserDocData = null;
+        let currentScore = 0;
+        let currentRank = 'N/A';
+        let leaderboardUnsubscribe = null; 
+
+        // --- Utility Functions ---
+
+        const checkDailyLimit = (taskField) => {
+            if (!currentUserDocData || !currentUserDocData[taskField]) {
+                return true; 
+            }
+            if (currentUserDocData[taskField] === null) {
+                return true;
+            }
+            const lastTime = currentUserDocData[taskField].toDate().getTime();
+            const now = new Date().getTime();
+            const timeDifference = now - lastTime;
+            const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+            return timeDifference >= twentyFourHoursInMs;
+        };
+
+        const updateScore = async (pointsToAdd, lastTimeField) => {
+            if (!currentFirebaseUserId) {
+                console.error("ተጠቃሚው አልተረጋገጠም።");
+                return;
+            }
+            
+            const userRef = doc(db, "users", currentFirebaseUserId);
+            const updateData = {
+                total_score: increment(pointsToAdd),
+                last_played: serverTimestamp(),
+            };
+
+            if (lastTimeField) {
+                updateData[lastTimeField] = serverTimestamp();
+            }
+
+            try {
+                await updateDoc(userRef, updateData);
+                console.log(`Score updated successfully. Added ${pointsToAdd} points.`);
+                if (document.getElementById('tasks-page').classList.contains('active')) {
+                    renderTasksPage();
+                }
+            } catch (error) {
+                console.error("Error updating score:", error);
+                alert("ነጥብ በመጨመር ላይ ችግር ተፈጥሯል። እንደገና ይሞክሩ።");
+            }
+        };
+
+
+        // --- UI Rendering Functions ---
+
+        const handleDailyTaskClick = async (e) => {
+            if (e.target.disabled) return;
+
+            const taskId = e.target.dataset.taskId;
+            const reward = parseInt(e.target.dataset.reward, 10);
+            const t = translations[currentLanguage];
+
+            if (taskId === 'last_spin_time') {
+                 if (checkDailyLimit(taskId)) {
+                     window.openSpinPage(); 
+                 } else {
+                     alert(t.alert24Hours);
+                 }
+                 return;
+            }
+
+            if (checkDailyLimit(taskId)) {
+                await updateScore(reward, taskId);
+                alert(t.alertPointsAdded(reward));
+            } else {
+                alert(t.alert24Hours);
+            }
+        };
+
+        /**
+         * Creates a task item HTML element.
+         * (Updated to use translation keys)
+         */
+        const createTaskItem = (titleKey, reward, taskId, actionKey) => {
+            const canPerform = checkDailyLimit(taskId);
+            const t = translations[currentLanguage];
+            const buttonText = canPerform ? t[actionKey] : t.taskWait;
+            const buttonDisabled = canPerform ? '' : 'disabled';
+            const buttonClass = taskId === 'last_spin_time' ? 'task-button spin-button' : 'task-button';
+
+            let timeLeftText = '';
+            if (!canPerform && currentUserDocData && currentUserDocData[taskId]) {
+                const lastTime = currentUserDocData[taskId].toDate().getTime();
+                const timeDifference = (new Date().getTime() - lastTime);
+                const remainingTimeMs = (24 * 60 * 60 * 1000) - timeDifference;
+                
+                if (remainingTimeMs > 0) {
+                    const hours = Math.floor(remainingTimeMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((remainingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
+                    timeLeftText = `${t.timeLeft} ${hours}${t.hours} ${minutes}${t.minutes}`;
+                }
+            }
+            
+            const rewardText = taskId !== 'last_spin_time' ? `+${reward.toLocaleString()} 💰` : t.specialReward;
+
+            return `
+                <div class="task-list-item">
+                    <div class="task-info">
+                        <strong>${t[titleKey]}</strong>
+                        <span class="reward">${rewardText} ${timeLeftText}</span>
+                    </div>
+                    <button class="${buttonClass}" data-task-id="${taskId}" data-reward="${reward}" ${buttonDisabled}>
+                        ${buttonText}
+                    </button>
+                </div>
+            `;
+        };
+
+        const renderTasksPage = () => {
+            const tasksListElement = document.getElementById('daily-tasks-list');
+            
+            const dailyTasks = [
+                { titleKey: "dailyRewardTask", reward: 1000, id: "last_daily_reward_time", actionKey: "dailyRewardAction" },
+                { titleKey: "spinTask", reward: 500, id: "last_spin_time", actionKey: "spinAction" }, 
+                { titleKey: "scratchTask", reward: 300, id: "last_scratch_time", actionKey: "scratchAction" },
+            ];
+
+            tasksListElement.innerHTML = dailyTasks.map(task => createTaskItem(task.titleKey, task.reward, task.id, task.actionKey)).join('');
+            
+            document.querySelectorAll('#daily-tasks-list .task-button').forEach(button => {
+                button.removeEventListener('click', handleDailyTaskClick); 
+                button.addEventListener('click', handleDailyTaskClick); 
+            });
+        };
+
+        function createLeaderboardItem(player, index) {
+            const isCurrentUser = player.uid === currentFirebaseUserId;
+            const rank = index + 1;
+            const playerScore = (Number(player.total_score) || 0).toLocaleString();
+            const playerName = player.username || translations[currentLanguage].unknownPlayer || 'ያልታወቀ ተጫዋች';
+
+            return `
+                <div class="leaderboard-item ${isCurrentUser ? 'current-user-item' : ''}">
+                    <span class="leaderboard-item-rank">#${rank}</span>
+                    <span class="leaderboard-item-name">${playerName}</span>
+                    <span class="leaderboard-item-score">${playerScore} 💰</span>
+                </div>
+            `;
+        }
+
+
+        /**
+         * Updates the content of the currently active page and the header score.
+         */
+        window.renderPageContent = () => {
+            const safeScore = currentScore || 0; 
+            const formattedScore = safeScore.toLocaleString();
+
+            // 0. Header ላይ ማዘመን
+            document.getElementById('header-score-display').innerText = formattedScore + ' 💰';
+
+            // 1. Profile Page (Only updates score/birr display, text is handled by updateLanguage)
+            const profileScoreDisplay = document.getElementById('profile-score-display');
+            const profileBirrDisplay = document.getElementById('profile-birr-display');
+
+            if (profileScoreDisplay) {
+                profileScoreDisplay.innerText = formattedScore;
+            }
+            // የብር ዋጋ ማዘመን
+            const t = translations[currentLanguage];
+             if (profileBirrDisplay) {
+                const birrEquivalent = (safeScore / 1000).toFixed(2); // 1000 ነጥብ = 1 ብር
+                profileBirrDisplay.innerText = `${birrEquivalent} ${t.birrUnit}`;
+            }
+
+            // 2. Leaderboard Page (Only updates score/rank display, text is handled by updateLanguage)
+            const topScoreDisplay = document.getElementById('top-score-display');
+            const topRankDisplay = document.getElementById('top-rank-display');
+
+            if (topScoreDisplay) {
+                topScoreDisplay.innerText = formattedScore + ' 💰';
+            }
+
+            if (topRankDisplay) {
+                topRankDisplay.innerText = currentRank;
+            }
+
+            // Call updateLanguage to ensure all static text is correct
+            updateLanguage(); 
+        };
+
+
+        // --- Firebase Listener & Auth (Same logic) ---
+
+        const setupLeaderboardListener = () => {
+             if (leaderboardUnsubscribe) {
+                leaderboardUnsubscribe(); 
+            }
+            const usersCollectionRef = collection(db, "users");
+            const q = query(usersCollectionRef, orderBy('total_score', 'desc'), limit(20)); 
+            const leaderboardListElement = document.getElementById('leaderboard-list');
+
+            leaderboardUnsubscribe = onSnapshot(q, (snapshot) => {
+                const leaderboardItems = [];
+                let foundUserRank = currentRank; 
+                
+                snapshot.forEach((doc, index) => {
+                    const data = doc.data();
+                    leaderboardItems.push({
+                        uid: doc.id,
+                        username: data.username || translations[currentLanguage].unknownPlayer,
+                        total_score: data.total_score,
+                        rank: index + 1
+                    });
+                    if (doc.id === currentFirebaseUserId) {
+                        currentUserDocData = data;
+                        currentScore = Number(data.total_score) || 0; 
+                        foundUserRank = `#${index + 1}`;
+                    }
+                });
+
+                currentRank = foundUserRank;
+                
+                if (currentRank === 'N/A' && currentFirebaseUserId && !currentUserDocData) {
+                    getDoc(doc(db, "users", currentFirebaseUserId)).then(userDoc => {
+                        if (userDoc.exists()) {
+                            currentUserDocData = userDoc.data();
+                            currentScore = Number(userDoc.data().total_score) || 0; 
+                        }
+                        window.renderPageContent();
+                    }).catch(error => {
+                        console.error("Error fetching current user data:", error);
+                    });
+                } else {
+                    window.renderPageContent();
+                }
+
+                leaderboardListElement.innerHTML = leaderboardItems.map(createLeaderboardItem).join('');
+            }, (error) => {
+                console.error("Leaderboard listener error:", error);
+            });
+        };
+
+        const handleAuth = async () => {
+            try {
+                 const result = await auth.signInAnonymously();
+                 console.log("Signed in anonymously:", result.user.uid);
+            } catch (error) {
+                 console.error("Error signing in anonymously:", error);
+            }
+        };
+        
+        const handleUserSetup = async (user) => {
+             currentFirebaseUserId = user.uid;
+            const userRef = doc(db, "users", user.uid);
+            
+            const userDoc = await getDoc(userRef);
+
+            if (!userDoc.exists()) {
+                const initialData = {
+                    telegram_id: user.uid, 
+                    username: `ተጫዋች-${Math.floor(Math.random() * 10000)}`,
+                    total_score: 0, 
+                    created_at: serverTimestamp(),
+                    last_played: serverTimestamp(),
+                    last_daily_reward_time: null, 
+                    last_spin_time: null, 
+                    last_scratch_time: null,
+                    last_gift_time: null 
+                };
+                await setDoc(userRef, initialData);
+                currentUserDocData = initialData;
+                currentScore = 0;
+            } else {
+                currentUserDocData = userDoc.data();
+                currentScore = Number(currentUserDocData.total_score) || 0; 
+            }
+            
+            setupLeaderboardListener();
+            window.renderPageContent();
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                handleUserSetup(user);
+            } else {
+                console.log("No user signed in. Attempting authentication...");
+                handleAuth();
+            }
+        });
+
+        // --- Navigation ---
+
+        const navItems = document.querySelectorAll('.nav-item');
+
+        window.navigateTo = (pageId) => {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            } else if (pageId === 'spin-page') {
+                 window.openSpinPage();
+            }
+
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            window.renderPageContent();
+        };
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.navigateTo(item.dataset.page);
+            });
+        });
+
+        // --- Custom Button Handlers (Changing alert messages to use translation) ---
+        
+        window.handleWithdraw = () => {
+            alert(translations[currentLanguage].soonAlert);
+        }
+        
+        window.handleExchange = () => {
+            alert(translations[currentLanguage].soonAlert);
+        }
+        
+        window.handleConnectWallet = () => {
+            // The link is already set up in HTML
+        }
+
+        window.handleLogout = async () => {
+             try {
+                if (leaderboardUnsubscribe) {
+                     leaderboardUnsubscribe(); 
+                }
+                await signOut(auth);
+                alert(currentLanguage === 'am' ? "በስኬት ወጥተዋል።" : "Successfully logged out.");
+                currentFirebaseUserId = null;
+                currentUserDocData = null;
+                currentScore = 0;
+                currentRank = 'N/A';
+                window.navigateTo('home-page'); 
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        }
+        
+        // Initial language setup when the app loads
+        window.addEventListener('DOMContentLoaded', () => {
+            updateLanguage();
+        });
+    </script>
+</body>
+</html>
