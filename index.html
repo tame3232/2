@@ -856,15 +856,15 @@
                     የልውውጥ ጥያቄዎን እዚህ ያስገቡ። ጥያቄዎ በአስተዳዳሪዎች ይጣራል፣ ከዚያም ነጥብዎ ተቀንሶ ቲኬት ይጨመርልዎታል።
                 </p>
                 <p style="text-align: center; font-weight: bold; color: var(--et-yellow); margin-top: 15px;">
-                    ልውውጥ ምጣኔ: 10,000 ነጥብ = 1 ቲኬት
+                    ልውውጥ ምጣኔ: 10,000 ነጥብ =...
                 </p>
             </div>
             
-            <div style="background-color: var(--tg-secondary-bg); padding: 20px; border-radius: 10px;">
+            <div style="background-color: #333333; padding: 20px; border-radius: 10px;">
                 <label for="exchangePointsInput" style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px;">
                     መቀየር የሚፈልጉትን ነጥብ ያስገቡ (በ10,000 ብዜት):
                 </label>
-                <input type="number" id="exchangePointsInput" placeholder="ዝቅተኛው: 10000" min="10000" step="10000" style="width: 95%; padding: 10px; margin-bottom: 20px; border: 1px solid #444; border-radius: 5px; background-color: #1c1c1c; color: var(--tg-text);">
+                <input type="number" id="exchangePointsInput" placeholder="ዝቅተኛው: 10000" min="10000" step="10000" style="width: 95%; padding: 10px; margin-bottom: 20px; border: 1px solid #444; border-radius: 5px; background-color:var(--tg-secondary-bg); color: var(--tg-text);">
                 
                 <button id="finalChangeButton" disabled style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold; color: white; background-color: #a0a0a0; border: none; border-radius: 8px; cursor: not-allowed; transition: background-color 0.3s;">
                     CHANGE
@@ -1680,7 +1680,7 @@
                     exchangeMessage.innerText = `✅ የ${pointsToExchange.toLocaleString()} ነጥብ ልውውጥ ጥያቄዎ ደርሶናል! በቅርብ ቀን ይጠብቁ።`;
                 } else {
                     exchangeMessage.style.color = '#F44336';
-                    exchangeMessage.innerText = '❌ ጥያቄው ሳይመዘገብ ቀርቷል። እባክዎ እንደገና ይሞክሩ።';
+                    exchangeMessage.innerText = '❌ ይቅርታ ጥያቄው ተቀባይነት አላገኘም ይህን አገለግሎት ለመጠቀም አጠቃላይ ነጥባችሁ ከ100000 በላይ መሆን አለበት።';
                 }
                 
                 // ወደ መጀመሪያ ሁኔታ መመለስ
