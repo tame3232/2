@@ -4,20 +4,34 @@ const fetch = require('node-fetch');
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
 
+// 🛑 የሚፈለገው የ Headers Block
+const CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*', // ከየትኛውም ቦታ ጥሪ እንዲቀበል
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 exports.handler = async (event, context) => {
     // POST request ብቻ ነው የምንቀበለው
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+        return { 
+            statusCode: 405, 
+            headers: CORS_HEADERS, // 👈 Headers ጨምር
+            body: 'Method Not Allowed' 
+        };
     }
 
     try {
         const body = JSON.parse(event.body);
         const message = body.message;
-        // ሰውዬው የራሱን ID ከላከ ወደ እሱ እንልካለን፣ ካልላከ ወደ አንተ (Admin) እንልካለን
         const targetChatId = body.custom_chat_id ? body.custom_chat_id : ADMIN_ID;
 
         if (!message) {
-            return { statusCode: 400, body: 'Message is empty' };
+            return { 
+                statusCode: 400, 
+                headers: CORS_HEADERS, // 👈 Headers ጨምር
+                body: 'Message is empty' 
+            };
         }
 
         // ወደ Telegram API መላክ
@@ -38,12 +52,14 @@ exports.handler = async (event, context) => {
         if (response.ok) {
             return {
                 statusCode: 200,
+                headers: CORS_HEADERS, // 👈 Headers ጨምር
                 body: JSON.stringify({ success: true, result: data })
             };
         } else {
             console.error("Telegram Error:", data);
             return {
                 statusCode: 400,
+                headers: CORS_HEADERS, // 👈 Headers ጨምር
                 body: JSON.stringify({ success: false, error: data.description })
             };
         }
@@ -52,6 +68,7 @@ exports.handler = async (event, context) => {
         console.error("Server Error:", error);
         return {
             statusCode: 500,
+            headers: CORS_HEADERS, // 👈 Headers ጨምር
             body: JSON.stringify({ success: false, error: error.message })
         };
     }
