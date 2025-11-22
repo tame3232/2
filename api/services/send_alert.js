@@ -12,11 +12,22 @@ const CORS_HEADERS = {
 };
 
 exports.handler = async (event, context) => {
+    
+    // 🚀 አዲስ የተጨመረው ብሎክ: የ OPTIONS ጥያቄዎችን ማስተናገድ (Preflight Request)
+    // ሚኒ አፑ POST ከመላኩ በፊት የደህንነት ፍቃድ የሚጠይቅበት መንገድ ነው።
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200, 
+            headers: CORS_HEADERS, // CORS Headers ይዞ ይመልሳል
+            body: 'OK'
+        };
+    }
+
     // POST request ብቻ ነው የምንቀበለው
     if (event.httpMethod !== 'POST') {
         return { 
             statusCode: 405, 
-            headers: CORS_HEADERS, // 👈 Headers ጨምር
+            headers: CORS_HEADERS, 
             body: 'Method Not Allowed' 
         };
     }
@@ -29,7 +40,7 @@ exports.handler = async (event, context) => {
         if (!message) {
             return { 
                 statusCode: 400, 
-                headers: CORS_HEADERS, // 👈 Headers ጨምር
+                headers: CORS_HEADERS, 
                 body: 'Message is empty' 
             };
         }
@@ -52,14 +63,14 @@ exports.handler = async (event, context) => {
         if (response.ok) {
             return {
                 statusCode: 200,
-                headers: CORS_HEADERS, // 👈 Headers ጨምር
+                headers: CORS_HEADERS, // Headers ጨምር
                 body: JSON.stringify({ success: true, result: data })
             };
         } else {
             console.error("Telegram Error:", data);
             return {
                 statusCode: 400,
-                headers: CORS_HEADERS, // 👈 Headers ጨምር
+                headers: CORS_HEADERS, // Headers ጨምር
                 body: JSON.stringify({ success: false, error: data.description })
             };
         }
@@ -68,7 +79,7 @@ exports.handler = async (event, context) => {
         console.error("Server Error:", error);
         return {
             statusCode: 500,
-            headers: CORS_HEADERS, // 👈 Headers ጨምር
+            headers: CORS_HEADERS, // Headers ጨምር
             body: JSON.stringify({ success: false, error: error.message })
         };
     }
