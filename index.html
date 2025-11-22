@@ -3369,9 +3369,24 @@
         </span>
     </button>
 
-</div> 
-
-
+<div id="admin-panel" style="display: none; margin-top: 30px; border-top: 1px dashed #555; padding-top: 20px;">
+    
+    <h3 style="color: var(--et-red); font-size: 16px;">👮 Admin Zone</h3>
+    
+    <button class="profile-action-button" onclick="window.generateWeeklyReport()" style="border: 1px solid var(--et-red); margin-bottom: 10px;">
+        <span class="stat-label">
+            <span class="icon">📊</span> ሳምንታዊ ሪፖርት ላክልኝ
+        </span>
+    </button>
+    
+    <button class="profile-action-button" onclick="window.generateTop10FrequentUsers()">
+        <span class="stat-label">👑 Top 10 ታታሪዎች ሽልማት</span>
+    </button>
+    
+    <p id="report-status" style="font-size: 12px; color: #aaa; margin-top: 5px;"></p>
+    
+</div>
+</div>
 
 
    <div id="social-tasks-page" class="game-page-container" style="display: none; text-align: left;">
@@ -4017,10 +4032,13 @@ window.playSound = (type) => {
     }
 }
 </script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, updateDoc, doc, setDoc, collection, query, onSnapshot, orderBy, limit, increment, serverTimestamp, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnapshot, orderBy, limit, increment, serverTimestamp, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+
+
 
 let cachedLeaderboardData = null; 
 let lastLeaderboardFetchTime = 0;
@@ -7916,6 +7934,215 @@ window.endMemoryGame = async (isWin) => {
     // የ pointerEvents ን እንደገና ለማንቃት አያስፈልግም ምክንያቱም grid.innerHTML = '' ያደርገዋል
 }
 
+// ============================================================
+// ✅ 🛑 ADMIN REPORT SYSTEM (የተስተካከለ)
+// ============================================================
+
+const ADMIN_TELEGRAM_ID = "403001547"; 
+const TOP10_REWARD_AMOUNT = 2000; 
+
+// 1. አድሚን መሆንዎን ማረጋገጥ
+function checkAdminStatus() {
+    if (String(window.telegramUserId) === String(ADMIN_TELEGRAM_ID)) {
+        const adminPanel = document.getElementById('admin-panel');
+        if (adminPanel) adminPanel.style.display = 'block';
+    }
+}
+
+// 🛑 ማሻሻያ 1፡ ለተጠቃሚው የግል መልዕክት የሚልከው ተግባር (አሁን ይሰራል!)
+async function sendRewardNotification(userId, rewardAmount, customMessage = null) {
+    const msgToSend = customMessage || `🎉 <b>እንኳን ደስ አለዎት!</b>\n\nበሳምንቱ ከፍተኛ ተሳታፊ በመሆንዎ <b>${rewardAmount.toLocaleString()} Coins</b> ተሸልመዋል! 🏆`;
+
+    try {
+        // ወደ Netlify Function እንልካለን፣ ግን "custom_chat_id" አብረን እንልካለን
+        const response = await fetch('/.netlify/functions/send_alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: msgToSend, 
+                custom_chat_id: userId // 👈 ይህ አዲሱ ቁልፍ ነገር ነው! (ለተጠቃሚው ይላካል)
+            }), 
+        });
+
+        if (!response.ok) {
+            console.warn(`Failed to notify user ${userId}`);
+        } else {
+            console.log(`Notification sent to user ${userId}`);
+        }
+    } catch (error) {
+        console.error("Notification Error:", error);
+    }
+}
+
+// 2. አጠቃላይ ሪፖርት (ለአድሚን ብቻ)
+window.generateWeeklyReport = async () => {
+    const statusEl = document.getElementById('report-status');
+    statusEl.innerText = "መረጃ በመሰብሰብ ላይ...";
+    statusEl.style.color = "#FFC107";
+
+    try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const usersCollectionRef = collection(db, "users");
+        
+        const q = query(
+            usersCollectionRef, 
+            where('last_played', '>', sevenDaysAgo),
+            orderBy('last_played', 'desc'),
+            limit(50) 
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            statusEl.innerText = "ባለፉት 7 ቀናት ምንም ተሳታፊ የለም።";
+            return;
+        }
+
+        let message = `📊 <b>ሳምንታዊ የንቁ ተሳታፊዎች ሪፖርት</b>\n`; 
+        message += `📅 ቀን: ${new Date().toLocaleDateString()}\n`;
+        message += `👥 ጠቅላላ Active Users (Top 50 shown): ${snapshot.size}\n\n`;
+        message += `--------------------------------\n`;
+
+        let count = 0;
+        snapshot.forEach((doc) => {
+            count++;
+            const data = doc.data();
+            const lastDate = data.last_played ? data.last_played.toDate().toLocaleDateString() : 'N/A';
+            message += `${count}. 👤 ${data.username || 'No Name'}\n`;
+            message += `   💰 Score: ${data.total_score.toLocaleString()}\n`;
+            message += `   🕒 Last Seen: ${lastDate}\n\n`;
+        });
+
+        message += `--------------------------------\n`;
+        message += `🤖 Sent from Smart Airdrop System`;
+
+        // ለአድሚን መላክ (custom_chat_id ስለሌለ በነባሪ ወደ Admin ይሄዳል)
+        await sendToTelegram(message);
+        
+        statusEl.innerText = "✅ ሪፖርቱ በተሳካ ሁኔታ ተልኳል!";
+        statusEl.style.color = "#4CAF50";
+
+    } catch (error) {
+        console.error("Report Error:", error);
+        statusEl.innerText = "❌ ስህተት: " + error.message;
+        statusEl.style.color = "#F44336";
+    }
+};
+
+// 3. ወደ Netlify Function የሚልክ (ለአድሚን ሪፖርት)
+async function sendToTelegram(text) {
+    const functionUrl = 'https://newsmartgames.netlify.app/.netlify/functions/send_alert'; 
+    const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }), // custom_chat_id የለም (ወደ Admin ይሄዳል)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to send via Netlify: ${errorData.error || 'Unknown'}`);
+    }
+}
+
+// 4. Top 10 ተጠቃሚዎችን መሸለም እና ማሳወቅ
+// ============================================================
+// ✅ 🛑 ADMIN REPORT SYSTEM (Final Fix)
+// ============================================================
+// ... (ሌላው ኮድህ እዚህ ይቀጥላል)
+// ...
+
+// ... (የቀረው ኮድህ ይቀጥላል)
+// ...
+// 4. Top 10 ተጠቃሚዎችን መሸለም እና ማሳወቅ
+window.generateTop10FrequentUsers = async () => {
+    const statusEl = document.getElementById('report-status');
+    statusEl.innerText = "ከፍተኛ 10 ተጠቃሚዎችን በመሸለም ላይ...";
+    statusEl.style.color = "#FFC107";
+
+    try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const usersCollectionRef = collection(db, "users");
+        
+        // 🛑 Query-ው ፍትሃዊ እንዲሆን እና Index-ህ እንዲሰራ የተስተካከለ
+        const q = query(
+            usersCollectionRef, 
+            where('last_played', '>', sevenDaysAgo), 
+            orderBy('last_played', 'asc'),           // Index-ህ የሚፈልገው ቅደም ተከተል
+            orderBy('total_score', 'desc'),          
+            limit(10) 
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            statusEl.innerText = "ባለፉት 7 ቀናት ምንም ንቁ ተጠቃሚ አልተገኘም።";
+            return;
+        }
+
+        const rewardPromises = [];
+        const customMessage = `🥇 <b>እንኳን ደስ አለዎት!</b>\n\nበሳምንቱ ከፍተኛ ውጤት በማምጣትዎ ከ Top 10 ውስጥ ገብተዋል!\n\n🎁 ሽልማት: <b>${TOP10_REWARD_AMOUNT.toLocaleString()} Coins</b> ተቀብለዋል።`;
+        
+        // 🛑 ማሻሻያ፡ 'doc' የሚለው የሉፕ ተለዋዋጭ ወደ 'userDoc' ተቀይሯል።
+        snapshot.forEach((userDoc) => { 
+            // አሁን የ Firebase doc() ተግባርን በትክክል መጥራት ትችላለህ
+            const userRef = doc(db, "users", userDoc.id); 
+            const userId = userDoc.data().telegram_id; 
+            
+            // 1. ኮይን መጨመር
+            const rewardUpdatePromise = updateDoc(userRef, {
+                total_score: increment(TOP10_REWARD_AMOUNT),
+                last_top10_reward_time: serverTimestamp() 
+            });
+
+            // 2. ለተጠቃሚው መልዕክት መላክ
+            if (userId) {
+                const notificationPromise = sendRewardNotification(
+                    userId, 
+                    TOP10_REWARD_AMOUNT, 
+                    customMessage
+                ).catch(e => console.error(`Failed to notify user ${userId}`, e));
+                rewardPromises.push(notificationPromise);
+            }
+            
+            rewardPromises.push(rewardUpdatePromise);
+        });
+
+        await Promise.all(rewardPromises);
+        
+        // ለአድሚን ሪፖርት መላክ
+        let message = `👑 <b>Top 10 ሽልማት ተከፋፍሏል!</b>\n\n`;
+        let count = 0;
+        snapshot.forEach((userDoc) => {
+            count++;
+            const data = userDoc.data();
+            message += `#${count} 👤 ${data.username || 'No Name'} (+${TOP10_REWARD_AMOUNT})\n`;
+        });
+        
+        await sendToTelegram(message);
+        
+        statusEl.innerText = `✅ ለ ${snapshot.size} ተጠቃሚዎች ሽልማት እና መልዕክት ተልኳል!`;
+        statusEl.style.color = "#4CAF50";
+
+    } catch (error) {
+        console.error("Reward Error:", error);
+        statusEl.innerText = "❌ ስህተት: " + error.message;
+        statusEl.style.color = "#F44336";
+        
+        if (error.message.includes('index')) {
+            statusEl.innerText += "\n(💡 Index ችግር: Index-ው በትክክል የተሰራ ቢሆንም፣ ምናልባት Building Time አልጨረሰም ይሆናል። ለተወሰነ ጊዜ ጠብቀህ ሞክር።)";
+        }
+    }
+};
+
+// ... (የቀረው ኮድህ ይቀጥላል)
+
+
+
+
+
+
+
+
         // ======================================================================
         //                         MAIN RENDER FUNCTION
         // ======================================================================
@@ -7973,7 +8200,7 @@ window.endMemoryGame = async (isWin) => {
             if (isTasksPage) {
                 const { isReady } = checkDailyLimit('last_gift_time');
                 if (isReady) {
-                    WebApp.MainButton.setText(`🎁 ዕለታዊ ስጦታ (+10 coin)`); 
+                    WebApp.MainButton.setText(`🎁 ዕለታዊ ስጦታ (+200 coin)`); 
                     WebApp.MainButton.show();
                     WebApp.MainButton.setParams({ color: '#4CAF50', text_color: '#FFFFFF' });
                 } else {
@@ -7996,10 +8223,9 @@ window.endMemoryGame = async (isWin) => {
             if (document.getElementById('slots-game-page')?.style.display === 'block') {
                  window.updateSlotGameUI();
             }
-
+          checkAdminStatus();
 
         }
-
 
 // ======================================================================
 //                              INITIALIZATION
