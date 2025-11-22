@@ -1,0 +1,12 @@
+{
+  "name": "netlify-telegram-alert-function",
+  "version": "1.0.0",
+  "description": "Dependencies for Netlify Functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
