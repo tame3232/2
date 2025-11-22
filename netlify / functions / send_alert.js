@@ -1,20 +1,58 @@
-// functions/send_alert.js
-// 🛑 ይህ ኮድ Environment Variablesን በትክክል ማንበብ መቻሉን ያረጋግጣል!
-// የ node-fetch dependency አይፈልግም!
+const fetch = require('node-fetch');
+
+// Netlify ላይ የምናስገባቸው ሚስጥራዊ ቁልፎች
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const ADMIN_ID = process.env.ADMIN_ID;
 
 exports.handler = async (event, context) => {
-    
-    // Environment Variablesን ለማንበብ ይሞክራል
-    const BOT_TOKEN_READ = process.env.BOT_TOKEN ? 'READ' : 'NOT READ';
-    const ADMIN_ID_READ = process.env.ADMIN_ID ? 'READ' : 'NOT READ';
+    // POST request ብቻ ነው የምንቀበለው
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
 
-    // 🛑 LOG የሚታይበት ቦታ
-    console.log("--- Environment Variable Test Result ---");
-    console.log("BOT_TOKEN Status:", BOT_TOKEN_READ);
-    console.log("ADMIN_ID Status:", ADMIN_ID_READ);
+    try {
+        const body = JSON.parse(event.body);
+        const message = body.message;
+        // ሰውዬው የራሱን ID ከላከ ወደ እሱ እንልካለን፣ ካልላከ ወደ አንተ (Admin) እንልካለን
+        const targetChatId = body.custom_chat_id ? body.custom_chat_id : ADMIN_ID;
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ status: "Test complete. Check Netlify Logs for result." }),
-    };
+        if (!message) {
+            return { statusCode: 400, body: 'Message is empty' };
+        }
+
+        // ወደ Telegram API መላክ
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: targetChatId,
+                text: message,
+                parse_mode: 'HTML'
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ success: true, result: data })
+            };
+        } else {
+            console.error("Telegram Error:", data);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ success: false, error: data.description })
+            };
+        }
+
+    } catch (error) {
+        console.error("Server Error:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ success: false, error: error.message })
+        };
+    }
 };
