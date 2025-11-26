@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -4034,8 +4034,27 @@ window.playSound = (type) => {
 </script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnapshot, orderBy, limit, increment, serverTimestamp, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { 
+        getFirestore, 
+        updateDoc, 
+        doc, 
+        setDoc, 
+        collection, 
+        query, 
+        where, 
+        onSnapshot, 
+        orderBy, 
+        limit, 
+        increment, 
+        serverTimestamp, 
+        getDoc, 
+        getDocs, 
+        runTransaction,
+        // ✅ ይህ ተጨምሯል: የድሮ ፋይሎችን ለመሰረዝ
+        deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
 
 
 
@@ -4447,66 +4466,127 @@ function setupCurrentUserListener(userId) {
 
 
         
+     async function firebaseLogin() {
+    try {
+        // 1. Anonymous Login
+        await signInAnonymously(auth);
         
-        async function firebaseLogin() {
-            try {
-                const userCredential = await signInAnonymously(auth);
-                currentFirebaseUserId = userCredential.user.uid;
-                
-                            telegramUserId = window.telegramUserId; // አስቀድሞ የተጫነውን 'window.telegramUserId' እንጠቀማለን
-
-                const userRef = doc(db, 'users', currentFirebaseUserId);
-                const userDoc = await getDoc(userRef); // ሰነዱ መኖሩን አስቀድሞ መፈተሽ
-
-                const username = getTelegramUsername();
-                const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-                
-                let referrerId = null;
-                if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-                    referrerId = WebApp.initDataUnsafe.start_param;
-                    if (referrerId === telegramUserId) {
-                        referrerId = null; 
-                    }
-                }
-                
-                if (!userDoc.exists()) {
-                    // አዲስ ተጠቃሚ ከሆነ:
-                    await setDoc(userRef, {
-                        telegram_id: telegramUserId,
-                        username: username, 
-                        photo_url: photo_url,
-                        created_at: serverTimestamp(),
-                        tickets: 0, 
-                        total_score: 0, 
-                        referrer_id: referrerId || null, // አዲስ ከሆነ referral ID ማስቀመጥ
-                        // 🛑 NEW: ለዕለታዊ ሽልማት የሚያስፈልጉ መረጃዎች
-                        daily_streak: 0,
-                        last_streak_claim_time: null,
-                        // 🛑 UPDATED: ለ Slot Game የሚያስፈልጉ መረጃዎች
-                        slot_spins_left: SLOTS_MAX_SPINS,
-                        last_slot_reset_time: null, // <--- ✅ ኮማ (,) እዚህ ተጨምሯል
-                        
-                        // ✅ 🛑 አዲስ የ Staking መስኮች
-                        staked_amount: 0,
-                        stake_start_time: null
-                    });
-                } else {
-                    // ነባር ተጠቃሚ ከሆነ:
-                    await setDoc(userRef, {
-                        telegram_id: telegramUserId,
-                        username: username, 
-                        photo_url: photo_url,
-                        // referrer_id, created_at, total_score, daily_streak አይሻሻሉም
-                    }, { merge: true });
-                }
-
-            } catch (error) {
-                WebApp.showAlert("Firebase Login Failed: " + error.message);
-                console.error("Firebase Login Failed:", error);
-            }
+        if (!telegramUserId || telegramUserId.includes('MOCK')) {
+             console.warn("Telegram ID አልተገኘም");
         }
 
+        // ለቀጣይ አጠቃቀም
+        currentFirebaseUserId = telegramUserId; 
 
+        // 2. አዲሱ ቦታ ላይ (Telegram ID) መረጃ መኖሩን እንፈትሽ
+        const newUserRef = doc(db, 'users', telegramUserId); 
+        const newUserDoc = await getDoc(newUserRef);
+
+        const username = getTelegramUsername();
+        const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
+        
+        let referrerId = null;
+        if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
+            referrerId = WebApp.initDataUnsafe.start_param;
+            if (referrerId === telegramUserId) referrerId = null; 
+        }
+
+        if (newUserDoc.exists()) {
+            // ✅ CASE A: ተጠቃሚው ቀድሞውኑ ወደ አዲሱ ሲስተም ተሸጋግሯል
+            console.log("User already migrated.");
+            
+            // መረጃ ማደስ ብቻ
+            await setDoc(newUserRef, {
+                username: username, 
+                photo_url: photo_url,
+            }, { merge: true });
+
+        } else {
+            // ⚠️ CASE B: የድሮ መረጃዎችን መፈለግ (MIGRATION)
+            console.log("Searching for old accounts...");
+            
+            const usersRef = collection(db, "users");
+            // የድሮውን መረጃ በ telegram_id እንፈልግ
+            const q = query(usersRef, where("telegram_id", "==", telegramUserId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // ✅ ብዙ አካውንቶች ቢኖሩትም "ምርጡን" (ብዙ Coin ያለውን) መምረጥ
+                let bestData = null;
+                let maxScore = -1;
+
+                console.log(`Found ${querySnapshot.size} old accounts. Picking the best one...`);
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const score = data.total_score || 0;
+
+                    // አሁን ካገኘነው ይልቅ የዚህኛው ስኮር ከፍ ካለ፣ ይህንን እንያዝ
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestData = data;
+                    }
+                });
+
+                // የተመረጠውን (ምርጡን) ዳታ ወደ አዲሱ ቦታ እንገለብጣለን
+                if (bestData) {
+                    // 1. መረጃውን ወደ አዲሱ (Telegram ID) ፋይል መገልበጥ (ዋናው እርምጃ)
+                    await setDoc(newUserRef, {
+                        ...bestData, // የድሮውን መረጃ በሙሉ
+                        username: username, 
+                        photo_url: photo_url,
+                        migrated_at: serverTimestamp(),
+                        telegram_id: telegramUserId // እርግጠኛ ለመሆን
+                    });
+
+                    WebApp.showAlert(`እንኳን ደህና መጡ! ${maxScore.toLocaleString()} Coin የነበረው ዋና አካውንትዎ ወደዚህ ተላልፏል። ✅`);
+
+                    // 2. ✅ የተጨመረው ክፍል: የድሮዎቹን (ተመሳሳይ የሆኑትን) ፋይሎች መሰረዝ (Cleanup)
+                    const deletionPromises = [];
+                    querySnapshot.forEach((doc) => {
+                        // የመሰረዝ ተግባር ወደ list መጨመር
+                        deletionPromises.push(deleteDoc(doc.ref));
+                    });
+
+                    // ሁሉንም የመሰረዝ ተግባራት በአንድ ጊዜ መጨረስ
+                    await Promise.all(deletionPromises);
+                    console.log(`Successfully deleted ${querySnapshot.size} old duplicate documents.`);
+                    // -----------------------------------------------------------------------
+                }
+
+            } else {
+                // ❌ CASE C: ምንም የድሮ መረጃ የለም (አዲስ ተጠቃሚ)
+                console.log("Creating brand new user.");
+                
+                await setDoc(newUserRef, {
+                    telegram_id: telegramUserId,
+                    username: username, 
+                    photo_url: photo_url,
+                    created_at: serverTimestamp(),
+                    tickets: 0, 
+                    total_score: 0, 
+                    referrer_id: referrerId || null,
+                    daily_streak: 0,
+                    last_streak_claim_time: null,
+                    slot_spins_left: SLOTS_MAX_SPINS,
+                    last_slot_reset_time: null,
+                    staked_amount: 0,
+                    stake_start_time: null,
+                    smart_coin_balance: 0
+                });
+            }
+        }
+        
+        // Listener ማስጀመር
+        setupCurrentUserListener(telegramUserId);
+
+    } catch (error) {
+        WebApp.showAlert("Login Error: " + error.message);
+        console.error("Firebase Login Failed:", error);
+    }
+}
+   
+        
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
             if (!currentFirebaseUserId) {
@@ -7716,50 +7796,140 @@ window.handleStakeClick = async (plan) => {
 // ======================================================================
 
 // ======================================================================
-// ✅ DAILY CIPHER GAME LOGIC
+// ✅ DAILY CIPHER GAME LOGIC (FIXED)
 // ======================================================================
-const DAILY_CIPHER_CODE = "SMART"; // 🛑 ይህንን በየቀኑ ከ Firebase ወይም እዚሁ መቀየር ትችላለህ
+
 const CIPHER_REWARD = 50000; 
+const cipherTimestampField = 'last_daily_cipher_time';
 
 window.submitDailyCipher = async () => {
     const inputEl = document.getElementById('cipher-input');
     const messageEl = document.getElementById('cipher-message');
-    const userCode = inputEl.value.toUpperCase().trim();
-    const timestampField = 'last_daily_cipher_time';
+    const submitBtn = document.getElementById('cipher-submit-btn');
 
-    // 1. Cooldown መፈተሽ
-    const { isReady } = checkDailyLimit(timestampField);
+    // 1. የተጠቃሚውን ኮድ መቀበል (ወደ Capital letter መቀየር)
+    const userCode = inputEl.value.toUpperCase().trim();
+    
+    // የተጠቃሚ ID ማረጋገጥ
+    const currentUserId = currentFirebaseUserId; // ቀድሞ የተጫነውን እንጠቀማለን
+
+    if (!currentUserId) {
+        WebApp.showAlert("Error: User not logged in.");
+        return;
+    }
+
+    if (!userCode) {
+        messageEl.innerText = "⚠️ እባክዎ ኮድ ያስገቡ።";
+        messageEl.style.color = "var(--et-yellow)";
+        return;
+    }
+
+    // 2. Cooldown ቼክ ማድረግ
+    const { isReady } = checkDailyLimit(cipherTimestampField);
     if (!isReady) {
         messageEl.innerText = "❌ ለዛሬ ጨርሰዋል! ነገ ይመለሱ።";
         messageEl.style.color = "var(--et-red)";
         return;
     }
 
-    // 2. ኮዱን ማረጋገጥ
-    if (userCode === DAILY_CIPHER_CODE) {
-        // ትክክል ከሆነ
-        window.playSound('win');
-        const success = await updateScore(CIPHER_REWARD, 'Daily Cipher', timestampField);
-        
-        if (success) {
+    // 3. እየሰራ መሆኑን ማሳየት
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Checking...";
+    messageEl.innerText = "Code በማረጋገጥ ላይ...";
+    messageEl.style.color = "var(--tg-hint)";
+
+    try {
+        // Firebase Transaction መጀመር
+        const result = await runTransaction(db, async (transaction) => {
+            
+            // ሀ. የሚያስፈልጉ Referenceዎችን መፍጠር
+            // 'daily_cipher_config' የሚባል Collection እና 'current_settings' የሚባል Document በ Firebase ላይ መኖር አለበት!
+            const settingsRef = doc(db, "daily_cipher_config", "current_settings");
+            const userRef = doc(db, "users", currentUserId);
+            
+            const settingsSnap = await transaction.get(settingsRef);
+            const userSnap = await transaction.get(userRef);
+
+            if (!settingsSnap.exists()) {
+                 throw new Error("CONFIG_MISSING"); 
+            }
+            
+            const currentSettings = settingsSnap.data();
+            const userData = userSnap.data() || {}; 
+            
+            // ለ. ኮዱን ማረጋገጥ (ዳታቤዝ ላይ ካለው 'code' ጋር)
+            const CORRECT_CODE = (currentSettings.code || "").toUpperCase().trim();
+            
+            if (userCode !== CORRECT_CODE) {
+                throw new Error("WRONG_CODE");
+            }
+            
+            // ሐ. የሰዎች ብዛት ገደብ (ለምሳሌ ለመጀመሪያዎቹ 100 ሰዎች)
+            let currentClaimCount = currentSettings.claim_count || 0;
+            const MAX_CLAIMS = currentSettings.max_claims || 10000; // በነባሪ ብዙ እናድርገው
+
+            if (currentClaimCount >= MAX_CLAIMS) {
+                throw new Error("LIMIT_REACHED");
+            }
+
+            // መ. ሽልማት መስጠት
+            const newClaimCount = currentClaimCount + 1;
+            const newScore = (userData.total_score || 0) + CIPHER_REWARD;
+            
+            // 1. የመልስ ሰጪዎችን ቁጥር መጨመር
+            transaction.update(settingsRef, { claim_count: newClaimCount });
+            
+            // 2. ለተጠቃሚው Coin መጨመር እና ሰዓቱን መመዝገብ
+            transaction.update(userRef, { 
+                [cipherTimestampField]: serverTimestamp(),
+                total_score: newScore 
+            });
+            
+            return { success: true, newCount: newClaimCount, max: MAX_CLAIMS };
+        });
+
+        // 4. ከተሳካ በኋላ
+        if (result.success) {
+            window.playSound('win');
+            window.triggerConfetti(CIPHER_REWARD); // ኮንፌቲ
+            
             messageEl.innerText = `🎉 ትክክል! +${CIPHER_REWARD.toLocaleString()} Coin አግኝተዋል!`;
             messageEl.style.color = "var(--et-green)";
             inputEl.value = "";
             
-            // Cooldown ማስጀመር
-            startCooldownTimer(timestampField, 'daily-cipher-timer', 'cipher-submit-btn');
-            renderPageContent();
+            // የአካባቢ ተለዋዋጮችን ማዘመን
+            currentScore += CIPHER_REWARD;
+            
+            // አዝራሩን በ Timer መቆለፍ
+            startCooldownTimer(cipherTimestampField, 'daily-cipher-timer', 'cipher-submit-btn');
+            renderPageContent(); // ነጥቡን በስክሪኑ ላይ ማሳየት
         }
+
+    } catch (error) {
+        // 5. ስህተቶችን መቆጣጠር
+        submitBtn.disabled = false;
+        submitBtn.innerText = "CHECK CODE";
+        
+        if (error.message === "WRONG_CODE") {
+             messageEl.innerText = "❌ የተሳሳተ ኮድ! እባክዎ ድጋሚ ይሞክሩ።";
+             messageEl.style.color = "var(--et-red)";
+             window.playSound('fail');
+        } else if (error.message === "LIMIT_REACHED") {
+             messageEl.innerText = `🛑 ይቅርታ! የዛሬው ሽልማት አልቋል።`;
+             messageEl.style.color = "var(--et-red)";
+        } else if (error.message === "CONFIG_MISSING") {
+             messageEl.innerText = "System Error: Admin code not set.";
+             messageEl.style.color = "var(--et-red)";
+             console.error("Firebase ላይ daily_cipher_config/current_settings አልተፈጠረም።");
     } else {
-        // ስህተት ከሆነ
-        window.playSound('fail');
-        messageEl.innerText = "❌ የተሳሳተ ኮድ! እንደገና ይሞክሩ።";
-        messageEl.style.color = "var(--et-red)";
-        inputEl.classList.add('shake-animation');
-        setTimeout(() => inputEl.classList.remove('shake-animation'), 500);
+     console.error("Transaction failed:", error);
+     // እዚህ ጋር ትክክለኛውን የ error መልእክት ስክሪኑ ላይ እናሳያለን
+     messageEl.innerText = "Error: " + error.message; 
+     messageEl.style.color = "var(--et-red)";
+}
+
     }
 };
-
 
 // ======================================================================
 // ✅ MEMORY MATCH GAME LOGIC
@@ -8264,9 +8434,11 @@ window.onload = async () => {
             // 🛑 === የቴሌግራም ID አመክንዮ መጨረሻ === 🛑
 
             if (user) {
-                currentFirebaseUserId = user.uid;
-                // 🛑 ✅ FIX: ወጪ ቆጣቢ መፍትሄ
-                setupCurrentUserListener(user.uid); 
+                // ቀደም ሲል currentFirebaseUserId = user.uid; ይል ነበር። 
+                // አሁን መረጃ በ Telegram ID ስለሚገኝ Firebase UID አያስፈልግም
+                
+                // ✅ ወሳኝ ማስተካከያ: የዳታቤዝ መረጃ የምንፈልገው በ Telegram ID ነው
+                setupCurrentUserListener(telegramUserId); 
             } else {
                 await firebaseLogin(); 
             }
@@ -8289,3 +8461,5 @@ window.onload = async () => {
     </script>
 </body>
 </html>
+
+
