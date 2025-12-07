@@ -9213,73 +9213,91 @@ window.generateTop10FrequentUsers = async () => {
     }
 };
 
-
-
-// ============================================================
-// 💰 ADSGRAM INTEGRATION LOGIC (ለ Telegram WebApp ተስተካክሏል)
+    // ============================================================
+// 💰 ADSGRAM INTEGRATION LOGIC (FIXED & ROBUST)
 // ============================================================
 
-// የእርስዎ ትክክለኛ Block ID (ከ 18448 ጋር እኩል ነው)
 const ADSGRAM_BLOCK_ID = "18448"; 
 
-// ✅ ማስተካከያ 1: የ Telegram ተጠቃሚ መለያ ቁጥር (User ID) ማግኘት
+// የተጠቃሚ ID ማግኘት
 const USER_ID = window.Telegram.WebApp.initDataUnsafe.user 
     ? window.Telegram.WebApp.initDataUnsafe.user.id 
     : null; 
 
+// ✅ የተስተካከለው የAdsgram ማሳያ ፈንክሽን
 window.showAdsgramAd = async () => {
-    // ⚠️ ደህንነትን ማረጋገጥ: USER_ID ከሌለ ማቆም
+    // 1. የ User ID መኖሩን ማረጋገጥ
     if (!USER_ID) {
         WebApp.showAlert("⚠️ የቴሌግራም መታወቂያዎ (User ID) አልተገኘም። እባክዎ እንደገና ይሞክሩ።");
         return;
     }
     
-    // አድስግራም ስክሪፕት መጫኑን ማረጋገጥ
+    // 2. Adsgram ካልተጫነ (Undefined ከሆነ) በድጋሚ እንዲጭን ማስገደድ
     if (typeof window.Adsgram === 'undefined') {
-        WebApp.showAlert("Adsgram is not loaded yet. Please check your internet.");
-        return;
+        // ለተጠቃሚው መልእክት እናሳያለን
+        WebApp.showAlert("⚙️ ማስታወቂያው በመጫን ላይ ነው... እባክዎ 3 ሰከንድ ጠብቀው እንደገና ይጫኑ።");
+        
+        // ስክሪፕቱን በዳይናሚክ መንገድ መጨመር (Dynamic Script Injection)
+        const script = document.createElement('script');
+        script.src = "https://adsgram.ai/js/adsgram.js";
+        script.async = true;
+        
+        script.onload = () => {
+            console.log("Adsgram script loaded successfully!");
+        };
+        
+        script.onerror = () => {
+            WebApp.showAlert("❌ ማስታወቂያውን መጫን አልተቻለም! እባክዎ VPN ካለ ያጥፉ ወይም ኢንተርኔትዎን ያረጋግጡ።");
+        };
+        
+        document.body.appendChild(script);
+        return; // ለዚህ ዙር እንወጣለን፣ በሚቀጥለው ክሊክ ይሰራል።
     }
 
-    // ✅ ማስተካከያ 2: Block ID እና User ID በመጠቀም AdController ን ማስጀመር
-    // User ID ን ማስገባት Adsgram (backend) ማስታወቂያውን ያየውን ሰው ለይቶ ለማወቅ ይረዳል።
-    const AdController = window.Adsgram.init({ 
-        blockId: ADSGRAM_BLOCK_ID,
-        userId: USER_ID 
-    });
+    // 3. Adsgram ከተጫነ በኋላ የሚሠራው መደበኛ ኮድ
+    try {
+        const AdController = window.Adsgram.init({ 
+            blockId: ADSGRAM_BLOCK_ID,
+            userId: USER_ID 
+        });
 
-    // ማስታወቂያውን አሳይ
-    AdController.show().then(async (result) => {
-        // ተጠቃሚው ማስታወቂያውን አይቶ ከጨረሰ (Reward)
-        if (result.done) {
-            
-            // 🛑🛑🛑 ወሳኝ የደህንነት ማስጠንቀቂያ ከታች ይመልከቱ! 🛑🛑🛑
-            const rewardAmount = 5000;
-            
-            // ኮይኑን ወደ ዳታቤዝ መጨመር 
-            const success = await updateScore(rewardAmount, 'Ad Watched', 'last_ad_watch_time');
-            
-            if (success) {
-                WebApp.showAlert(`🎉 ማስታወቂያውን አይተው ጨርሰዋል! +${rewardAmount} Coin አግኝተዋል!`);
-                window.playSound('win'); 
+        // ማስታወቂያውን አሳይ
+        AdController.show().then(async (result) => {
+            // ተጠቃሚው ማስታወቂያውን አይቶ ከጨረሰ (Reward)
+            if (result.done) {
+                const rewardAmount = 1000; // በካርዱ ላይ 1000 ስለሚል
+                
+                // ኮይኑን ወደ ዳታቤዝ መጨመር 
+                const success = await updateScore(rewardAmount, 'Ad Watched', 'last_ad_watch_time');
+                
+                if (success) {
+                    WebApp.showAlert(`🎉 ማስታወቂያውን አይተው ጨርሰዋል! +${rewardAmount} Coin አግኝተዋል!`);
+                    window.playSound('win'); 
+                    
+                    // UI ማዘመን
+                    renderPageContent();
+                }
             }
-        }
-    }).catch((result) => {
-        // ስህተት ከተፈጠረ ወይም ተጠቃሚው ካቋረጠው (Skip)
-        console.log(result);
-        if (result.state === 'skip') {
-            WebApp.showAlert("⚠️ ቪዲዮውን አቋርጠዋል! ሽልማት አይሰጥም::");
-        } else if (result.state === 'load_fail') {
-            WebApp.showAlert("⚠️ ማስታወቂያ መጫን አልተቻለም። እባክዎ ትንሽ ቆይተው ይሞክሩ።");
-        } else {
-            // ሌሎች ስህተቶች
-            WebApp.showAlert("⚠️ Error showing ad: " + JSON.stringify(result));
-        }
-    });
+        }).catch((result) => {
+            // ስህተት ከተፈጠረ ወይም ተጠቃሚው ካቋረጠው (Skip)
+            console.log("Adsgram Error/Skip:", result);
+            if (result.state === 'skip') {
+                WebApp.showAlert("⚠️ ቪዲዮውን አቋርጠዋል! ሽልማት አይሰጥም::");
+            } else if (result.state === 'load_fail') {
+                WebApp.showAlert("⚠️ ማስታወቂያ መጫን አልተቻለም (No ads available)። እባክዎ ትንሽ ቆይተው ይሞክሩ።");
+            } else {
+                WebApp.showAlert("⚠️ Error: " + JSON.stringify(result));
+            }
+        });
+    } catch (e) {
+        console.error("Adsgram Init Error:", e);
+        WebApp.showAlert("⚠️ ሲስተም ስህተት: " + e.message);
+    }
 };
 
 
 
-// ======================================================================
+    =====================================================================
 // 💣 MINES GAME LOGIC
 // ======================================================================
 
