@@ -5300,13 +5300,13 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
 //                          FIREBASE FUNCTIONS
 // ======================================================================
 
-
-
-        // Function setupCurrentUserListener(userId)
+// Function setupCurrentUserListener(userId)
 function setupCurrentUserListener(userId) {
     
-    // 🛑 ማስተካከያ: የእርስዎን የድጋፍ ቦት Username እዚህ ያስገቡ
-    const ADMIN_TELEGRAM_USERNAME = 'https://t.me/smartgameSupporter_bot'; // <--- እዚህ ይቀይሩት
+    // 🛑 ማስተካከያ: እዚህ ጋር Username ብቻ አስገባ (https://t.me/... የሚለውን አጥፋ)
+    // ምክንያቱም ታች ላይ ሊንኩ ሲሰራ ይደገማል
+    const ADMIN_TELEGRAM_USERNAME = 'smartgameSupporter_bot'; 
+    
     const userRef = doc(db, 'users', userId);
     
     onSnapshot(userRef, (docSnapshot) => {
@@ -5314,23 +5314,40 @@ function setupCurrentUserListener(userId) {
             const data = docSnapshot.data();
 
             // =============================================================
-            // 🛑🛑🛑 አዲስ የ BAN ቼክ ሎጂክ (BAN CHECK LOGIC) 🛑🛑🛑
+            // 🛑🛑🛑 የተስተካከለ የ BAN ቼክ (FIXED BAN LOGIC) 🛑🛑🛑
             // =============================================================
             if (data.is_banned === true) {
-                
+                console.log("USER IS BANNED. BLOCKING ACCESS.");
+
                 // 1. መተግበሪያው ውስጥ ያሉትን ሁሉንም ነገሮች ከስር መሰረቱ ማጥፋት
+                // ይህ #root, #loading-container, እና ሁሉንም ነገር ያጠፋል።
                 document.body.innerHTML = ''; 
                 
-                // 2. የመታገጃ ምክንያትን ከዳታቤዝ ማንበብ
+                // 2. የጀርባ ቀለም ወደ ጥቁር መቀየር (Safety)
+                document.body.style.backgroundColor = '#000000';
+
+                // 3. የመታገጃ ምክንያትን ከዳታቤዝ ማንበብ
                 const banReason = data.ban_reason || 'ያልተለመደ የነጥብ አሰባሰብ (Suspicious Scoring Activity)';
 
-                // 3. የ Ban ማሳያ ስክሪን መፍጠር እና ማሳየት
+                // 4. የ Ban ማሳያ ስክሪን መፍጠር
                 const banScreen = document.createElement('div');
+                banScreen.id = 'ban-overlay'; // መለያ መስጠት
                 banScreen.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background-color: #0f0f0f; color: white; display: flex;
-                    flex-direction: column; align-items: center; justify-content: center;
-                    z-index: 100000; text-align: center; padding: 20px; font-family: sans-serif;
+                    position: fixed; 
+                    top: 0; 
+                    left: 0; 
+                    width: 100%; 
+                    height: 100%;
+                    background-color: #0f0f0f; 
+                    color: white; 
+                    display: flex;
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center;
+                    z-index: 2147483647 !important; /* ከሁሉም ነገር በላይ (Maximum Z-Index) */
+                    text-align: center; 
+                    padding: 20px; 
+                    font-family: sans-serif;
                 `;
                 
                 banScreen.innerHTML = `
@@ -5351,7 +5368,6 @@ function setupCurrentUserListener(userId) {
                     </p>
 
                     <div style="margin-top: 30px; display: flex; gap: 15px;">
-                        
                         <a href="https://t.me/${ADMIN_TELEGRAM_USERNAME}?start=appeal_${userId}" 
                            target="_blank"
                            style="text-decoration: none; padding: 12px 25px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
@@ -5369,42 +5385,35 @@ function setupCurrentUserListener(userId) {
                     </div>
                 `;
                 
+                // 5. ስክሪኑን መጨመር
                 document.body.appendChild(banScreen);
                 
-                // Loading Screen መደበቅ (Ban ቢኖርም)
-                const loadingContainer = document.getElementById('loading-container');
-                if (loadingContainer.style.display !== 'none') {
-                     loadingContainer.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingContainer.style.display = 'none';
-                    }, 500); 
-                }
+                // 🛑 ስህተቱ የነበረው እዚህ ጋር ነው!
+                // document.body.innerHTML = '' ስላልን loading-container ጠፍቷል::
+                // ስለዚህ እሱን መፈለግ አያስፈልግም::
                 
-                return; // 🛑 እገዳ ከተገኘ፣ ከዚህ በታች ያለው የነጥብ ማዘመን ኮድ እንዳይሰራ ይቆማል
+                return; // 🛑 ኮዱ እዚህ ጋር ይቆማል፣ ሌላ ምንም ነገር አይሰራም።
             }
             // =============================================================
             
-            // Global ተለዋዋጮችን ማዘመን (እገዳ ካልተገኘ ብቻ ይሰራል)
+            // ... (ከዚህ በታች ያለው የነባር ኮድህ ክፍል ይቀጥላል - ለተራ ተጠቃሚዎች)
             currentScore = data.total_score || 0;
             currentSmartCoinBalance = data.smart_coin_balance || 0;
             currentTickets = data.tickets || 0;
             currentUserDocData = data;
             
-            // የ Slot Game ሁኔታን ማዘመን
+            // ... (የተቀረው ኮድ እንዳለ ይቀጥላል)
             currentSpinsLeft = data.slot_spins_left !== undefined ? data.slot_spins_left : SLOTS_MAX_SPINS;
 
-            // ደረጃው እስኪመጣ ድረስ '...' ተብሎ ይቀመጣል
             if (currentRank === 'N/A' || currentRank === '0' || currentRank === '...') {
                 currentRank = '...';
             }
             
-            // ✅ NEW FIX: የ Top ገጽ ላይ ያለውን የግል ነጥብ ማዘመን
             const topScoreDisplay = document.getElementById('top-score-display');
             if (topScoreDisplay) {
                 topScoreDisplay.innerText = `${currentScore.toLocaleString()} 💰`;
             }
 
-            // 3. ✅ FIX: የ Exchange ገጽን ባላንስ ማዘመን
             const exchangeBalanceElement = document.getElementById('currentCoinBalance');
             if (exchangeBalanceElement) {
                 exchangeBalanceElement.innerText = currentScore.toLocaleString();
@@ -5412,9 +5421,9 @@ function setupCurrentUserListener(userId) {
 
             renderPageContent();
 
-            // Loading Screen መደበቅ
+            // Loading Screen መደበቅ (ለተራ ተጠቃሚዎች)
             const loadingContainer = document.getElementById('loading-container');
-            if (loadingContainer.style.display !== 'none') {
+            if (loadingContainer && loadingContainer.style.display !== 'none') {
                  loadingContainer.style.opacity = '0';
                 setTimeout(() => {
                     loadingContainer.style.display = 'none';
@@ -5429,8 +5438,9 @@ function setupCurrentUserListener(userId) {
         WebApp.showAlert("Error: Could not load your profile.");
     });
 }
-    
 
+
+         
 
 
 
