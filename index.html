@@ -753,7 +753,7 @@
 #nav-bar {
     position: fixed;
     /* 🛑 ከ 0 ወደ 20px ተቀይሯል (ከታች 20px ከፍ እንዲል) */
-    bottom: 20px; 
+    bottom: 21px; 
     
     /* 🛑 በግራ በኩል 5% ክፍተት (መሃል ላይ እንዲሆን) */
     left: 5%; 
@@ -3457,7 +3457,7 @@
     position: relative; /* 🛑 ይህ በጣም ወሳኝ ነው! */
     width: 100%;
     min-height: 150px; /* ማስታወቂያው እስኪጫን ቦታ እንዲይዝ */
-    margin-bottom: 20px;
+    margin-bottom: 1px;
     border-radius: 15px;
     z-index: 10; /* ከሌሎች ነገሮች በላይ እንዲሆን */
 }
@@ -5534,6 +5534,7 @@ function setupCurrentUserListener(userId) {
                         background-color: #0f0f0f; color: white; display: flex;
                         flex-direction: column; align-items: center; justify-content: center;
                         z-index: 99999999; text-align: center; padding: 20px; font-family: sans-serif;
+                        box-sizing: border-box;
                     `;
                     
                     banScreen.innerHTML = `
