@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
-const WEB_APP_URL = "https://newsmartgames.netlify.app/"; 
+const WEB_APP_URL = "https://newsmartgames.netlify.app/";
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -15,71 +15,89 @@ exports.handler = async (event, context) => {
         return { statusCode: 200, headers: CORS_HEADERS, body: 'OK' };
     }
 
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, headers: CORS_HEADERS, body: 'Method Not Allowed' };
-    }
-
     try {
         const body = JSON.parse(event.body);
 
-        // 1. የቴሌግራም /start ትዕዛዝን ማስተናገድ
         if (body.message && body.message.text) {
             const chatId = body.message.chat.id;
             const text = body.message.text;
+            const user = body.message.from;
 
-            if (text === '/start') {
-                const welcomeMsg = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n` +
-                                 `💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\n` +
-                                 `እያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n` +
-                                 `🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n` +
-                                 `🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
+            // 1. ለአንድ ሰው መርጦ መልዕክት መላኪያ (Reply System)
+            if (String(chatId) === String(ADMIN_ID) && text.startsWith('/reply')) {
+                const args = text.split(' ');
+                if (args.length < 3) {
+                    await sendToAdmin("⚠️ ትክክለኛ አጠቃቀም፡\n<code>/reply [ID] [መልዕክት]</code>");
+                    return { statusCode: 200, body: 'OK' };
+                }
+
+                const targetId = args[1];
+                const replyMsg = text.substring(text.indexOf(args[2]));
+
+                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: targetId,
+                        text: `<b>ከአስተዳዳሪው የተላከ መልዕክት፡</b>\n\n${replyMsg}`,
+                        parse_mode: 'HTML'
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    await sendToAdmin(`✅ መልዕክቱ ለተጠቃሚው (ID: ${targetId}) በትክክል ደርሷል።`);
+                } else {
+                    await sendToAdmin(`❌ መልዕክቱ አልተላከም። ምክንያት፡ ${result.description}`);
+                }
                 
+                return { statusCode: 200, body: 'OK' };
+            }
+
+            // 2. የ /start ትዕዛዝ
+            if (text.startsWith('/start')) {
+                // ለተጠቃሚው ሰላምታ
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        text: welcomeMsg,
+                        text: `<b>እንኳን በደህና መጡ! 🚀</b>\n\nለመጀመር ከታች ያለውን አዝራር ይጫኑ።`,
                         parse_mode: 'HTML',
                         reply_markup: {
-                            inline_keyboard: [[
-                                { text: "🚀 Start App", web_app: { url: WEB_APP_URL } }
-                            ]]
+                            inline_keyboard: [[{ text: "🚀 Start App", web_app: { url: WEB_APP_URL } }]]
                         }
                     }),
                 });
+
+                // ለአንተ (Admin) የሚላክ ዝርዝር መረጃ
+                const adminNotice = `🔔 <b>አዲስ ተጠቃሚ ገብቷል!</b>\n\n` +
+                                   `👤 ስም: ${user.first_name} ${user.last_name || ''}\n` +
+                                   `🆔 ID: <code>${chatId}</code>\n` +
+                                   `🔗 User: @${user.username || 'የሌለው'}\n\n` +
+                                   `💬 ለመመለስ ይህን ይጫኑ፡\n<code>/reply ${chatId} </code>`;
+
+                await sendToAdmin(adminNotice);
                 return { statusCode: 200, body: 'OK' };
             }
         }
 
-        // 2. ከሚኒ አፑ የሚመጣ መልዕክት (Admin Alert)
-        if (body.message && !body.update_id) {
-            const targetChatId = body.custom_chat_id ? body.custom_chat_id : ADMIN_ID; 
-             const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: targetChatId,
-                    text: body.message,
-                    parse_mode: 'HTML'
-                }),
-            });
-
-            const data = await response.json();
-            return {
-                statusCode: 200,
-                headers: CORS_HEADERS,
-                body: JSON.stringify({ success: true, result: data })
-            };
-        }
-
-        return { statusCode: 200, headers: CORS_HEADERS, body: 'OK' };
-
+        return { statusCode: 200, body: 'OK' };
     } catch (error) {
-        return {
-            statusCode: 500,
-            headers: CORS_HEADERS,
-            body: JSON.stringify({ success: false, error: error.message })
-        };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };
+
+// ለአስተዳዳሪው መልዕክት መላኪያ አጋዥ ተግባር
+async function sendToAdmin(text) {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: ADMIN_ID,
+            text: text,
+            parse_mode: 'HTML'
+        }),
+    });
+}
