@@ -1,16 +1,32 @@
 const fetch = require('node-fetch');
+const admin = require('firebase-admin');
+const fs = require('fs');
+const FormData = require('form-data');
 
+// 1. Firebase Initialization
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        })
+    });
+}
+
+const db = admin.firestore();
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
-const WEB_APP_URL = "https://newsmartgames.netlify.app/";
 
+// CORS Headers
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
+    // 🚀 ለ Mini App የሚሆን የ OPTIONS ፍቃድ
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers: CORS_HEADERS, body: 'OK' };
     }
@@ -18,86 +34,114 @@ exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body);
 
-        if (body.message && body.message.text) {
-            const chatId = body.message.chat.id;
-            const text = body.message.text;
-            const user = body.message.from;
+        // 🛠 ሁኔታ 1፡ መልዕክቱ የመጣው ከ Mini App ከሆነ (CORS Case)
+        if (body.message && !body.update_id) { 
+            const targetId = body.custom_chat_id || ADMIN_ID;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: targetId, text: body.message, parse_mode: 'HTML' }),
+            });
+            return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify({ success: true }) };
+        }
 
-            // 1. ለአንድ ሰው መርጦ መልዕክት መላኪያ (Reply System)
-            if (String(chatId) === String(ADMIN_ID) && text.startsWith('/reply')) {
-                const args = text.split(' ');
-                if (args.length < 3) {
-                    await sendToAdmin("⚠️ ትክክለኛ አጠቃቀም፡\n<code>/reply [ID] [መልዕክት]</code>");
-                    return { statusCode: 200, body: 'OK' };
-                }
+        // 🤖 ሁኔታ 2፡ መልዕክቱ የመጣው ከቴሌግራም ቦት ከሆነ (Bot Logic)
+        if (!body.message) return { statusCode: 200, body: 'OK' };
 
-                const targetId = args[1];
-                const replyMsg = text.substring(text.indexOf(args[2]));
+        const chatId = body.message.chat.id;
+        const text = body.message.text;
+        const user = body.message.from;
 
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: targetId,
-                        text: `<b>ከአስተዳዳሪው የተላከ መልዕክት፡</b>\n\n${replyMsg}`,
-                        parse_mode: 'HTML'
-                    }),
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    await sendToAdmin(`✅ መልዕክቱ ለተጠቃሚው (ID: ${targetId}) በትክክል ደርሷል።`);
-                } else {
-                    await sendToAdmin(`❌ መልዕክቱ አልተላከም። ምክንያት፡ ${result.description}`);
-                }
-                
+        // --- የአስተዳዳሪ (Admin) ስራዎች ---
+        if (String(chatId) === String(ADMIN_ID)) {
+            if (text === '/stats') {
+                const snapshot = await db.collection('users').count().get();
+                await sendToAdmin(`📊 <b>ጠቅላላ ተጠቃሚዎች:</b> ${snapshot.data().count}`);
                 return { statusCode: 200, body: 'OK' };
             }
 
-            // 2. የ /start ትዕዛዝ
-            if (text.startsWith('/start')) {
-                // ለተጠቃሚው ሰላምታ
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: `<b>እንኳን በደህና መጡ! 🚀</b>\n\nለመጀመር ከታች ያለውን አዝራር ይጫኑ።`,
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [[{ text: "🚀 Start App", web_app: { url: WEB_APP_URL } }]]
-                        }
-                    }),
+            if (text === '/export') {
+                const usersSnapshot = await db.collection('users').get();
+                let userData = "ID, Name, Username\n";
+                usersSnapshot.forEach(doc => {
+                    const d = doc.data();
+                    userData += `${doc.id}, ${d.first_name}, @${d.username || 'none'}\n`;
                 });
+                const filePath = '/tmp/users.csv';
+                fs.writeFileSync(filePath, userData);
+                const form = new FormData();
+                form.append('chat_id', ADMIN_ID);
+                form.append('document', fs.createReadStream(filePath));
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: form });
+                return { statusCode: 200, body: 'OK' };
+            }
 
-                // ለአንተ (Admin) የሚላክ ዝርዝር መረጃ
-                const adminNotice = `🔔 <b>አዲስ ተጠቃሚ ገብቷል!</b>\n\n` +
-                                   `👤 ስም: ${user.first_name} ${user.last_name || ''}\n` +
-                                   `🆔 ID: <code>${chatId}</code>\n` +
-                                   `🔗 User: @${user.username || 'የሌለው'}\n\n` +
-                                   `💬 ለመመለስ ይህን ይጫኑ፡\n<code>/reply ${chatId} </code>`;
+            if (text && text.startsWith('/broadcast')) {
+                const rawMsg = text.substring(text.indexOf(' ') + 1);
+                const usersSnapshot = await db.collection('users').get();
+                for (const doc of usersSnapshot.docs) {
+                    const msg = rawMsg.replace(/{name}/g, doc.data().first_name || 'ወዳጄ');
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: doc.id, text: msg, parse_mode: 'HTML' })
+                    });
+                }
+                await sendToAdmin("✅ ስርጭቱ ተጠናቋል።");
+                return { statusCode: 200, body: 'OK' };
+            }
 
-                await sendToAdmin(adminNotice);
+            if (text && text.startsWith('/mreply')) {
+                const args = text.split(' ');
+                const ids = args[1].split(',');
+                const rawMsg = text.substring(text.indexOf(args[2]));
+                for (const id of ids) {
+                    const userDoc = await db.collection('users').doc(id.trim()).get();
+                    if (userDoc.exists) {
+                        const msg = rawMsg.replace(/{name}/g, userDoc.data().first_name);
+                        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chat_id: id.trim(), text: `✉️ <b>መልዕክት:</b>\n${msg}`, parse_mode: 'HTML' })
+                        });
+                        const resData = await res.json();
+                        await sendToAdmin(resData.ok ? `✅ ለ ${id} ደርሷል` : `❌ ለ ${id} አልደረሰም`);
+                    }
+                }
                 return { statusCode: 200, body: 'OK' };
             }
         }
 
+        // --- የ /start ስራ ---
+        if (text && text.startsWith('/start')) {
+            const userRef = db.collection('users').doc(String(chatId));
+            const doc = await userRef.get();
+            if (!doc.exists) {
+                await userRef.set({ first_name: user.first_name, username: user.username || 'none', joined_at: admin.firestore.FieldValue.serverTimestamp() });
+                const count = (await db.collection('users').count().get()).data().count;
+                await sendToAdmin(`🔔 <b>አዲስ ተጠቃሚ:</b> <a href="tg://user?id=${chatId}">${user.first_name}</a>\n📊 ጠቅላላ: ${count}`);
+            }
+            const welcome = `<b>እንኳን ወደ Smart Airdrop በደህና መጡ 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!`;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: welcome, parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: "🚀 Play App", web_app: { url: "https://newsmartgames.netlify.app/" } }]] }
+                }),
+            });
+        }
+
         return { statusCode: 200, body: 'OK' };
-    } catch (error) {
-        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    } catch (e) {
+        console.error(e);
+        return { statusCode: 200, headers: CORS_HEADERS, body: 'OK' };
     }
 };
 
-// ለአስተዳዳሪው መልዕክት መላኪያ አጋዥ ተግባር
 async function sendToAdmin(text) {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: ADMIN_ID,
-            text: text,
-            parse_mode: 'HTML'
-        }),
+        body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' }),
     });
 }
