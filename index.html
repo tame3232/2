@@ -5489,19 +5489,18 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
 //                          FIREBASE FUNCTIONS
 // ======================================================================
 
-
-// Function setupCurrentUserListener(userId)
-function setupCurrentUserListener(userId) {
-    
-    // 🛑 ማስተካከያ: እዚህ ጋር Username ብቻ ያስገቡ (https://t.me/ አያስፈልግም)
+            
+            function setupCurrentUserListener(userId) {
     const ADMIN_TELEGRAM_USERNAME = 'smartgameSupporter_bot'; 
-    
     const userRef = doc(db, 'users', userId);
     
-    onSnapshot(userRef, (docSnapshot) => {
+    // 🛑 እዚህ ጋር 'return' መጨመር ወሳኝ ነው!
+    // ይህ ተጠቃሚው አካውንት ሲቀይር የቀድሞውን Listener ለማቆም ይረዳል
+    return onSnapshot(userRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
             const data = docSnapshot.data();
-
+            
+            
             // =============================================================
             // 🛑🛑🛑 የተስተካከለ የ BAN ቼክ ሎጂክ (FIXED BAN LOGIC) 🛑🛑🛑
             // =============================================================
@@ -5633,74 +5632,54 @@ function setupCurrentUserListener(userId) {
 
         
         
+// 1. ከሁሉም ፈንክሽን ውጭ (Global scope) ላይ ይህን ተለዋዋጭ አስቀምጥ
+let unsubscribeCurrentUser = null; 
+
 async function firebaseLogin() {
     try {
-        // 1. በቅድሚያ በ Anonymous እንገባለን (ለ Security Rule እንዲያመች)
-        const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid; // ይህ ለጊዜው የተቀየረው UID ሊሆን ይችላል
+        // 2. 🛑 የቀደመውን ተጠቃሚ Listener ማቆም (ለአካውንት ቀያሪዎች ወሳኝ ነው)
+        if (unsubscribeCurrentUser && typeof unsubscribeCurrentUser === 'function') {
+            console.log("Cleaning up previous user session...");
+            unsubscribeCurrentUser(); 
+            unsubscribeCurrentUser = null;
+        }
 
-        // 2. ትክክለኛው የ Telegram ID ማግኘታችንን ማረጋገጥ
+        // 3. በ Anonymous Login መግባት
+        await signInAnonymously(auth);
+        
+        // 4. የአሁኑን ተጠቃሚ Telegram ID በትክክል ማንበብ
+        const telegramUserId = window.Telegram.WebApp.initDataUnsafe.user?.id;
+
         if (!telegramUserId) {
-            console.error("Telegram User ID አልተገኘም!");
+            WebApp.showAlert("Telegram User ID አልተገኘም! እባክዎ ቦቱን ድጋሚ ያስጀምሩ።");
             return;
         }
 
-        // 🛑 ወሳኙ ለውጥ እዚህ ነው! 🛑
-        // ተጠቃሚውን በቀጥታ በ UID ከመፈለግ ይልቅ፣ በ Telegram ID እንፈልገዋለን (Query)
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("telegram_id", "==", telegramUserId));
-        const querySnapshot = await getDocs(q);
+        // 5. Telegram IDን እንደ ብቸኛ መለያ (Document ID) መጠቀም
+        currentFirebaseUserId = telegramUserId.toString(); 
+        const userDocRef = doc(db, "users", currentFirebaseUserId);
+        const docSnap = await getDoc(userDocRef);
 
-        let userDocRef;
-        let isNewUser = false;
+        const username = getTelegramUsername();
+        const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
 
-        if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል! (ኮይኖች ያሉት እዚህ ነው)
-            // ምንም እንኳን Firebase አዲስ UID ቢሰጠንም፣ እኛ የድሮውን Document ID እንጠቀማለን።
-            const existingDoc = querySnapshot.docs[0];
-            userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; // ግሎባል ተለዋዋጭውን ወደ ትክክለኛው (ድሮው) ID እንቀይራለን
-            
-            // የድሮውን መረጃ እናዘምናል (Updated Info)
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
+        if (docSnap.exists()) {
+            // ✅ ነባር ተጠቃሚ - መረጃ ማመሳሰል
             await updateDoc(userDocRef, {
                 username: username,
                 photo_url: photo_url,
-                // እዚህ ጋር total_score አንነካም (እንዳይጠፋ)
+                last_login: serverTimestamp()
             });
-
         } else {
-            // ✅ ሁኔታ ለ፡ በጭራሽ የለም (አዲስ ተጠቃሚ ነው)
-            isNewUser = true;
-            
-            // 💡 ምክር፡ ለወደፊቱ እንዳይምታታ አዲስ ሲፈጥሩ የ Document IDውን የ Telegram ID ያድርጉት።
-            // ከዚህ በፊት በ UID ከፈጠሩ ግን እንዳይጋጭ እዚሁ UID መጠቀም ይቻላል፣ 
-            // ነገር ግን ለወደፊት ጥራት ሲባል Telegram ID መጠቀም ይሻላል።
-            
-            // እዚህ ጋር Document IDውን telegramUserId አድርገነዋል (Robust Solution)
-            currentFirebaseUserId = telegramUserId.toString(); 
-            userDocRef = doc(db, "users", currentFirebaseUserId);
-
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            let referrerId = null;
-            if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-                referrerId = WebApp.initDataUnsafe.start_param;
-                if (referrerId === telegramUserId) {
-                    referrerId = null; 
-                }
-            }
-
+            // ✅ አዲስ ተጠቃሚ - መፍጠር
+            let referrerId = WebApp.initDataUnsafe.start_param || null;
             await setDoc(userDocRef, {
                 telegram_id: telegramUserId,
                 username: username, 
                 photo_url: photo_url,
                 created_at: serverTimestamp(),
                 tickets: 0, 
-                total_score: 0, 
+                total_score: 100, 
                 referrer_id: referrerId || null,
                 daily_streak: 0,
                 last_streak_claim_time: null,
@@ -5712,15 +5691,15 @@ async function firebaseLogin() {
             });
         }
 
-        // በመጨረሻም Listenerውን እንጠራለን (ይህ መረጃውን ወደ ስክሪኑ ያመጣል)
-        setupCurrentUserListener(currentFirebaseUserId);
+        // 6. 🛑 Listenerውን መጥራት እና የቆራጭ (unsubscribe) ዋጋውን መያዝ
+        // ማሳሰቢያ፡ setupCurrentUserListener ፈንክሽንህ 'return onSnapshot(...)' ማድረግ አለበት
+        unsubscribeCurrentUser = setupCurrentUserListener(currentFirebaseUserId);
 
     } catch (error) {
-        WebApp.showAlert("Firebase Login Failed: " + error.message);
         console.error("Firebase Login Failed:", error);
+        WebApp.showAlert("Login Failed: " + error.message);
     }
 }
-
 
 
 
@@ -10029,5 +10008,4 @@ try {
    </script>
 </body>
 </html>
-
 
