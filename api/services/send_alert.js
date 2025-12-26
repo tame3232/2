@@ -177,28 +177,43 @@ exports.handler = async (event) => {
             const doc = await userRef.get();
             
             if (!doc.exists) {
-                // አዲስ ተጠቃሚ
+                // ✅ ማሻሻያ፡ ቦቱ ሁሉንም የ Mini App ፊልዶች አብሮ ይፈጥራል
+                // በዚህ ምክንያት Mini App ሲከፈት "አዲስ ተጠቃሚ" ብሎ ዳታውን አይደግምም
                 await userRef.set({ 
+                    telegram_id: String(chatId),
                     first_name: user.first_name || 'User', 
                     username: user.username || 'none', 
-                    telegram_id: String(chatId),
-                    total_score: 1000,
+                    
+                    // ውጤቶች
+                    total_score: 0, // የመነሻ ቦነስ
+                    smart_coin_balance: 0,
+                    
+                    // ሪፈራል
                     referrer_id: referrerId,
-                    invite_count: 0, // አዲስ ፊልድ ተጨምሯል (ለወደፊቱ ራሱ ይጋብዛልና)
-                    joined_at: admin.firestore.FieldValue.serverTimestamp() 
+                    invite_count: 0, 
+
+                    // የጨዋታ መረጃዎች (Mini App Fields)
+                    tickets: 0,
+                    daily_streak: 0,
+                    last_streak_claim_time: null,
+                    slot_spins_left: 10, // Default Spin
+                    last_slot_reset_time: null,
+                    staked_amount: 0,
+                    stake_start_time: null,
+
+                    joined_at: admin.firestore.FieldValue.serverTimestamp(),
+                    last_played: admin.firestore.FieldValue.serverTimestamp()
                 });
 
                 if (referrerId) {
                     const refUserRef = db.collection('users').doc(referrerId);
                     const refDoc = await refUserRef.get();
                     if (refDoc.exists) {
-                        // Method 2: እዚህ ጋር invite_count እንዲጨምር ተደርጓል
                         await refUserRef.update({
                             total_score: admin.firestore.FieldValue.increment(500),
                             invite_count: admin.firestore.FieldValue.increment(1) 
                         });
                         
-                        // ማሳወቂያ ለጋባዡ
                         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -206,8 +221,9 @@ exports.handler = async (event) => {
                         });
                     }
                 }
+                
 
-                const countSnap = await db.collection('users').count().get();
+                  const countSnap = await db.collection('users').count().get();
                 await sendToAdmin(`🔔 <b>አዲስ ተጠቃሚ:</b> <a href="tg://user?id=${chatId}">${user.first_name}</a>\n📊 ጠቅላላ: ${countSnap.data().count}`);
             }
 
