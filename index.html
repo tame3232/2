@@ -5630,85 +5630,68 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
 }
 
 
-// 1. ከሁሉም ፈንክሽን ውጭ (Global scope)
-let unsubscribeCurrentUser = null; 
 
-async function firebaseLogin() {
+        
+  async function firebaseLogin() {
     try {
-        // 2. የቀደመውን ተጠቃሚ Listener ማቆም
-        if (unsubscribeCurrentUser && typeof unsubscribeCurrentUser === 'function') {
-            console.log("Cleaning up previous user session...");
+        const WebApp = window.Telegram.WebApp; // WebApp መኖሩን ማረጋገጥ
+
+        if (unsubscribeCurrentUser) {
             unsubscribeCurrentUser(); 
-            unsubscribeCurrentUser = null;
         }
 
-        // 3. Anonymous Login
-        await signInAnonymously(auth);
+        // 1. Firebase Auth መኖሩን ማረጋገጥ
+        const userCredential = await signInAnonymously(auth);
         
-        // 4. Telegram ID ማግኘት
-        const telegramUserId = window.Telegram.WebApp.initDataUnsafe.user?.id;
-
-        if (!telegramUserId) {
-            WebApp.showAlert("Telegram User ID አልተገኘም! እባክዎ ቦቱን ድጋሚ ያስጀምሩ።");
+        // 2. Telegram ID ማግኘት (Optional chaining በመጠቀም)
+        const tgUser = WebApp.initDataUnsafe?.user;
+        if (!tgUser?.id) {
+            WebApp.showAlert("Telegram User ID አልተገኘም! እባክዎ ቦቱን በቴሌግራም ይክፈቱ።");
             return;
         }
 
-        currentFirebaseUserId = telegramUserId.toString(); 
+        const currentFirebaseUserId = tgUser.id.toString(); 
         const userDocRef = doc(db, "users", currentFirebaseUserId);
         
-        // ዳታውን እናንብብ
         const docSnap = await getDoc(userDocRef);
-        const username = getTelegramUsername();
-        const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
+        const username = tgUser.username || "Guest";
+        const photo_url = tgUser.photo_url || null;
 
-        // መሰረታዊ መረጃ (ሁሌም የሚዘመን)
         let userDataToUpdate = {
-            telegram_id: currentFirebaseUserId, // እርግጠኛ ለመሆን
+            telegram_id: currentFirebaseUserId,
             username: username,
             photo_url: photo_url,
             last_login: serverTimestamp()
         };
 
-        // 🛑 ወሳኙ ማስተካከያ እዚህ ነው!
         if (!docSnap.exists()) {
-            // ሀ) ተጠቃሚው ዳታቤዝ ውስጥ ጨርሶ ከሌለ ብቻ እነዚህን Defaults እንጨምራለን
-            // ቦቱ ቀድሞ ከፈጠረው ይህ ብሎክ አይሰራም፣ ስለዚህ Score 1000 እንደተጠበቀ ይቆያል!
             Object.assign(userDataToUpdate, {
                 created_at: serverTimestamp(),
-                total_score: 0, // ቦቱን ሳያይ በቀጥታ አፕ ውስጥ ለገባ ብቻ
+                total_score: 1000, // እዚህ ጋር Default መስጠት ትችላለህ
                 tickets: 0, 
                 referrer_id: WebApp.initDataUnsafe.start_param || null,
                 daily_streak: 0,
-                last_streak_claim_time: null,
                 slot_spins_left: 10,
-                last_slot_reset_time: null,
-                staked_amount: 0,
-                stake_start_time: null,
-                smart_coin_balance: 0,
-                invite_count: 0
+                smart_coin_balance: 0
             });
-        } else {
-            // ለ) ተጠቃሚው ካለ (ቦቱ ፈጥሮታል ማለት ነው)
-            // እዚህ ጋር ነባር መረጃዎች (Tickets, Spins) ጎድለው ከሆነ ብቻ እንሞላለን
-            const existingData = docSnap.data();
-            
-            if (existingData.tickets === undefined) userDataToUpdate.tickets = 0;
-            if (existingData.slot_spins_left === undefined) userDataToUpdate.slot_spins_left = 10;
-            // ማሳሰቢያ፡ total_score እዚህ ውስጥ የለም! ስለዚህ ያለውን ነጥብ (1000) አይነካውም።
         }
 
-        // 5. Save/Update Data (Safe Merge)
-        // { merge: true } ስላለ፣ ያለውን ነጥብ ሳያጠፋ አዲሱን መረጃ ከላዩ ላይ ይጨምራል።
         await setDoc(userDocRef, userDataToUpdate, { merge: true });
 
-        // 6. Listener ማስጀመር
-        unsubscribeCurrentUser = setupCurrentUserListener(currentFirebaseUserId);
+        // ፈንክሽኑ መኖሩን አረጋግጠህ ጥራ
+        if (typeof setupCurrentUserListener === 'function') {
+            unsubscribeCurrentUser = setupCurrentUserListener(currentFirebaseUserId);
+        }
+
+        console.log("Login Successful!");
 
     } catch (error) {
-        console.error("Firebase Login Failed:", error);
-        WebApp.showAlert("Login Failed: " + error.message);
+        console.error("Detailed Error:", error);
+        window.Telegram.WebApp.showAlert("መግባት አልተቻለም፦ " + error.message);
     }
 }
+        
+
 
         
  
