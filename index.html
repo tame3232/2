@@ -5501,7 +5501,6 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
             const data = docSnapshot.data();
             
             
-           
             // =============================================================
             // 🛑🛑🛑 የተስተካከለ የ BAN ቼክ ሎጂክ (FIXED BAN LOGIC) 🛑🛑🛑
             // =============================================================
@@ -5525,7 +5524,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
                 let banScreen = document.getElementById('ban-overlay-screen');
                 
                 if (!banScreen) {
-                    const banReason = data.ban_reason || 'Unusual point accumulation (Suspicious Activity)';
+                    const banReason = data.ban_reason || 'ያልተለመደ የነጥብ አሰባሰብ (Suspicious Activity)';
 
                     banScreen = document.createElement('div');
                     banScreen.id = 'ban-overlay-screen'; // ID እንሰጠዋለን
@@ -5543,7 +5542,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
                         
                         <div style="margin-top: 15px; padding: 15px; background: #222; border-radius: 8px; max-width: 300px; width: 100%;">
                             <p style="font-size: 14px; color: #ffeb3b; margin-bottom: 5px; font-weight: bold;">
-                                Reason for ban:
+                                መታገጃ ምክንያት:
                             </p>
                             <p style="font-size: 14px; color: #ccc;">
                                 ${banReason}
@@ -5551,7 +5550,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
                         </div>
 
                         <p style="font-size: 15px; color: #ccc; line-height: 1.5; margin-top: 20px;">
-                            This account has been permanently banned If you think this is a mistake, please report it
+                            ይህ አካውንት በቋሚነት ታግዷል። ስህተት ነው ብለው ካሰቡ Report ያድርጉ።
                         </p>
 
                         <div style="margin-top: 30px; display: flex; gap: 15px;">
@@ -5559,7 +5558,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
                             <a href="https://t.me/${ADMIN_TELEGRAM_USERNAME}?start=appeal_${userId}" 
                                target="_blank"
                                style="text-decoration: none; padding: 12px 25px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                                📝 Request an appeal
+                                📝 ይግባኝ ጠይቅ
                             </a>
                             
                             <button onclick="window.Telegram.WebApp.close()" 
@@ -5632,70 +5631,75 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
 
 
         
-  async function firebaseLogin() {
-    try {
-        const WebApp = window.Telegram.WebApp; // WebApp መኖሩን ማረጋገጥ
+        
+// 1. ከሁሉም ፈንክሽን ውጭ (Global scope) ላይ ይህን ተለዋዋጭ አስቀምጥ
+let unsubscribeCurrentUser = null; 
 
-        if (unsubscribeCurrentUser) {
+async function firebaseLogin() {
+    try {
+        // 2. 🛑 የቀደመውን ተጠቃሚ Listener ማቆም (ለአካውንት ቀያሪዎች ወሳኝ ነው)
+        if (unsubscribeCurrentUser && typeof unsubscribeCurrentUser === 'function') {
+            console.log("Cleaning up previous user session...");
             unsubscribeCurrentUser(); 
+            unsubscribeCurrentUser = null;
         }
 
-        // 1. Firebase Auth መኖሩን ማረጋገጥ
-        const userCredential = await signInAnonymously(auth);
+        // 3. በ Anonymous Login መግባት
+        await signInAnonymously(auth);
         
-        // 2. Telegram ID ማግኘት (Optional chaining በመጠቀም)
-        const tgUser = WebApp.initDataUnsafe?.user;
-        if (!tgUser?.id) {
-            WebApp.showAlert("Telegram User ID አልተገኘም! እባክዎ ቦቱን በቴሌግራም ይክፈቱ።");
+        // 4. የአሁኑን ተጠቃሚ Telegram ID በትክክል ማንበብ
+        const telegramUserId = window.Telegram.WebApp.initDataUnsafe.user?.id;
+
+        if (!telegramUserId) {
+            WebApp.showAlert("Telegram User ID አልተገኘም! እባክዎ ቦቱን ድጋሚ ያስጀምሩ።");
             return;
         }
 
-        const currentFirebaseUserId = tgUser.id.toString(); 
+        // 5. Telegram IDን እንደ ብቸኛ መለያ (Document ID) መጠቀም
+        currentFirebaseUserId = telegramUserId.toString(); 
         const userDocRef = doc(db, "users", currentFirebaseUserId);
-        
         const docSnap = await getDoc(userDocRef);
-        const username = tgUser.username || "Guest";
-        const photo_url = tgUser.photo_url || null;
 
-        let userDataToUpdate = {
-            telegram_id: currentFirebaseUserId,
-            username: username,
-            photo_url: photo_url,
-            last_login: serverTimestamp()
-        };
+        const username = getTelegramUsername();
+        const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
 
-        if (!docSnap.exists()) {
-            Object.assign(userDataToUpdate, {
+        if (docSnap.exists()) {
+            // ✅ ነባር ተጠቃሚ - መረጃ ማመሳሰል
+            await updateDoc(userDocRef, {
+                username: username,
+                photo_url: photo_url,
+                last_login: serverTimestamp()
+            });
+        } else {
+            // ✅ አዲስ ተጠቃሚ - መፍጠር
+            let referrerId = WebApp.initDataUnsafe.start_param || null;
+            await setDoc(userDocRef, {
+                telegram_id: telegramUserId,
+                username: username, 
+                photo_url: photo_url,
                 created_at: serverTimestamp(),
-                total_score: 1000, // እዚህ ጋር Default መስጠት ትችላለህ
                 tickets: 0, 
-                referrer_id: WebApp.initDataUnsafe.start_param || null,
+                total_score: 100, 
+                referrer_id: referrerId || null,
                 daily_streak: 0,
-                slot_spins_left: 10,
+                last_streak_claim_time: null,
+                slot_spins_left: 10, // SLOTS_MAX_SPINS
+                last_slot_reset_time: null,
+                staked_amount: 0,
+                stake_start_time: null,
                 smart_coin_balance: 0
             });
         }
 
-        await setDoc(userDocRef, userDataToUpdate, { merge: true });
-
-        // ፈንክሽኑ መኖሩን አረጋግጠህ ጥራ
-        if (typeof setupCurrentUserListener === 'function') {
-            unsubscribeCurrentUser = setupCurrentUserListener(currentFirebaseUserId);
-        }
-
-        console.log("Login Successful!");
+        // 6. 🛑 Listenerውን መጥራት እና የቆራጭ (unsubscribe) ዋጋውን መያዝ
+        // ማሳሰቢያ፡ setupCurrentUserListener ፈንክሽንህ 'return onSnapshot(...)' ማድረግ አለበት
+        unsubscribeCurrentUser = setupCurrentUserListener(currentFirebaseUserId);
 
     } catch (error) {
-        console.error("Detailed Error:", error);
-        window.Telegram.WebApp.showAlert("መግባት አልተቻለም፦ " + error.message);
+        console.error("Firebase Login Failed:", error);
+        WebApp.showAlert("Login Failed: " + error.message);
     }
 }
-        
-
-
-        
- 
- 
 
 
 
@@ -5741,7 +5745,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
                     const setData = {
                         total_score: coinsToAdd, 
                         username: username,
-                        telegram_id: telegramUserId,
+                        telegram_id: currentFirebaseUserId, 
                         photo_url: photo_url,
                         last_played: serverTimestamp(), 
                         last_reward_source: source,
