@@ -5630,9 +5630,6 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
 }
 
 
-
-        
-        
 // 1. ከሁሉም ፈንክሽን ውጭ (Global scope)
 let unsubscribeCurrentUser = null; 
 
@@ -5712,6 +5709,11 @@ async function firebaseLogin() {
         WebApp.showAlert("Login Failed: " + error.message);
     }
 }
+
+        
+ 
+ 
+
 
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
