@@ -40,7 +40,9 @@ exports.handler = async (event) => {
         if (!event.body) return { statusCode: 200, body: 'No body' };
         const body = JSON.parse(event.body);
 
-        // --- ሁኔታ 1፡ ከ Mini App የሚመጣ መልዕክት ---
+        // --- ሁኔታ 1፡ ከ Mini App የሚመጣ መልዕክት (ውጤት መመዝገብ ወዘተ) ---
+        // Mini App ጥገና ላይ ከሆነም እንዲሰራ ከተፈለገ ይህንን ከጥገናው logic በላይ ያድርጉት።
+        // ካልተፈለገ ግን ከታች ወዳለው logic ማውረድ ይቻላል። ለጊዜው እዚህ ይሁን።
         if (body.message && !body.update_id) { 
             const targetId = body.custom_chat_id || ADMIN_ID;
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -51,41 +53,84 @@ exports.handler = async (event) => {
             return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify({ success: true }) };
         }
 
-        // --- ሁኔታ 2፡ የ Callback Query አያያዝ (Share ቁልፍ ሲነካ) ---
-        if (body.callback_query) {
-            const cb = body.callback_query;
-            const cbId = cb.id;
-            const cbChatId = cb.message.chat.id;
-            const data = cb.data;
+        // መደበኛ የቴሌግራም መልዕክት ወይም Callback
+        if (!body.message && !body.callback_query) return { statusCode: 200, body: 'OK' };
 
-            if (data === "check_and_share") {
-                const userDoc = await db.collection('users').doc(String(cbChatId)).get();
+        // መረጃዎችን ማውጣት
+        let chatId, text, user, isCallback = false, callbackId = null;
+
+        if (body.callback_query) {
+            isCallback = true;
+            chatId = body.callback_query.message.chat.id;
+            text = body.callback_query.data;
+            user = body.callback_query.from;
+            callbackId = body.callback_query.id;
+        } else {
+            chatId = body.message.chat.id;
+            text = body.message.text;
+            user = body.message.from;
+        }
+
+        // ============================================================
+        // 🔥 MAINTENANCE CHECK (የጥገና ማጣሪያ)
+        // ============================================================
+        
+        // 1. የቅንብር መረጃ ከ Database ማምጣት
+        const configDoc = await db.collection('settings').doc('bot_config').get();
+        const isMaintenance = configDoc.exists ? configDoc.data().maintenance_mode : false;
+
+        // 2. ጥገና ላይ ከሆነ እና ተጠቃሚው Admin ካልሆነ
+        if (isMaintenance && String(chatId) !== String(ADMIN_ID)) {
+            const maintenanceMsg = "🚧 <b>ቦቱ ለጊዜው በጥገና ላይ ነው!</b>\n\nእባክዎ ትንሽ ቆይተው ይመለሱ። አዳዲስ ነገሮችን እየጨመርን ነው። 🚀";
+            
+            if (isCallback) {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ callback_query_id: callbackId, text: "ቦቱ በጥገና ላይ ነው!", show_alert: true }),
+                });
+            } else {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: maintenanceMsg, parse_mode: 'HTML' }),
+                });
+            }
+            return { statusCode: 200, body: 'Maintenance Mode' };
+        }
+        // ============================================================
+
+
+        // --- ሁኔታ 2፡ የ Callback Query አያያዝ ---
+        if (isCallback) {
+            if (text === "check_and_share") {
+                const userDoc = await db.collection('users').doc(String(chatId)).get();
 
                 if (!userDoc.exists) {
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            callback_query_id: cbId, 
+                            callback_query_id: callbackId, 
                             text: "⚠️ ይቅርታ! መጀመሪያ 'Play Now' የሚለውን ተጭነው መመዝገብ አለብዎት።", 
                             show_alert: true 
                         }),
                     });
                 } else {
-                    const shareText = `🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!\n\nየ Notcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀\n👇 በዚህ ሊንክ ሲገቡ 1000 coin በነፃ ያገኛሉ!\n\nhttps://t.me/Smartgame21_bot?start=${cbChatId}\n\n⏳ ጊዜው ከማለቁ በፊት ቦታዎን ይያዙ!`;
-                    const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${cbChatId}&text=${encodeURIComponent("​🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!የNotcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀")}`;
+                    const shareText = `🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!\n\nየ Notcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀\n👇 በዚህ ሊንክ ሲገቡ 1000 coin በነፃ ያገኛሉ!\n\nhttps://t.me/Smartgame21_bot?start=${chatId}\n\n⏳ ጊዜው ከማለቁ በፊት ቦታዎን ይያዙ!`;
+                    const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${chatId}&text=${encodeURIComponent("​🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!...")}`;
                     
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ callback_query_id: cbId, text: "✅ ዝግጁ ነው!" }),
+                        body: JSON.stringify({ callback_query_id: callbackId, text: "✅ ዝግጁ ነው!" }),
                     });
 
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            chat_id: cbChatId, 
+                            chat_id: chatId, 
                             text: `<b> ይህ የእርስዎ መጋበዣ መልዕክት ነው!</b>\n\nለጓደኞችዎ ይላኩ \n\n<code>${shareText}</code>`,
                             parse_mode: 'HTML',
                             reply_markup: { inline_keyboard: [[{ text: "🚀 አሁኑኑ ለጓደኛ ላክ", url: shareUrl }]] }
@@ -96,92 +141,88 @@ exports.handler = async (event) => {
             return { statusCode: 200, body: 'OK' };
         }
 
-        if (!body.message) return { statusCode: 200, body: 'OK' };
-
-        const chatId = body.message.chat.id;
-        const text = body.message.text;
-        const user = body.message.from;
 
         // --- የአስተዳዳሪ (Admin) ተግባራት ---
         if (String(chatId) === String(ADMIN_ID)) {
+            
+            // 🔧 Maintenance ማዘዣዎች
+            if (text === '/maintenance on') {
+                await db.collection('settings').doc('bot_config').set({ maintenance_mode: true }, { merge: true });
+                await sendToAdmin("🔴 <b>Maintenance Mode ON!</b>\n\nቦቱ ለተጠቃሚዎች ተዘግቷል። ለእርስዎ ግን ይሰራል::");
+                return { statusCode: 200, body: 'OK' };
+            }
+
+            if (text === '/maintenance off') {
+                await db.collection('settings').doc('bot_config').set({ maintenance_mode: false }, { merge: true });
+                await sendToAdmin("🟢 <b>Maintenance Mode OFF!</b>\n\nቦቱ ወደ መደበኛ ስራ ተመልሷል።");
+                return { statusCode: 200, body: 'OK' };
+            }
+
             if (text === '/stats') {
                 const snapshot = await db.collection('users').get();
-            await sendToAdmin(`📊 <b>ጠቅላላ ተጠቃሚዎች:</b> ${snapshot.size}`);
-
+                await sendToAdmin(`📊 <b>ጠቅላላ ተጠቃሚዎች:</b> ${snapshot.size}`);
                 return { statusCode: 200, body: 'OK' };
-
-            }
-        if (text && text.startsWith('/check_user')) {
-            const parts = text.split(' ');
-            if (parts.length < 2) {
-                await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
-                return { statusCode: 200, body: 'Missing ID' };
             }
 
-            // የሚፈለገው ID (እንደ String እና እንደ Number ይያዙ)
-            const targetIdString = parts[1].trim();
-            const targetIdNumber = Number(targetIdString); // አንዳንዴ በ Number ስለሚቀመጥ
+            if (text && text.startsWith('/check_user')) {
+                const parts = text.split(' ');
+                if (parts.length < 2) {
+                    await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
+                    return { statusCode: 200, body: 'Missing ID' };
+                }
 
-            try {
-                let userData = null;
-                let userDocId = null;
+                const targetIdString = parts[1].trim();
+                const targetIdNumber = Number(targetIdString);
 
-                // 1. መጀመሪያ በ Document ID (String) እንፈልግ
-                let userDoc = await db.collection('users').doc(targetIdString).get();
+                try {
+                    let userData = null;
+                    let userDocId = null;
 
-                if (userDoc.exists) {
-                    userData = userDoc.data();
-                    userDocId = userDoc.id;
-                } else {
-                    // 2. በ Document ID ካልተገኘ፣ በ 'telegram_id' field እንፈልግ (Number)
-                    // ሚን አፑ telegram_idን እንደ number ስለሚያስቀምጥ
-                    let querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdNumber).limit(1).get();
+                    let userDoc = await db.collection('users').doc(targetIdString).get();
+
+                    if (userDoc.exists) {
+                        userData = userDoc.data();
+                        userDocId = userDoc.id;
+                    } else {
+                        let querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdNumber).limit(1).get();
+                        
+                        if (querySnapshot.empty) {
+                             querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdString).limit(1).get();
+                        }
+
+                        if (!querySnapshot.empty) {
+                            const docFound = querySnapshot.docs[0];
+                            userData = docFound.data();
+                            userDocId = docFound.id;
+                        }
+                    }
+
+                    if (!userData) {
+                        await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetIdString}) ዳታቤዝ ውስጥ የለም።`);
+                        return { statusCode: 200, body: 'User not found' };
+                    }
+
+                    const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetIdString)).get();
+                    const inviteCount = inviteSnapshot.size;
+
+                    const name = userData.username || userData.first_name || 'ያልታወቀ';
+                    const score = userData.total_score || 0;
                     
-                    if (querySnapshot.empty) {
-                        // 3. አሁንም ካልተገኘ፣ በ 'telegram_id' field (String) እንፈልግ
-                         querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdString).limit(1).get();
-                    }
+                    const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n` +
+                                `👤 <b>ስም:</b> ${name}\n` +
+                                `🆔 <b>ID:</b> <code>${targetIdString}</code>\n` +
+                                `💰 <b>Score:</b> ${score.toLocaleString()}\n` +
+                                `👥 <b>Invites:</b> ${inviteCount}`;
 
-                    if (!querySnapshot.empty) {
-                        const docFound = querySnapshot.docs[0];
-                        userData = docFound.data();
-                        userDocId = docFound.id;
-                    }
+                    await sendToAdmin(msg);
+
+                } catch (error) {
+                    console.error(error);
+                    await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
                 }
-
-                // ተጠቃሚው አሁንም ካልተገኘ
-                if (!userData) {
-                    await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetIdString}) ዳታቤዝ ውስጥ የለም።\n\n💡 ተጠቃሚው መጀመሪያ 'Play Now' ብሎ መመዝገብ አለበት።`);
-                    return { statusCode: 200, body: 'User not found' };
-                }
-
-                // --- እዚህ ጋ ደርሰናል ማለት ተጠቃሚው ተገኝቷል ---
-
-                // የጋበዛቸው ሰዎች ብዛት (በቀላል መንገድ) - referrer_id አብዛኛውን ጊዜ String ነው የሚሆነው
-                const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetIdString)).get();
-                const inviteCount = inviteSnapshot.size;
-
-                const name = userData.username || userData.first_name || 'ያልታወቀ';
-                const score = userData.total_score || 0;
-                
-                // ለ Admin መረጃውን እንላክ
-                const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n` +
-                            `👤 <b>ስም:</b> ${name}\n` +
-                            `🆔 <b>ID:</b> <code>${targetIdString}</code>\n` +
-                            `📂 <b>Doc Ref:</b> <code>${userDocId}</code>\n` + 
-                            `💰 <b>ጠቅላላ Score:</b> ${score.toLocaleString()}\n` +
-                            `👥 <b>የጋበዛቸው ሰዎች:</b> ${inviteCount} ሰው`;
-
-                await sendToAdmin(msg);
-
-            } catch (error) {
-                console.error(error);
-                await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
+                return { statusCode: 200, body: 'OK' };
             }
-            return { statusCode: 200, body: 'OK' };
-        }
 
-  
             if (text === '/export') {
                 const usersSnapshot = await db.collection('users').get();
                 let userData = "Telegram ID, Username, Total Score, Invites, Referrer ID\n";
@@ -218,8 +259,6 @@ exports.handler = async (event) => {
                 if (args.length < 3) return { statusCode: 200, body: 'Missing args' };
                 
                 const ids = args[1].split(',');
-                // መልዕክቱን ከትዕዛዙ እና ከ ID ውጪ ያለውን ክፍል ብቻ ይወስዳል
-                // ማስተካከያ፡ መልዕክቱን በትክክል ለመለየት
                 const msgStartIndex = text.indexOf(args[2]);
                 const msgContent = text.substring(msgStartIndex);
 
@@ -228,36 +267,29 @@ exports.handler = async (event) => {
                     let userData = null;
 
                     try {
-                        // 1. መጀመሪያ በ Document ID እንፈልግ
                         const userDoc = await db.collection('users').doc(targetId).get();
                         
                         if (userDoc.exists) {
                             userData = userDoc.data();
                         } else {
-                            // 2. በ Document ID ካልተገኘ፣ በ telegram_id field እንፈልግ (Number & String)
                             let qSnapshot = await db.collection('users').where('telegram_id', '==', Number(targetId)).limit(1).get();
-                            
                             if (qSnapshot.empty) {
                                 qSnapshot = await db.collection('users').where('telegram_id', '==', String(targetId)).limit(1).get();
                             }
-                            
                             if (!qSnapshot.empty) {
                                 userData = qSnapshot.docs[0].data();
                             }
                         }
 
-                        // ስሙን መተካት (Priority: username -> first_name -> name -> 'ወዳጄ')
                         let finalMsg = msgContent;
-                        let userName = 'ወዳጄ'; // Default
+                        let userName = 'ወዳጄ'; 
 
                         if (userData) {
                             userName = userData.username || userData.first_name || userData.name || 'ወዳጄ';
                         }
 
-                        // {name} የሚለውን በተገኘው ስም ቀይር
                         finalMsg = finalMsg.replace(/{name}/g, userName);
 
-                        // መልዕክቱን ላክ
                         const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -267,10 +299,7 @@ exports.handler = async (event) => {
                                 parse_mode: 'HTML' 
                             })
                         });
-
                         const resData = await res.json();
-                        
-                        // ውጤቱን ለአድሚን ሪፖርት አድርግ (ከተፈለገ ብቻ)
                          if (!resData.ok) {
                             await sendToAdmin(`❌ ለ ${targetId} አልደረሰም: ${resData.description}`);
                          }
@@ -283,8 +312,9 @@ exports.handler = async (event) => {
                 await sendToAdmin(`✅ መልዕክት መላክ ተጠናቋል።`);
                 return { statusCode: 200, body: 'OK' };
             }
+        } // <--- የAdmin Logic መዝጊያ
 
-        // --- የ /start ስራ (የተስተካከለ Welcome መልዕክት) ---
+        // --- የ /start ስራ (Maintenance ውስጥ ካልሆነ ብቻ ነው የሚሰራው) ---
         if (text && text.startsWith('/start')) {
             const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
             
@@ -296,13 +326,12 @@ exports.handler = async (event) => {
                     text: welcome, 
                     parse_mode: 'HTML',
                     reply_markup: { 
-             inline_keyboard: [
-        [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }],
-        [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
-        [{ text: "🚀 Play Now ", web_app: { url: "https://newsmartgames.netlify.app/" } }]
-       ] 
-     }
-                          
+                        inline_keyboard: [
+                            [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }],
+                            [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
+                            [{ text: "🚀 Play Now ", web_app: { url: "https://newsmartgames.netlify.app/" } }]
+                        ] 
+                    }     
                 }),
             });
             return { statusCode: 200, body: 'OK' };
