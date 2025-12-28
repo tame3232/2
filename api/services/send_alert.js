@@ -73,7 +73,7 @@ exports.handler = async (event) => {
                     });
                 } else {
                     const shareText = `🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!\n\nየ Notcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀\n👇 በዚህ ሊንክ ሲገቡ 1000 coin በነፃ ያገኛሉ!\n\nhttps://t.me/Smartgame21_bot?start=${cbChatId}\n\n⏳ ጊዜው ከማለቁ በፊት ቦታዎን ይያዙ!`;
-                    const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${cbChatId}&text=${encodeURIComponent("🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ! 🚀")}`;
+                    const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${cbChatId}&text=${encodeURIComponent("​🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!የNotcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀")}`;
                     
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                         method: 'POST',
@@ -86,7 +86,7 @@ exports.handler = async (event) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             chat_id: cbChatId, 
-                            text: `<b>የእርስዎ መጋበዣ መልዕክት ዝግጁ ነው!</b>\n\nከታች ያለውን መልዕክት Copy አድርገው ለጓደኞችዎ ይላኩ ወይም "ለጓደኛ ላክ" የሚለውን ይጠቀሙ፦\n\n<code>${shareText}</code>`,
+                            text: `<b> ይህ የእርስዎ መጋበዣ መልዕክት ነው!</b>\n\nለጓደኞችዎ ይላኩ \n\n<code>${shareText}</code>`,
                             parse_mode: 'HTML',
                             reply_markup: { inline_keyboard: [[{ text: "🚀 አሁኑኑ ለጓደኛ ላክ", url: shareUrl }]] }
                         }),
@@ -105,34 +105,56 @@ exports.handler = async (event) => {
         // --- የአስተዳዳሪ (Admin) ተግባራት ---
         if (String(chatId) === String(ADMIN_ID)) {
             if (text === '/stats') {
-                const snapshot = await db.collection('users').count().get();
-                await sendToAdmin(`📊 <b>ጠቅላላ ተጠቃሚዎች:</b> ${snapshot.data().count}`);
+                const snapshot = await db.collection('users').get();
+            await sendToAdmin(`📊 <b>ጠቅላላ ተጠቃሚዎች:</b> ${snapshot.size}`);
+
                 return { statusCode: 200, body: 'OK' };
+
             }
 
-            if (text && text.startsWith('/check_user')) {
-                const parts = text.split(' ');
-                if (parts.length < 2) {
-                    await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
-                    return { statusCode: 200, body: 'Missing ID' };
-                }
-                const targetId = parts[1].trim();
-                try {
-                    const userDoc = await db.collection('users').doc(targetId).get();
-                    if (!userDoc.exists) {
-                        await sendToAdmin("❌ ይህ ተጠቃሚ ዳታቤዝ ውስጥ የለም።");
-                        return { statusCode: 200, body: 'User not found' };
-                    }
-                    const userData = userDoc.data();
-                    const inviteSnapshot = await db.collection('users').where('referrer_id', '==', targetId).count().get();
-                    const inviteCount = inviteSnapshot.data().count;
-                    const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n👤 <b>ስም:</b> ${userData.first_name}\n🆔 <b>ID:</b> <code>${targetId}</code>\n💰 <b>ጠቅላላ Score:</b> ${userData.total_score}\n👥 <b>የጋበዛቸው ሰዎች ብዛት:</b> ${inviteCount}`;
-                    await sendToAdmin(msg);
-                } catch (error) {
-                    await sendToAdmin(`❌ Error: ${error.message}`);
-                }
-                return { statusCode: 200, body: 'OK' };
-            }
+  if (text && text.startsWith('/check_user')) {
+    const parts = text.split(' ');
+    if (parts.length < 2) {
+        await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
+        return { statusCode: 200, body: 'Missing ID' };
+    }
+
+    const targetId = parts[1].trim();
+
+    try {
+        // 1. መጀመሪያ ተጠቃሚውን በ ID (እንደ String) እንፈልጋለን
+        const userDoc = await db.collection('users').doc(String(targetId)).get();
+
+        if (!userDoc.exists) {
+            await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetId}) ዳታቤዝ ውስጥ የለም።\n\n💡 ተጠቃሚው መጀመሪያ 'Play Now' ብሎ መመዝገብ አለበት።`);
+            return { statusCode: 200, body: 'User not found' };
+        }
+
+        const userData = userDoc.data();
+
+        // 2. የጋበዛቸው ሰዎች ብዛት (በቀላል መንገድ)
+        const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetId)).get();
+        const inviteCount = inviteSnapshot.size;
+
+        // 3. መልዕክቱን ማዘጋጀት (ስም ወይም ስኮር ከሌለ 0 ወይም 'ያልታወቀ' እንዲል)
+        const name = userData.username || userData.first_name || 'ያልታወቀ';
+        const score = userData.total_score || 0;
+
+        const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n` +
+                    `👤 <b>ስም:</b> ${name}\n` +
+                    `🆔 <b>ID:</b> <code>${targetId}</code>\n` +
+                    `💰 <b>ጠቅላላ Score:</b> ${score}\n` +
+                    `👥 <b>የጋበዛቸው ሰዎች:</b> ${inviteCount} ሰው`;
+
+        await sendToAdmin(msg);
+
+    } catch (error) {
+        // ማንኛውም ስህተት ቢፈጠር ለአድሚኑ ያሳውቃል
+        await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
+    }
+    return { statusCode: 200, body: 'OK' };
+}
+
 
             if (text === '/export') {
                 const usersSnapshot = await db.collection('users').get();
@@ -199,12 +221,13 @@ exports.handler = async (event) => {
                     text: welcome, 
                     parse_mode: 'HTML',
                     reply_markup: { 
-                        inline_keyboard: [
-                            [{ text: "🚀 Play Now ", web_app: { url: "https://newsmartgames.netlify.app/" } }],
-                            [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
-                            [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }]
-                        ] 
-                    }
+             inline_keyboard: [
+        [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }],
+        [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
+        [{ text: "🚀 Play Now ", web_app: { url: "https://newsmartgames.netlify.app/" } }]
+       ] 
+     }
+                          
                 }),
             });
             return { statusCode: 200, body: 'OK' };
