@@ -111,51 +111,77 @@ exports.handler = async (event) => {
                 return { statusCode: 200, body: 'OK' };
 
             }
+        if (text && text.startsWith('/check_user')) {
+            const parts = text.split(' ');
+            if (parts.length < 2) {
+                await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
+                return { statusCode: 200, body: 'Missing ID' };
+            }
 
-  if (text && text.startsWith('/check_user')) {
-    const parts = text.split(' ');
-    if (parts.length < 2) {
-        await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
-        return { statusCode: 200, body: 'Missing ID' };
-    }
+            // የሚፈለገው ID (እንደ String እና እንደ Number ይያዙ)
+            const targetIdString = parts[1].trim();
+            const targetIdNumber = Number(targetIdString); // አንዳንዴ በ Number ስለሚቀመጥ
 
-    const targetId = parts[1].trim();
+            try {
+                let userData = null;
+                let userDocId = null;
 
-    try {
-        // 1. መጀመሪያ ተጠቃሚውን በ ID (እንደ String) እንፈልጋለን
-        const userDoc = await db.collection('users').doc(String(targetId)).get();
+                // 1. መጀመሪያ በ Document ID (String) እንፈልግ
+                let userDoc = await db.collection('users').doc(targetIdString).get();
 
-        if (!userDoc.exists) {
-            await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetId}) ዳታቤዝ ውስጥ የለም።\n\n💡 ተጠቃሚው መጀመሪያ 'Play Now' ብሎ መመዝገብ አለበት።`);
-            return { statusCode: 200, body: 'User not found' };
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    userDocId = userDoc.id;
+                } else {
+                    // 2. በ Document ID ካልተገኘ፣ በ 'telegram_id' field እንፈልግ (Number)
+                    // ሚን አፑ telegram_idን እንደ number ስለሚያስቀምጥ
+                    let querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdNumber).limit(1).get();
+                    
+                    if (querySnapshot.empty) {
+                        // 3. አሁንም ካልተገኘ፣ በ 'telegram_id' field (String) እንፈልግ
+                         querySnapshot = await db.collection('users').where('telegram_id', '==', targetIdString).limit(1).get();
+                    }
+
+                    if (!querySnapshot.empty) {
+                        const docFound = querySnapshot.docs[0];
+                        userData = docFound.data();
+                        userDocId = docFound.id;
+                    }
+                }
+
+                // ተጠቃሚው አሁንም ካልተገኘ
+                if (!userData) {
+                    await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetIdString}) ዳታቤዝ ውስጥ የለም።\n\n💡 ተጠቃሚው መጀመሪያ 'Play Now' ብሎ መመዝገብ አለበት።`);
+                    return { statusCode: 200, body: 'User not found' };
+                }
+
+                // --- እዚህ ጋ ደርሰናል ማለት ተጠቃሚው ተገኝቷል ---
+
+                // የጋበዛቸው ሰዎች ብዛት (በቀላል መንገድ) - referrer_id አብዛኛውን ጊዜ String ነው የሚሆነው
+                const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetIdString)).get();
+                const inviteCount = inviteSnapshot.size;
+
+                const name = userData.username || userData.first_name || 'ያልታወቀ';
+                const score = userData.total_score || 0;
+                
+                // ለ Admin መረጃውን እንላክ
+                const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n` +
+                            `👤 <b>ስም:</b> ${name}\n` +
+                            `🆔 <b>ID:</b> <code>${targetIdString}</code>\n` +
+                            `📂 <b>Doc Ref:</b> <code>${userDocId}</code>\n` + 
+                            `💰 <b>ጠቅላላ Score:</b> ${score.toLocaleString()}\n` +
+                            `👥 <b>የጋበዛቸው ሰዎች:</b> ${inviteCount} ሰው`;
+
+                await sendToAdmin(msg);
+
+            } catch (error) {
+                console.error(error);
+                await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
+            }
+            return { statusCode: 200, body: 'OK' };
         }
 
-        const userData = userDoc.data();
-
-        // 2. የጋበዛቸው ሰዎች ብዛት (በቀላል መንገድ)
-        const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetId)).get();
-        const inviteCount = inviteSnapshot.size;
-
-        // 3. መልዕክቱን ማዘጋጀት (ስም ወይም ስኮር ከሌለ 0 ወይም 'ያልታወቀ' እንዲል)
-        const name = userData.username || userData.first_name || 'ያልታወቀ';
-        const score = userData.total_score || 0;
-
-        const msg = `🔍 <b>የተጠቃሚ መረጃ:</b>\n\n` +
-                    `👤 <b>ስም:</b> ${name}\n` +
-                    `🆔 <b>ID:</b> <code>${targetId}</code>\n` +
-                    `💰 <b>ጠቅላላ Score:</b> ${score}\n` +
-                    `👥 <b>የጋበዛቸው ሰዎች:</b> ${inviteCount} ሰው`;
-
-        await sendToAdmin(msg);
-
-    } catch (error) {
-        // ማንኛውም ስህተት ቢፈጠር ለአድሚኑ ያሳውቃል
-        await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
-    }
-    return { statusCode: 200, body: 'OK' };
-}
-
-
+  
             if (text === '/export') {
                 const usersSnapshot = await db.collection('users').get();
                 let userData = "Telegram ID, Username, Total Score, Invites, Referrer ID\n";
@@ -187,27 +213,76 @@ exports.handler = async (event) => {
                 return { statusCode: 200, body: 'OK' };
             }
 
-            if (text && text.startsWith('/mreply')) {
+               if (text && text.startsWith('/mreply')) {
                 const args = text.split(' ');
                 if (args.length < 3) return { statusCode: 200, body: 'Missing args' };
+                
                 const ids = args[1].split(',');
-                const msgContent = text.substring(text.indexOf(args[2]));
+                // መልዕክቱን ከትዕዛዙ እና ከ ID ውጪ ያለውን ክፍል ብቻ ይወስዳል
+                // ማስተካከያ፡ መልዕክቱን በትክክል ለመለየት
+                const msgStartIndex = text.indexOf(args[2]);
+                const msgContent = text.substring(msgStartIndex);
+
                 for (const id of ids) {
                     const targetId = id.trim();
-                    const userDoc = await db.collection('users').doc(targetId).get();
-                    let finalMsg = msgContent;
-                    if (userDoc.exists) finalMsg = msgContent.replace(/{name}/g, userDoc.data().first_name || 'ወዳጄ');
-                    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: targetId, text: `✉️ <b>Smart Airdrop:</b>\n${finalMsg}`, parse_mode: 'HTML' })
-                    });
-                    const resData = await res.json();
-                    await sendToAdmin(resData.ok ? `✅ ለ ${targetId} ደርሷል` : `❌ ለ ${targetId} አልደረሰም`);
+                    let userData = null;
+
+                    try {
+                        // 1. መጀመሪያ በ Document ID እንፈልግ
+                        const userDoc = await db.collection('users').doc(targetId).get();
+                        
+                        if (userDoc.exists) {
+                            userData = userDoc.data();
+                        } else {
+                            // 2. በ Document ID ካልተገኘ፣ በ telegram_id field እንፈልግ (Number & String)
+                            let qSnapshot = await db.collection('users').where('telegram_id', '==', Number(targetId)).limit(1).get();
+                            
+                            if (qSnapshot.empty) {
+                                qSnapshot = await db.collection('users').where('telegram_id', '==', String(targetId)).limit(1).get();
+                            }
+                            
+                            if (!qSnapshot.empty) {
+                                userData = qSnapshot.docs[0].data();
+                            }
+                        }
+
+                        // ስሙን መተካት (Priority: username -> first_name -> name -> 'ወዳጄ')
+                        let finalMsg = msgContent;
+                        let userName = 'ወዳጄ'; // Default
+
+                        if (userData) {
+                            userName = userData.username || userData.first_name || userData.name || 'ወዳጄ';
+                        }
+
+                        // {name} የሚለውን በተገኘው ስም ቀይር
+                        finalMsg = finalMsg.replace(/{name}/g, userName);
+
+                        // መልዕክቱን ላክ
+                        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                chat_id: targetId, 
+                                text: `✉️ <b>Smart Airdrop:</b>\n${finalMsg}`, 
+                                parse_mode: 'HTML' 
+                            })
+                        });
+
+                        const resData = await res.json();
+                        
+                        // ውጤቱን ለአድሚን ሪፖርት አድርግ (ከተፈለገ ብቻ)
+                         if (!resData.ok) {
+                            await sendToAdmin(`❌ ለ ${targetId} አልደረሰም: ${resData.description}`);
+                         }
+
+                    } catch (err) {
+                        console.error(`Error sending to ${targetId}:`, err);
+                    }
                 }
+                
+                await sendToAdmin(`✅ መልዕክት መላክ ተጠናቋል።`);
                 return { statusCode: 200, body: 'OK' };
             }
-        }
 
         // --- የ /start ስራ (የተስተካከለ Welcome መልዕክት) ---
         if (text && text.startsWith('/start')) {
