@@ -5626,103 +5626,59 @@ function setupCurrentUserListener(userId) {
 
 
         
-async function firebaseLogin() {
-    try {
-        // 1. በቅድሚያ በ Anonymous እንገባለን (ለ Security Rule እንዲያመች)
-        const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid; // ይህ ለጊዜው የተቀየረው UID ሊሆን ይችላል
+        async function firebaseLogin() {
+            try {
+                const userCredential = await signInAnonymously(auth);
+                currentFirebaseUserId = userCredential.user.uid;
+                
+                            telegramUserId = window.telegramUserId; // አስቀድሞ የተጫነውን 'window.telegramUserId' እንጠቀማለን
 
-        // 2. ትክክለኛው የ Telegram ID ማግኘታችንን ማረጋገጥ
-        if (!telegramUserId) {
-            console.error("Telegram User ID አልተገኘም!");
-            return;
-        }
+                const userRef = doc(db, 'users', currentFirebaseUserId);
+                const userDoc = await getDoc(userRef); // ሰነዱ መኖሩን አስቀድሞ መፈተሽ
 
-        // 🛑 ወሳኙ ለውጥ እዚህ ነው! 🛑
-        // ተጠቃሚውን በቀጥታ በ UID ከመፈለግ ይልቅ፣ በ Telegram ID እንፈልገዋለን (Query)
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("telegram_id", "==", telegramUserId));
-        const querySnapshot = await getDocs(q);
-
-        let userDocRef;
-        let isNewUser = false;
-
-        if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል! (ኮይኖች ያሉት እዚህ ነው)
-            // ምንም እንኳን Firebase አዲስ UID ቢሰጠንም፣ እኛ የድሮውን Document ID እንጠቀማለን።
-            const existingDoc = querySnapshot.docs[0];
-            userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; // ግሎባል ተለዋዋጭውን ወደ ትክክለኛው (ድሮው) ID እንቀይራለን
-            
-            // የድሮውን መረጃ እናዘምናል (Updated Info)
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            await updateDoc(userDocRef, {
-                username: username,
-                photo_url: photo_url,
-                // እዚህ ጋር total_score አንነካም (እንዳይጠፋ)
-            });
-
-        } else {
-            // ✅ ሁኔታ ለ፡ በጭራሽ የለም (አዲስ ተጠቃሚ ነው)
-            isNewUser = true;
-            
-            // 💡 ምክር፡ ለወደፊቱ እንዳይምታታ አዲስ ሲፈጥሩ የ Document IDውን የ Telegram ID ያድርጉት።
-            // ከዚህ በፊት በ UID ከፈጠሩ ግን እንዳይጋጭ እዚሁ UID መጠቀም ይቻላል፣ 
-            // ነገር ግን ለወደፊት ጥራት ሲባል Telegram ID መጠቀም ይሻላል።
-            
-            // እዚህ ጋር Document IDውን telegramUserId አድርገነዋል (Robust Solution)
-            currentFirebaseUserId = telegramUserId.toString(); 
-            userDocRef = doc(db, "users", currentFirebaseUserId);
-
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            let referrerId = null;
-            if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-                referrerId = WebApp.initDataUnsafe.start_param;
-                if (referrerId === telegramUserId) {
-                    referrerId = null; 
+                const username = getTelegramUsername();
+                const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
+                
+                let referrerId = null;
+                if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
+                    referrerId = WebApp.initDataUnsafe.start_param;
+                    if (referrerId === telegramUserId) {
+                        referrerId = null; 
+                    }
                 }
+                
+                if (!userDoc.exists()) {
+                    // አዲስ ተጠቃሚ ከሆነ:
+                    await setDoc(userRef, {
+                        telegram_id: telegramUserId,
+                        username: username, 
+                        photo_url: photo_url,
+                        created_at: serverTimestamp(),
+                        tickets: 0, 
+                        total_score: 0, 
+                        referrer_id: referrerId || null, // አዲስ ከሆነ referral ID ማስቀመጥ
+                        // 🛑 NEW: ለዕለታዊ ሽልማት የሚያስፈልጉ መረጃዎች
+                        daily_streak: 0,
+                        last_streak_claim_time: null,
+                        // 🛑 UPDATED: ለ Slot Game የሚያስፈልጉ መረጃዎች
+                        slot_spins_left: SLOTS_MAX_SPINS,
+                        last_slot_reset_time: null 
+                    });
+                } else {
+                    // ነባር ተጠቃሚ ከሆነ:
+                    await setDoc(userRef, {
+                        telegram_id: telegramUserId,
+                        username: username, 
+                        photo_url: photo_url,
+                        // referrer_id, created_at, total_score, daily_streak አይሻሻሉም
+                    }, { merge: true });
+                }
+
+            } catch (error) {
+                WebApp.showAlert("Firebase Login Failed: " + error.message);
+                console.error("Firebase Login Failed:", error);
             }
-
-            await setDoc(userDocRef, {
-                telegram_id: telegramUserId,
-                username: username, 
-                photo_url: photo_url,
-                created_at: serverTimestamp(),
-                tickets: 0, 
-                total_score: 0, 
-                referrer_id: referrerId || null,
-                daily_streak: 0,
-                last_streak_claim_time: null,
-                slot_spins_left: 10, // SLOTS_MAX_SPINS
-                last_slot_reset_time: null,
-                staked_amount: 0,
-                stake_start_time: null,
-                smart_coin_balance: 0
-            });
-        // ... ከአዲሱ ተጠቃሚ setDoc በኋላ ይህንን ጨምር
-if (isNewUser && referrerId) {
-    const referrerRef = doc(db, "users", referrerId);
-    await updateDoc(referrerRef, {
-        total_score: increment(500),
-        invite_count: increment(1)
-    });
-}
-
-
-        // በመጨረሻም Listenerውን እንጠራለን (ይህ መረጃውን ወደ ስክሪኑ ያመጣል)
-        setupCurrentUserListener(currentFirebaseUserId);
-
-    } catch (error) {
-        WebApp.showAlert("Firebase Login Failed: " + error.message);
-        console.error("Firebase Login Failed:", error);
-    }
-}
-
-
+        }
 
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
@@ -5754,7 +5710,7 @@ if (isNewUser && referrerId) {
             try {
                 await updateDoc(userRef, updateData); 
                 // 🛑 ነጥቡ ዜሮ ወይም አሉታዊ ከሆነ ማንቂያ ማሳየት የለብንም
-                if(coinsToAdd > 0) WebApp.showAlert(t('alert_coin_success', { amount: coinsToAdd.toLocaleString() })); 
+                if(coinsToAdd > 0) WebApp.showAlert(`🎉 ${coinsToAdd.toLocaleString()} coin በተሳካ ሁኔታ ተጨመረ!`); 
                 // 🛑 UPDATED: ኮንፌቲውን መተኮስ
                 window.triggerConfetti(coinsToAdd); 
                 return true;
@@ -5778,11 +5734,6 @@ if (isNewUser && referrerId) {
                         slot_spins_left: SLOTS_MAX_SPINS, // 🛑 NEW: ለ Slot Game
                         last_slot_reset_time: null, // 🛑 NEW: ለ Slot Game
                         // referrer_id አይካተትም - በመጀመሪያው firebaseLogin ውስጥ ብቻ ስለሚመዘገበው
-                        smart_coin_balance: 0, // <--- ✅ ኮማ (,) እዚህ ተጨምሯል
-                       
-                        // ✅ 🛑 አዲስ የ Staking መስኮች እዚህም መግባት አለባቸው
-                        staked_amount: 0,
-                        stake_start_time: null
                     };
 
                     if (timestampField) {
@@ -5794,188 +5745,150 @@ if (isNewUser && referrerId) {
                     }
 
                     await setDoc(userRef, setData);
-                    if(coinsToAdd > 0) WebApp.showAlert(`🎉 አዲስ መረጃ ተፈጠረ እና ${coinsToAdd.toLocaleString()} coin ተጨመረ!`); 
+                    if(coinsToAdd > 0) WebApp.showAlert(`🎉 አዲስ መረጃ ተፈጠረ እና ${coinsToAdd.toLocaleString()} coin ተጨመረ!`); // 🛑 ነጥብ ወደ coin
                     // 🛑 UPDATED: ኮንፌቲውን መተኮስ
                     window.triggerConfetti(coinsToAdd); 
                     return true;
                 } else {
-                    WebApp.showAlert(t('msg_error_update'));
+                    WebApp.showAlert("❌ coin በማዘመን ላይ ስህተት ተፈጠረ: " + error.message); // 🛑 ነጥብ ወደ coin
                     console.error("Error updating score:", error);
                     return false;
                 }
             }
         }
-
-// ✅ አዲስ: ለመሪዎች ሰሌዳ መረጃ ማስቀመጫ ቁልፍ
-const LEADERBOARD_STORAGE_KEY = 'smart_drop_leaderboard_cache';
-
-/**
- * ✅ የተሻሻለ fetchLeaderboard: localStorage Caching ይጠቀማል
- * ይህ ዘዴ ወጪን (Cost) እና የዳታ አጠቃቀምን በእጅጉ ይቀንሳል።
- */
-async function fetchLeaderboard() {
-    console.log("DEBUG: fetchLeaderboard ተግባር ተጀምሯል።");
-    const leaderboardContainer = document.getElementById('leaderboard-container');
-    
-    // መጫኑን ለማሳየት (ከዚህ በፊት ዳታ ከሌለ ብቻ)
-    if (!leaderboardContainer.innerHTML.includes('leaderboard-item')) {
-        leaderboardContainer.innerHTML = '<p style="text-align: center; color: var(--tg-hint); padding: 10px;">እባክዎን ትንሽ ይጠብቁ...</p>';
-    }
-
-    const now = Date.now();
-
-    // ============================================================
-    // 1. መጀመሪያ ከ localStorage መረጃ ካለ እንፈትሽ (CACHE CHECK)
-    // ============================================================
-    const cachedDataString = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
-    
-    if (cachedDataString) {
-        try {
-            const cachedObj = JSON.parse(cachedDataString);
-            // መረጃው ካለ እና ከ 3 ደቂቃ (CACHE_LIFETIME) በታች ከሆነ
-            if (now - cachedObj.timestamp < CACHE_LIFETIME) {
-                console.log("DEBUG: መረጃ ከ localStorage (Cache) እየተጫነ ነው። (Firebase አይነበብም)");
-                
-                // በ Cache ውስጥ ያለውን የራሱን ደረጃ (Rank) አሁን ካለው User ID ጋር እናስተካክል
-                // (ምናልባት ተጠቃሚው አካውንት ቀይሮ ከሆነ)
-                const currentUserEntry = cachedObj.data.players.find(p => p.id === currentFirebaseUserId);
-                cachedObj.data.foundUserRank = currentUserEntry ? currentUserEntry.rank : 0;
-
-                renderLeaderboard(cachedObj.data);
-                return; // 🛑 ከ Firebase ሳንጠይቅ እዚሁ እናቆማለን (Cost Saved!)
+        
+        // 🛑 NEW: ቲኬቶችን (coin) ማዘመን (አልተወገደም - ለሌሎች ክፍሎች ጠቃሚ ሊሆን ይችላል)
+        async function updateTickets(ticketsToAdd) {
+             if (!currentFirebaseUserId) {
+                WebApp.showAlert("እባክዎ መተግበሪያው እስኪጫን ይጠብቁ (Login Failed).");
+                return false;
             }
-        } catch (e) {
-            console.warn("Cache parsing error, fetching fresh data.");
-            // ስህተት ካለ ችግር የለውም፣ ከታች አዲስ እናወርዳለን
+            
+            const userRef = doc(db, "users", currentFirebaseUserId); 
+            
+            const updateData = {
+                tickets: increment(ticketsToAdd), 
+            };
+            
+            try {
+                await updateDoc(userRef, updateData); 
+                WebApp.showAlert(`🎉 ${ticketsToAdd.toLocaleString()} Teto (Ticket) በተሳካ ሁኔታ ተጨመረ!`);
+                return true;
+            } catch (error) {
+                 WebApp.showAlert("❌ ቲኬት (coin) በማዘመን ላይ ስህተት ተፈጠረ: " + error.message);
+                 console.error("Error updating tickets:", error);
+                 return false;
+            }
         }
-    }
-
-    // ============================================================
-    // 2. Cache ከሌለ ወይም ጊዜው ካለፈበት፣ ከ Firebase እንጠይቅ
-    // ============================================================
-    try {
-        console.log("DEBUG: አዲስ መረጃ ከ Firebase እየተሳበ ነው።");
-        
-        const usersCollectionRef = collection(db, "users");
-        // Top 100 ተጠቃሚዎችን በነጥብ ብዛት (descending) አምጣ
-        const q = query(usersCollectionRef, orderBy('total_score', 'desc'), limit(100)); 
-        
-        const snapshot = await getDocs(q); 
-        
+/**
+ * የFireStoreን የ"users" ስብስብ በማዳመጥ የሊደርቦርዱን መረጃ በእውነተኛ ጊዜ ያዘምናል።
+ * ማስተካከያ:
+ * 1. 'Function' ወደ 'function' (Syntax Error ተስተካክሏል).
+ * 2. የደረጃ ቁጥሩን በትክክል ለመቁጠር 'rankCounter' ተጨምሯል (Rank Error ተስተካክሏል).
+ */
+function setupLeaderboardListener() {
+    const usersCollectionRef = collection(db, "users");
+    // በ 'total_score' በቅደም ተከተል በመደርደር የመጀመሪያዎቹን 50 ተጠቃሚዎች እንገደባለን
+    const q = query(usersCollectionRef, orderBy('total_score', 'desc'), limit(100)); 
+    
+    onSnapshot(q, (snapshot) => {
         let players = [];
-        let foundUserRank = 0; 
-        let rankCounter = 0;
+        let foundUserRank = '0'; 
+        
+        // 🛑 ማስተካከያ 1: ትክክለኛውን ደረጃ ለመቁጠር ውጫዊ ቆጣሪ እንጠቀማለን
+        let rankCounter = 0; 
         
         snapshot.forEach((doc) => {
-            rankCounter++;
             const data = doc.data();
-            const rank = rankCounter;
             
-            // መረጃውን ወደ array እንጨምር
+            // 🛑 ማስተካከያ 2: ቆጣሪውን ጨምረን ትክክለኛውን የደረጃ ቁጥር እንሰጣለን
+            rankCounter++;
+            const rank = rankCounter; 
+            
             players.push({ id: doc.id, ...data, rank: rank });
 
-            // የአሁኑን ተጠቃሚ ደረጃ እንፈልግ
             if (doc.id === currentFirebaseUserId) {
-                foundUserRank = rank; 
+                currentScore = data.total_score || 0; 
+                currentTickets = data.tickets || 0; 
+                currentUserDocData = data; 
+                foundUserRank = `#${rank}`; 
+                
+                // የ Slot Game ሁኔታን ከ Firebase ማግኘት
+                currentSpinsLeft = data.slot_spins_left !== undefined ? data.slot_spins_left : SLOTS_MAX_SPINS;
             }
         });
         
-        const leaderboardData = { players, foundUserRank };
-
-        // ============================================================
-        // 3. አዲሱን መረጃ ወደ localStorage እናስቀምጥ (SAVE CACHE)
-        // ============================================================
-        try {
-            localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify({
-                data: leaderboardData,
-                timestamp: now
-            }));
-        } catch (e) {
-            console.warn("localStorage is full or disabled", e);
-        }
-
-        // መረጃውን ወደ UI መላክ
-        renderLeaderboard(leaderboardData);
+        currentRank = foundUserRank;
         
-        console.log("DEBUG: fetchLeaderboard በተሳካ ሁኔታ ተጠናቀቀ (Updated Cache).");
-
-    } catch (error) {
-        leaderboardContainer.innerHTML = `<p style="text-align: center; color: var(--et-red); padding: 10px;">🛑 ስህተት ተፈጠረ! ${error.message}</p>`;
-        console.error("CRITICAL ERROR in fetchLeaderboard:", error);
-        WebApp.showAlert("🛑 ስህተት: Leaderboardን ማምጣት አልተቻለም።");
-    }
-}
-
-
-/**
- * Leaderboardን መረጃውን ተቀብሎ ወደ HTML የሚቀይር ተግባር (ከ fetchLeaderboard ወጥቷል)
- */
-function renderLeaderboard(data) {
-    const { players, foundUserRank } = data;
-    const leaderboardContainer = document.getElementById('leaderboard-container');
-    
-    // የደረጃ አመክንዮ (Rank Logic)
-    if (foundUserRank > 0) {
-        currentRank = `#${foundUserRank}`;
-    } else {
-        currentRank = 'Top 100+'; 
-    }
-    
-    // UI ማሻሻያ (Rank Update)
-    const rankDisplayEl = document.getElementById('top-rank-display');
-    if(rankDisplayEl) {
-         rankDisplayEl.innerText = currentRank;
-    }
-
-    // Leaderboard HTML መገንባት እና ማሳየት
-    let leaderboardHTML = `<div id="leaderboard-list">`;
-    
-    if (players.length === 0) {
-         leaderboardHTML += '<p style="text-align: center; color: var(--tg-hint); padding: 10px;">ምንም ተጫዋች የለም።</p>';
-    } else {
-         players.forEach((player) => {
-             const isCurrentUser = player.id === currentFirebaseUserId;
-             const avatarHtml = getAvatarHtml(player.username, player.photo_url); 
-             let rankClass = '';
-             let rankDisplay; 
-             const rankNumber = Number(player.rank); 
-              
-             if (isNaN(rankNumber) || rankNumber < 1) {
-                 rankDisplay = '#?';
-                 rankClass = '';
-             } else if (rankNumber === 1) {
-                 rankClass = 'gold-highlight';
-                 rankDisplay = '🥇'; 
-             } else if (rankNumber === 2) {
-                 rankClass = 'silver-highlight';
-                 rankDisplay = '🥈'; 
-             } else if (rankNumber === 3) {
-                 rankClass = 'bronze-highlight';
-                 rankDisplay = '🥉'; 
-             } else {
-                 rankDisplay = rankNumber.toString() + '.'; 
-                 rankClass = ''; 
-             }
-              
-             const itemClasses = `${isCurrentUser ? 'current-user-highlight' : ''} ${rankClass}`;
-             const rankHtmlClass = (rankNumber === 1) ? 'gold' : (rankNumber === 2) ? 'silver' : (rankNumber === 3) ? 'bronze' : '';
+        let leaderboardHTML = `<div id="leaderboard-list">`;
+        
+        if (players.length === 0) {
+             leaderboardHTML += '<p style="text-align: center; color: var(--tg-hint); padding: 10px;">ትንሽ ይጠብቁ።</p>';
+        } else {
+            players.forEach((player) => {
+                const isCurrentUser = player.id === currentFirebaseUserId;
+                const avatarHtml = getAvatarHtml(player.username, player.photo_url); 
+                
+                // ትክክለኛው የደረጃ አመክንዮ
+                let rankClass = '';
+                let rankDisplay; 
+                
+                const rankNumber = Number(player.rank); 
+                
+                // NaN ወይም 0 ከሆነ #? ይሁን (ይህ #? የሚለውን ችግር ይፈታል)
+                if (isNaN(rankNumber) || rankNumber < 1) {
+                    rankDisplay = '#?';
+                    rankClass = '';
+                } else {
+                    // ለ Top 3 ሜዳሊያዎችን እና ክላስን መወሰን
+                    if (rankNumber === 1) {
+                        rankClass = 'gold-highlight';
+                        rankDisplay = '🥇'; // Gold Medal
+                    } else if (rankNumber === 2) {
+                        rankClass = 'silver-highlight';
+                        rankDisplay = '🥈'; // Silver Medal
+                    } else if (rankNumber === 3) {
+                        rankClass = 'bronze-highlight';
+                        rankDisplay = '🥉'; // Bronze Medal
+                    } else {
+                        // ከ 3ኛ ደረጃ በላይ ላሉት: ትክክለኛውን ቁጥር በነጥብ እንዲያሳይ
+                        rankDisplay = rankNumber.toString() + '.'; 
+                        rankClass = ''; 
+                    }
+                }
+                
+                // የአሁኑ ተጠቃሚም ከሆነ ሁለቱንም ክላሶች ይውሰድ
+                const itemClasses = `${isCurrentUser ? 'current-user-highlight' : ''} ${rankClass}`;
+                // rankHtmlClass የሚውለው ለሜዳሊያዎቹ ቀለም ብቻ ነው
+                const rankHtmlClass = (rankNumber === 1) ? 'gold' : (rankNumber === 2) ? 'silver' : (rankNumber === 3) ? 'bronze' : '';
 
 
-            leaderboardHTML += `
-                <div class="leaderboard-item ${itemClasses}">
-                    <span class="leaderboard-item-rank ${rankHtmlClass}">
-                        ${rankDisplay} 
-                    </span> 
-                    <div class="leaderboard-item-photo">${avatarHtml}</div> 
-                    <span class="leaderboard-item-name">${player.username || 'ያልታወቀ ተጫዋች'}</span>
-                    <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
-                </div>
-            `;
-         });
-    }
-      
-    leaderboardHTML += `</div>`;
-    leaderboardContainer.innerHTML = leaderboardHTML;
+                leaderboardHTML += `
+                    <div class="leaderboard-item ${itemClasses}">
+                        <span class="leaderboard-item-rank ${rankHtmlClass}">
+                            ${rankDisplay} 
+                        </span> 
+                        <div class="leaderboard-item-photo">${avatarHtml}</div> 
+                        <span class="leaderboard-item-name">${player.username || 'ያልታወቀ ተጫዋች'}</span>
+                        <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
+                    </div>
+                `;
+            });
+        }
+          
+        leaderboardHTML += `</div>`;
+        
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        if (leaderboardContainer) {
+            leaderboardContainer.innerHTML = leaderboardHTML;
+        }
+        
+        renderPageContent();
+
+    }, (error) => {
+        console.error("Error fetching leaderboard:", error);
+        document.getElementById('leaderboard-container').innerHTML = '<p style="text-align: center; color: var(--et-red); padding: 10px;">የሰንጠረዡን መረጃ በማምጣት ላይ ስህተት ተፈጠረ።</p>';
+    });
 }
 
 
