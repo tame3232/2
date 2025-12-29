@@ -5628,6 +5628,15 @@ function setupCurrentUserListener(userId) {
         
 async function firebaseLogin() {
     try {
+        const savedTelegramId = localStorage.getItem('last_telegram_id');
+        
+        if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
+            await auth.signOut();
+            localStorage.clear();
+        }
+        
+        localStorage.setItem('last_telegram_id', telegramUserId.toString());
+
         const userCredential = await signInAnonymously(auth);
         let firebaseAuthUid = userCredential.user.uid;
 
