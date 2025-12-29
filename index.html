@@ -5625,66 +5625,67 @@ function setupCurrentUserListener(userId) {
 
 
 
-        
-async function firebaseLogin() {
+    async function firebaseLogin() {
     try {
-        const savedTelegramId = localStorage.getItem('last_telegram_id');
-        
-        if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
-            await auth.signOut();
-            localStorage.clear();
-        }
-        
-        localStorage.setItem('last_telegram_id', telegramUserId.toString());
-
+        // 1. በቅድሚያ በ Anonymous እንገባለን (ለ Security Rule እንዲያመች)
         const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid;
+        let firebaseAuthUid = userCredential.user.uid; // ይህ ለጊዜው የተቀየረው UID ሊሆን ይችላል
 
+        // 2. ትክክለኛው የ Telegram ID ማግኘታችንን ማረጋገጥ
         if (!telegramUserId) {
             console.error("Telegram User ID አልተገኘም!");
             return;
         }
 
+        // 🛑 ወሳኙ ለውጥ እዚህ ነው! 🛑
+        // ተጠቃሚውን በቀጥታ በ UID ከመፈለግ ይልቅ፣ በ Telegram ID እንፈልገዋለን (Query)
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("telegram_id", "==", telegramUserId));
         const querySnapshot = await getDocs(q);
 
         let userDocRef;
         let isNewUser = false;
-        let referrerId = null; // መጀመሪያ እዚህ ጋር እንገልጸዋለን
-
-        // የሪፈራል ID መኖሩን ከ start_param ላይ መፈተሽ
-        if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-            referrerId = WebApp.initDataUnsafe.start_param;
-            if (String(referrerId) === String(telegramUserId)) {
-                referrerId = null; 
-            }
-        }
 
         if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል
+            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል! (ኮይኖች ያሉት እዚህ ነው)
+            // ምንም እንኳን Firebase አዲስ UID ቢሰጠንም፣ እኛ የድሮውን Document ID እንጠቀማለን።
             const existingDoc = querySnapshot.docs[0];
             userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; 
+            currentFirebaseUserId = existingDoc.id; // ግሎባል ተለዋዋጭውን ወደ ትክክለኛው (ድሮው) ID እንቀይራለን
             
+            // የድሮውን መረጃ እናዘምናል (Updated Info)
             const username = getTelegramUsername();
             const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
             
             await updateDoc(userDocRef, {
                 username: username,
-                photo_url: photo_url
+                photo_url: photo_url,
+                // እዚህ ጋር total_score አንነካም (እንዳይጠፋ)
             });
 
         } else {
-            // ✅ ሁኔታ ለ፡ አዲስ ተጠቃሚ ነው
+            // ✅ ሁኔታ ለ፡ በጭራሽ የለም (አዲስ ተጠቃሚ ነው)
             isNewUser = true;
+            
+            // 💡 ምክር፡ ለወደፊቱ እንዳይምታታ አዲስ ሲፈጥሩ የ Document IDውን የ Telegram ID ያድርጉት።
+            // ከዚህ በፊት በ UID ከፈጠሩ ግን እንዳይጋጭ እዚሁ UID መጠቀም ይቻላል፣ 
+            // ነገር ግን ለወደፊት ጥራት ሲባል Telegram ID መጠቀም ይሻላል።
+            
+            // እዚህ ጋር Document IDውን telegramUserId አድርገነዋል (Robust Solution)
             currentFirebaseUserId = telegramUserId.toString(); 
             userDocRef = doc(db, "users", currentFirebaseUserId);
 
             const username = getTelegramUsername();
             const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
+            
+            let referrerId = null;
+            if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
+                referrerId = WebApp.initDataUnsafe.start_param;
+                if (referrerId === telegramUserId) {
+                    referrerId = null; 
+                }
+            }
 
-            // 1. አዲሱን ተጠቃሚ መመዝገብ
             await setDoc(userDocRef, {
                 telegram_id: telegramUserId,
                 username: username, 
@@ -5695,29 +5696,23 @@ async function firebaseLogin() {
                 referrer_id: referrerId || null,
                 daily_streak: 0,
                 last_streak_claim_time: null,
-                slot_spins_left: 10,
+                slot_spins_left: 10, // SLOTS_MAX_SPINS
                 last_slot_reset_time: null,
                 staked_amount: 0,
                 stake_start_time: null,
-                smart_coin_balance: 0,
-                invite_count: 0 // አዲስ ተጠቃሚ ስለሆነ 0
+                smart_coin_balance: 0
             });
+        // ... ከአዲሱ ተጠቃሚ setDoc በኋላ ይህንን ጨምር
+if (isNewUser && referrerId) {
+    const referrerRef = doc(db, "users", referrerId);
+    await updateDoc(referrerRef, {
+        total_score: increment(500),
+        invite_count: increment(1)
+    });
+}
 
-            // 2. ጋባዡ ካለ ነጥብ መጨመር (በአዲስ ተጠቃሚ ብሎክ ውስጥ)
-            if (referrerId) {
-                try {
-                    const referrerRef = doc(db, "users", String(referrerId));
-                    await updateDoc(referrerRef, {
-                        total_score: increment(500),
-                        invite_count: increment(1)
-                    });
-                    console.log("Referral bonus added to:", referrerId);
-                } catch (e) {
-                    console.error("Error updating referrer:", e);
-                }
-            }
-        } // እዚህ ጋር ነው else የሚዘጋው
 
+        // በመጨረሻም Listenerውን እንጠራለን (ይህ መረጃውን ወደ ስክሪኑ ያመጣል)
         setupCurrentUserListener(currentFirebaseUserId);
 
     } catch (error) {
@@ -5725,6 +5720,8 @@ async function firebaseLogin() {
         console.error("Firebase Login Failed:", error);
     }
 }
+    
+
 
 
 
