@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+Const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -314,8 +314,43 @@ exports.handler = async (event) => {
             }
         } // <--- የAdmin Logic መዝጊያ
 
-        // --- የ /start ስራ (Maintenance ውስጥ ካልሆነ ብቻ ነው የሚሰራው) ---
         if (text && text.startsWith('/start')) {
+    const startArgs = text.split(' ');
+    let referrerId = startArgs.length > 1 ? startArgs[1] : "በራሱ የመጣ";
+
+    // ተጠቃሚው ራሱን እንዳይጋብዝ መከላከል
+    if (String(referrerId) === String(chatId)) {
+        referrerId = "በራሱ የመጣ (Self-referral)";
+    }
+
+    const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
+                        `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
+                        `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
+                        `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
+                        `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
+                        `👥 <b>የጋባዥ ID:</b> <code>${referrerId}</code>\n` +
+                        `📅 <b>ቀን:</b> ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')} UTC`;
+    
+    // ለአድሚን መላክ
+    await sendToAdmin(newUserInfo);
+        // 🔥 አዲስ፡ ለጋባዡ (Referrer) መልዕክት መላክ
+    if (referrerId && String(referrerId) !== String(chatId) && referrerId !== "በራሱ የመጣ") {
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    chat_id: referrerId, 
+                    text: `🎉 <b>አዲስ ጓደኛ ተቀላቅሏል!</b>\n\n@${user.username || user.first_name} የእርስዎን ግብዣ ተቀብሎ በመጀመሩ 500 Coins አግኝተዋል። 🚀\n\nጓደኞችዎን መጋበዝዎን ይቀጥሉ!`, 
+                    parse_mode: 'HTML' 
+                }),
+            });
+        } catch (err) {
+            console.error("Referrer notification failed:", err);
+        }
+    }
+
+    
             const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
             
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
