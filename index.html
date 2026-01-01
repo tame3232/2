@@ -5764,10 +5764,9 @@ function removeMiniAppMaintenanceScreen() {
     }
 }
 
-// 2. አሁን firebaseLogin ፈንክሽን ብቻውን እንዲህ ይጻፋል
 async function firebaseLogin() {
     try {
-        // 🔥 ትልቁ ለውጥ እዚህ ጋር ነው፡ ጥገናውን ስራ እንዲጀምር ማዘዝ (Call)
+        // 1. ጥገና እና መሸጎጫ (Cache) ጽዳት
         setupMiniAppMaintenance(); 
 
         const savedTelegramId = localStorage.getItem('last_telegram_id');
@@ -5777,47 +5776,58 @@ async function firebaseLogin() {
         }
         
         localStorage.setItem('last_telegram_id', telegramUserId.toString());
+
+        // 2. Anonymous Login
         const userCredential = await signInAnonymously(auth);
-       let firebaseAuthUid = userCredential.user.uid;
+        let firebaseAuthUid = userCredential.user.uid;
 
         if (!telegramUserId) {
             console.error("Telegram User ID አልተገኘም!");
+            WebApp.showAlert("Critical Error: Telegram ID missing.");
             return;
         }
 
+        // 3. ተጠቃሚውን መፈለግ
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("telegram_id", "==", telegramUserId));
         const querySnapshot = await getDocs(q);
 
         let userDocRef;
-        let isNewUser = false;
-        let referrerId = null; // መጀመሪያ እዚህ ጋር እንገልጸዋለን
+        let referrerId = null;
 
-        // የሪፈራል ID መኖሩን ከ start_param ላይ መፈተሽ
+        // የሪፈራል ID ማጣራት
         if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
             referrerId = WebApp.initDataUnsafe.start_param;
+            // ሰውየው የራሱን ሊንክ ተጭኖ ከሆነ ሪፈራሉን እንሰርዘዋለን
             if (String(referrerId) === String(telegramUserId)) {
                 referrerId = null; 
             }
         }
 
         if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል
+            // ✅ ሁኔታ ሀ፡ የድሮ ተጠቃሚ (Existing User)
             const existingDoc = querySnapshot.docs[0];
             userDocRef = existingDoc.ref;
             currentFirebaseUserId = existingDoc.id; 
             
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            await updateDoc(userDocRef, {
-                username: username,
-                photo_url: photo_url
-            });
+            // 🛑 ማስተካከያ (CRITICAL FIX):
+            // እዚህ ጋር update ሲደረግ Error ቢፈጠር (ለምሳሌ በ Rule ምክንያት)፣
+            // ዋናው የ Login ሂደት መቆም የለበትም። ስለዚህ በ try-catch እንለየዋለን።
+            try {
+                const username = getTelegramUsername();
+                const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
+                
+                await updateDoc(userDocRef, {
+                    username: username,
+                    photo_url: photo_url
+                });
+            } catch (updateError) {
+                console.warn("User info update failed (Non-critical):", updateError);
+                // ችግር የለውም፣ ዝም ብለን ወደ ጨዋታው እንቀጥላለን
+            }
 
         } else {
-            // ✅ ሁኔታ ለ፡ አዲስ ተጠቃሚ ነው
-            isNewUser = true;
+            // ✅ ሁኔታ ለ፡ አዲስ ተጠቃሚ (New User)
             currentFirebaseUserId = telegramUserId.toString(); 
             userDocRef = doc(db, "users", currentFirebaseUserId);
 
@@ -5840,29 +5850,44 @@ async function firebaseLogin() {
                 staked_amount: 0,
                 stake_start_time: null,
                 smart_coin_balance: 0,
-                invite_count: 0 // አዲስ ተጠቃሚ ስለሆነ 0
+                invite_count: 0
             });
 
-            // 2. ጋባዡ ካለ ነጥብ መጨመር (በአዲስ ተጠቃሚ ብሎክ ውስጥ)
+            // 2. ጋባዡ (Referrer) ካለ ሽልማት መስጠት
+            // ማሳሰቢያ፡ ይህ እንዲሰራ Security Rule ላይ "ሌላ ሰው update ማድረግ ይቻላል" የሚል ህግ ያስፈልጋል።
             if (referrerId) {
                 try {
-                    const referrerRef = doc(db, "users", String(referrerId));
-                    await updateDoc(referrerRef, {
-                        total_score: increment(500),
-                        invite_count: increment(1)
-                    });
-                    console.log("Referral bonus added to:", referrerId);
+                    // IDው ቁጥር ብቻ መሆኑን እናረጋግጣለን
+                    const cleanReferrerId = String(referrerId).replace(/[^0-9]/g, '');
+                    if (cleanReferrerId) {
+                        const referrerRef = doc(db, "users", cleanReferrerId);
+                        
+                        // ጋባዡን ማዘመን
+                        await updateDoc(referrerRef, {
+                            total_score: increment(500),
+                            invite_count: increment(1)
+                        });
+                        console.log("Referral bonus added to:", cleanReferrerId);
+                    }
                 } catch (e) {
+                    // ጋባዡ ካልተገኘ ወይም Rule ከከለከለ ዋናው ተጠቃሚ እንዳይስተጓጎል ዝም እንላለን
                     console.error("Error updating referrer:", e);
                 }
             }
-        } // እዚህ ጋር ነው else የሚዘጋው
+        } 
 
+        // ✅ 4. ከሁሉም በላይ አስፈላጊው፡ Listenerውን መጥራት
+        // ይህ መስመር ካልሰራ ነው Loading Screen የሚቀረው!
         setupCurrentUserListener(currentFirebaseUserId);
 
     } catch (error) {
-        WebApp.showAlert("Firebase Login Failed: " + error.message);
-        console.error("Firebase Login Failed:", error);
+        // ከባድ ስህተት (Network error, etc)
+        WebApp.showAlert("Login Failed: " + error.message);
+        console.error("Firebase Login CRITICAL error:", error);
+        
+        // Loading Screen እንዳይቀር መደበቅ
+        const loadingContainer = document.getElementById('loading-container');
+        if(loadingContainer) loadingContainer.style.display = 'none';
     }
 }
 
