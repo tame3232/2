@@ -4403,7 +4403,7 @@ import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnaps
 
 
 
-
+let maintenance interval =null;
 let cachedLeaderboardData = null; 
 let lastLeaderboardFetchTime = 0;
 const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
@@ -5477,7 +5477,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
             return username;
         }
 
-
+ይህ የሚን አፕ ኮድ ከመጀመሪያው ቦት ኮድ ጋራ ይስማማሉ እንዴ??
         // ======================================================================
         //                          FIREBASE FUNCTIONS
         // ======================================================================
@@ -5624,69 +5624,207 @@ function setupCurrentUserListener(userId) {
 }
 
 
+function setupMiniAppMaintenance() {
+    const configRef = doc(db, 'settings', 'miniapp_config');
+    onSnapshot(configRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            
+            if (data.maintenance_mode === true) {
+                // እዚህ ጋር until የሚለውንም አብረን እንልካለን
+                showMiniAppMaintenanceScreen(data.maintenance_message, data.maintenance_until);
+            } else {
+                removeMiniAppMaintenanceScreen();
+            }
+        }
+    });
+}
+function showMiniAppMaintenanceScreen(message, maintenanceUntilTimestamp) {
+    const rootElement = document.getElementById('root');
+    const navBar = document.getElementById('nav-bar');
+    
+    // ዋናውን አፕ ደብቅ
+    if (rootElement) rootElement.style.display = 'none';
+    if (navBar) navBar.style.display = 'none';
 
+    let maintScreen = document.getElementById('miniapp-maint-overlay');
+    
+    // ስክሪኑ ከሌለ ፍጠረው
+    if (!maintScreen) {
+        maintScreen = document.createElement('div');
+        maintScreen.id = 'miniapp-maint-overlay';
+        maintScreen.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0f0f0f; color: white; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            z-index: 999999999; text-align: center; padding: 25px; font-family: sans-serif;
+        `;
         
-        async function firebaseLogin() {
-    try {
-        // 1. በቅድሚያ በ Anonymous እንገባለን (ለ Security Rule እንዲያመች)
-        const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid; // ይህ ለጊዜው የተቀየረው UID ሊሆን ይችላል
+        const channelLink = "https://t.me/Smart_Airdropss"; 
 
-        // 2. ትክክለኛው የ Telegram ID ማግኘታችንን ማረጋገጥ
+        maintScreen.innerHTML = `
+            <div style="font-size: 80px; margin-bottom: 20px;">🛠️</div>
+            <h1 style="color: #ffca28; font-size: 26px; margin-bottom: 10px;">SYSTEM UPDATE</h1>
+            
+            <p style="color: #ccc; font-size: 16px; line-height: 1.5; margin-bottom: 15px;">
+                ${message || "ሲስተሙን በማሻሻል ላይ ነን። ለጥቂት ደቂቃዎች ይጠብቁን።"}
+            </p>
+
+            <div id="maint-timer-display" style="
+                font-size: 32px; font-weight: bold; color: #ff5252; 
+                margin-bottom: 25px; background: #1a1a1a; 
+                padding: 10px 30px; border-radius: 15px; border: 1px solid #333;
+                min-width: 200px;">
+                -- : -- : --
+            </div>
+
+            <a href="${channelLink}" target="_blank" style="
+                background-color: #ffca28; color: black; padding: 12px 25px; 
+                text-decoration: none; border-radius: 25px; font-weight: bold; 
+                font-size: 14px; display: inline-block;">
+                ለበለጠ መረጃ ቻናላችንን ይቀላቀሉ
+            </a>
+        `;
+        document.body.appendChild(maintScreen);
+    }
+
+    // --- የቆጣሪው (Countdown) ስሌት ---
+    if (maintenanceUntilTimestamp) {
+        // የድሮ ቆጣሪ ካለ እናጠፋዋለን (እንዳይደራረብ)
+        if (maintenanceInterval) clearInterval(maintenanceInterval);
+
+        const timerElement = document.getElementById('maint-timer-display');
+        
+        // ከ Firebase የሚመጣው Timestamp ወደ ሚሊሰከንድ ይቀየራል
+        // .toDate() የሌለው ከሆነ (string ከሆነ) በ new Date() እንቀይረዋለን
+        const targetDate = maintenanceUntilTimestamp.toDate 
+            ? maintenanceUntilTimestamp.toDate().getTime() 
+            : new Date(maintenanceUntilTimestamp).getTime();
+
+        // በየ 1 ሰከንዱ የሚሰራ ተግባር
+        maintenanceInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            // ጊዜው ካለቀ (ከ 0 በታች ከሆነ)
+            if (distance < 0) {
+                clearInterval(maintenanceInterval);
+                if (timerElement) {
+                    timerElement.innerHTML = "Opening...";
+                    timerElement.style.color = "#4caf50"; // አረንጓዴ ይሁን
+                }
+                // ጊዜው ሲያልቅ አፑን ሪፍሬሽ እንዲያደርግ ከፈለግክ ይህን ክፈት፡
+                // setTimeout(() => window.location.reload(), 2000);
+                return;
+            }
+
+            // ሰዓት፣ ደቂቃ እና ሰከንድ ስሌት
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // አቀራረብ (Formatting): 02h : 15m : 30s
+            // ከ 10 በታች ሲሆኑ 0 መጨመር (ለምሳሌ 9 ሳይሆን 09)
+            const h = hours < 10 ? "0" + hours : hours;
+            const m = minutes < 10 ? "0" + minutes : minutes;
+            const s = seconds < 10 ? "0" + seconds : seconds;
+
+            if (timerElement) {
+                timerElement.innerHTML = `${h}h : ${m}m : ${s}s`;
+            }
+
+        }, 1000);
+    } else {
+        // ጊዜው ከሌለ ቆጣሪውን ደብቅ
+        const timerElement = document.getElementById('maint-timer-display');
+        if (timerElement) timerElement.style.display = 'none';
+    }
+}
+
+function removeMiniAppMaintenanceScreen() {
+    // 1. እየቆጠረ ያለውን ሰዓት አቁም (Stop the timer)
+    if (maintenanceInterval) {
+        clearInterval(maintenanceInterval);
+        maintenanceInterval = null;
+    }
+
+    const maintScreen = document.getElementById('miniapp-maint-overlay');
+    
+    // 2. ስክሪኑን አጥፋና ወደ ዋናው ገጽ መልስ
+    if (maintScreen) {
+        maintScreen.remove();
+        const rootElement = document.getElementById('root');
+        const navBar = document.getElementById('nav-bar');
+        
+        if (rootElement) rootElement.style.display = 'block';
+        if (navBar) navBar.style.display = 'flex';
+        
+        // ገጹን ሪፍሬሽ በማድረግ አፑን ማስጀመር (አስፈላጊ ከሆነ)
+        window.location.reload();
+    }
+}
+
+// 2. አሁን firebaseLogin ፈንክሽን ብቻውን እንዲህ ይጻፋል
+async function firebaseLogin() {
+    try {
+        // 🔥 ትልቁ ለውጥ እዚህ ጋር ነው፡ ጥገናውን ስራ እንዲጀምር ማዘዝ (Call)
+        setupMiniAppMaintenance(); 
+
+        const savedTelegramId = localStorage.getItem('last_telegram_id');
+        if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
+            await auth.signOut();
+            localStorage.clear();
+        }
+        
+        localStorage.setItem('last_telegram_id', telegramUserId.toString());
+        const userCredential = await signInAnonymously(auth);
+       let firebaseAuthUid = userCredential.user.uid;
+
         if (!telegramUserId) {
             console.error("Telegram User ID አልተገኘም!");
             return;
         }
 
-        // 🛑 ወሳኙ ለውጥ እዚህ ነው! 🛑
-        // ተጠቃሚውን በቀጥታ በ UID ከመፈለግ ይልቅ፣ በ Telegram ID እንፈልገዋለን (Query)
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("telegram_id", "==", telegramUserId));
         const querySnapshot = await getDocs(q);
 
         let userDocRef;
         let isNewUser = false;
+        let referrerId = null; // መጀመሪያ እዚህ ጋር እንገልጸዋለን
+
+        // የሪፈራል ID መኖሩን ከ start_param ላይ መፈተሽ
+        if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
+            referrerId = WebApp.initDataUnsafe.start_param;
+            if (String(referrerId) === String(telegramUserId)) {
+                referrerId = null; 
+            }
+        }
 
         if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል! (ኮይኖች ያሉት እዚህ ነው)
-            // ምንም እንኳን Firebase አዲስ UID ቢሰጠንም፣ እኛ የድሮውን Document ID እንጠቀማለን።
+            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል
             const existingDoc = querySnapshot.docs[0];
             userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; // ግሎባል ተለዋዋጭውን ወደ ትክክለኛው (ድሮው) ID እንቀይራለን
+            currentFirebaseUserId = existingDoc.id; 
             
-            // የድሮውን መረጃ እናዘምናል (Updated Info)
             const username = getTelegramUsername();
             const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
             
             await updateDoc(userDocRef, {
                 username: username,
-                photo_url: photo_url,
-                // እዚህ ጋር total_score አንነካም (እንዳይጠፋ)
+                photo_url: photo_url
             });
 
         } else {
-            // ✅ ሁኔታ ለ፡ በጭራሽ የለም (አዲስ ተጠቃሚ ነው)
+            // ✅ ሁኔታ ለ፡ አዲስ ተጠቃሚ ነው
             isNewUser = true;
-            
-            // 💡 ምክር፡ ለወደፊቱ እንዳይምታታ አዲስ ሲፈጥሩ የ Document IDውን የ Telegram ID ያድርጉት።
-            // ከዚህ በፊት በ UID ከፈጠሩ ግን እንዳይጋጭ እዚሁ UID መጠቀም ይቻላል፣ 
-            // ነገር ግን ለወደፊት ጥራት ሲባል Telegram ID መጠቀም ይሻላል።
-            
-            // እዚህ ጋር Document IDውን telegramUserId አድርገነዋል (Robust Solution)
             currentFirebaseUserId = telegramUserId.toString(); 
             userDocRef = doc(db, "users", currentFirebaseUserId);
 
             const username = getTelegramUsername();
             const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            let referrerId = null;
-            if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-                referrerId = WebApp.initDataUnsafe.start_param;
-                if (referrerId === telegramUserId) {
-                    referrerId = null; 
-                }
-            }
 
+            // 1. አዲሱን ተጠቃሚ መመዝገብ
             await setDoc(userDocRef, {
                 telegram_id: telegramUserId,
                 username: username, 
@@ -5697,15 +5835,29 @@ function setupCurrentUserListener(userId) {
                 referrer_id: referrerId || null,
                 daily_streak: 0,
                 last_streak_claim_time: null,
-                slot_spins_left: 10, // SLOTS_MAX_SPINS
+                slot_spins_left: 10,
                 last_slot_reset_time: null,
                 staked_amount: 0,
                 stake_start_time: null,
-                smart_coin_balance: 0
+                smart_coin_balance: 0,
+                invite_count: 0 // አዲስ ተጠቃሚ ስለሆነ 0
             });
-        }
 
-        // በመጨረሻም Listenerውን እንጠራለን (ይህ መረጃውን ወደ ስክሪኑ ያመጣል)
+            // 2. ጋባዡ ካለ ነጥብ መጨመር (በአዲስ ተጠቃሚ ብሎክ ውስጥ)
+            if (referrerId) {
+                try {
+                    const referrerRef = doc(db, "users", String(referrerId));
+                    await updateDoc(referrerRef, {
+                        total_score: increment(500),
+                        invite_count: increment(1)
+                    });
+                    console.log("Referral bonus added to:", referrerId);
+                } catch (e) {
+                    console.error("Error updating referrer:", e);
+                }
+            }
+        } // እዚህ ጋር ነው else የሚዘጋው
+
         setupCurrentUserListener(currentFirebaseUserId);
 
     } catch (error) {
@@ -5716,6 +5868,9 @@ function setupCurrentUserListener(userId) {
 
 
 
+
+        
+        
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
             if (!currentFirebaseUserId) {
