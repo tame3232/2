@@ -5766,134 +5766,92 @@ function removeMiniAppMaintenanceScreen() {
 
 async function firebaseLogin() {
     try {
-        // 1. ጥገና እና መሸጎጫ (Cache) ጽዳት
         setupMiniAppMaintenance(); 
 
+        if (!telegramUserId) {
+            console.error("Telegram User ID አልተገኘም!");
+            return;
+        }
+
+        // 1. የSession ቼክ
         const savedTelegramId = localStorage.getItem('last_telegram_id');
         if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
             await auth.signOut();
             localStorage.clear();
-        }
-        
-        localStorage.setItem('last_telegram_id', telegramUserId.toString());
-
-        // 2. Anonymous Login
-        const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid;
-
-        if (!telegramUserId) {
-            console.error("Telegram User ID አልተገኘም!");
-            WebApp.showAlert("Critical Error: Telegram ID missing.");
+            window.location.reload();
             return;
         }
+        localStorage.setItem('last_telegram_id', telegramUserId.toString());
 
+        // 2. Firebase Auth
+        const userCredential = await signInAnonymously(auth);
+        
         // 3. ተጠቃሚውን መፈለግ
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("telegram_id", "==", telegramUserId));
         const querySnapshot = await getDocs(q);
 
         let userDocRef;
-        let referrerId = null;
-
-        // የሪፈራል ID ማጣራት
-        if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-            referrerId = WebApp.initDataUnsafe.start_param;
-            // ሰውየው የራሱን ሊንክ ተጭኖ ከሆነ ሪፈራሉን እንሰርዘዋለን
-            if (String(referrerId) === String(telegramUserId)) {
-                referrerId = null; 
-            }
-        }
+        let referrerId = (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) ? WebApp.initDataUnsafe.start_param : null;
 
         if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ ተጠቃሚ (Existing User)
+            // ✅ የድሮ ተጠቃሚ
             const existingDoc = querySnapshot.docs[0];
+            currentFirebaseUserId = existingDoc.id; // እዚህ ጋር ID መያዙን አረጋግጥ
             userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; 
-            
-            // 🛑 ማስተካከያ (CRITICAL FIX):
-            // እዚህ ጋር update ሲደረግ Error ቢፈጠር (ለምሳሌ በ Rule ምክንያት)፣
-            // ዋናው የ Login ሂደት መቆም የለበትም። ስለዚህ በ try-catch እንለየዋለን።
+
             try {
-                const username = getTelegramUsername();
-                const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-                
                 await updateDoc(userDocRef, {
-                    username: username,
-                    photo_url: photo_url
+                    username: getTelegramUsername(),
+                    photo_url: WebApp.initDataUnsafe.user?.photo_url || null
                 });
-            } catch (updateError) {
-                console.warn("User info update failed (Non-critical):", updateError);
-                // ችግር የለውም፣ ዝም ብለን ወደ ጨዋታው እንቀጥላለን
-            }
+            } catch (e) { console.warn("Update failed", e); }
 
         } else {
-            // ✅ ሁኔታ ለ፡ አዲስ ተጠቃሚ (New User)
+            // ✅ አዲስ ተጠቃሚ
             currentFirebaseUserId = telegramUserId.toString(); 
             userDocRef = doc(db, "users", currentFirebaseUserId);
 
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-
-            // 1. አዲሱን ተጠቃሚ መመዝገብ
             await setDoc(userDocRef, {
                 telegram_id: telegramUserId,
-                username: username, 
-                photo_url: photo_url,
+                username: getTelegramUsername(),
+                photo_url: WebApp.initDataUnsafe.user?.photo_url || null,
                 created_at: serverTimestamp(),
-                tickets: 0, 
-                total_score: 0, 
-                referrer_id: referrerId || null,
+                tickets: 0,
+                total_score: 0,
+                referrer_id: (String(referrerId) === String(telegramUserId)) ? null : referrerId,
                 daily_streak: 0,
-                last_streak_claim_time: null,
                 slot_spins_left: 10,
-                last_slot_reset_time: null,
-                staked_amount: 0,
-                stake_start_time: null,
                 smart_coin_balance: 0,
                 invite_count: 0
             });
 
-            // 2. ጋባዡ (Referrer) ካለ ሽልማት መስጠት
-            // ማሳሰቢያ፡ ይህ እንዲሰራ Security Rule ላይ "ሌላ ሰው update ማድረግ ይቻላል" የሚል ህግ ያስፈልጋል።
-            if (referrerId) {
+            // Referrer ካለ ቦነስ መስጠት (በCloud Function ቢሆን ይመረጣል ግን ለጊዜው እዚህ ይቆይ)
+            if (referrerId && String(referrerId) !== String(telegramUserId)) {
                 try {
-                    // IDው ቁጥር ብቻ መሆኑን እናረጋግጣለን
-                    const cleanReferrerId = String(referrerId).replace(/[^0-9]/g, '');
-                    if (cleanReferrerId) {
-                        const referrerRef = doc(db, "users", cleanReferrerId);
-                        
-                        // ጋባዡን ማዘመን
-                        await updateDoc(referrerRef, {
-                            total_score: increment(500),
-                            invite_count: increment(1)
-                        });
-                        console.log("Referral bonus added to:", cleanReferrerId);
-                    }
-                } catch (e) {
-                    // ጋባዡ ካልተገኘ ወይም Rule ከከለከለ ዋናው ተጠቃሚ እንዳይስተጓጎል ዝም እንላለን
-                    console.error("Error updating referrer:", e);
-                }
+                    const refRef = doc(db, "users", String(referrerId));
+                    await updateDoc(refRef, {
+                        total_score: increment(500),
+                        invite_count: increment(1)
+                    });
+                } catch(e) { console.error("Referrer update failed", e); }
             }
         } 
 
-        // ✅ 4. ከሁሉም በላይ አስፈላጊው፡ Listenerውን መጥራት
-        // ይህ መስመር ካልሰራ ነው Loading Screen የሚቀረው!
-        setupCurrentUserListener(currentFirebaseUserId);
+        // 🛑 በጣም ወሳኝ፡ Listener እዚህ መጥራት አለበት
+        if (currentFirebaseUserId) {
+            setupCurrentUserListener(currentFirebaseUserId);
+        } else {
+            throw new Error("User ID could not be determined");
+        }
 
     } catch (error) {
-        // ከባድ ስህተት (Network error, etc)
-        WebApp.showAlert("Login Failed: " + error.message);
-        console.error("Firebase Login CRITICAL error:", error);
-        
-        // Loading Screen እንዳይቀር መደበቅ
-        const loadingContainer = document.getElementById('loading-container');
-        if(loadingContainer) loadingContainer.style.display = 'none';
+        console.error("Login Error:", error);
+        WebApp.showAlert("መግባት አልተቻለም: " + error.message);
+        const ld = document.getElementById('loading-container');
+        if(ld) ld.style.display = 'none';
     }
 }
-
-
-
-
         
         
 
