@@ -8,12 +8,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <script src="https://adsgram.ai/js/adsgram.js" onerror="window.adsgramError = true;"></script>
-<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-<script> var vConsole = new window.VConsole();</script>
-
-
-
-    <style>
+<style>
         /* ==============================================================
            === NEW: Loading Screen Styles (ጥቁሩ የሚሽከረከር ገጽ) ===
            ============================================================== */
@@ -4408,7 +4403,7 @@ import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnaps
 
 
 
-let maintenanceinterval =null;
+let maintenanceinterval = null;
 let cachedLeaderboardData = null; 
 let lastLeaderboardFetchTime = 0;
 const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
@@ -5769,91 +5764,145 @@ function removeMiniAppMaintenanceScreen() {
     }
 }
 
-async function firebaseLogin() {
+ async function firebaseLogin() {
     try {
-        // 1. በቅድሚያ በ Anonymous እንገባለን (ለ Security Rule እንዲያመች)
-        const userCredential = await signInAnonymously(auth);
-        let firebaseAuthUid = userCredential.user.uid; // ይህ ለጊዜው የተቀየረው UID ሊሆን ይችላል
+        setupMiniAppMaintenance(); 
 
-        // 2. ትክክለኛው የ Telegram ID ማግኘታችንን ማረጋገጥ
         if (!telegramUserId) {
             console.error("Telegram User ID አልተገኘም!");
             return;
         }
 
-        // 🛑 ወሳኙ ለውጥ እዚህ ነው! 🛑
-        // ተጠቃሚውን በቀጥታ በ UID ከመፈለግ ይልቅ፣ በ Telegram ID እንፈልገዋለን (Query)
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("telegram_id", "==", telegramUserId));
-        const querySnapshot = await getDocs(q);
+        // 1. የSession ቼክ
+        const savedTelegramId = localStorage.getItem('last_telegram_id');
+        if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
+            await auth.signOut();
+            localStorage.clear();
+            window.location.reload();
+            return;
+        }
+        localStorage.setItem('last_telegram_id', telegramUserId.toString());
+
+        // 2. Firebase Auth (Anonymous Login)
+        await signInAnonymously(auth);
+        
+        // =================================================================
+        // 🛑🛑🛑 ዋናው ማስተካከያ (CORE FIX) 🛑🛑🛑
+        // =================================================================
+        
+        // መረጃዎችን በጥንቃቄ እንያዝ (String vs Number እንዳያምታታው)
+        const strTelegramId = telegramUserId.toString(); 
+        const numTelegramId = Number(telegramUserId);
 
         let userDocRef;
-        let isNewUser = false;
+        let referrerId = (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) ? WebApp.initDataUnsafe.start_param : null;
 
-        if (!querySnapshot.empty) {
-            // ✅ ሁኔታ ሀ፡ የድሮ አካውንት ተገኝቷል! (ኮይኖች ያሉት እዚህ ነው)
-            // ምንም እንኳን Firebase አዲስ UID ቢሰጠንም፣ እኛ የድሮውን Document ID እንጠቀማለን።
-            const existingDoc = querySnapshot.docs[0];
-            userDocRef = existingDoc.ref;
-            currentFirebaseUserId = existingDoc.id; // ግሎባል ተለዋዋጭውን ወደ ትክክለኛው (ድሮው) ID እንቀይራለን
-            
-            // የድሮውን መረጃ እናዘምናል (Updated Info)
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            await updateDoc(userDocRef, {
-                username: username,
-                photo_url: photo_url,
-                // እዚህ ጋር total_score አንነካም (እንዳይጠፋ)
-            });
+        // ደረጃ 1፡ መጀመሪያ ተጠቃሚው "በአዲሱ ሲስተም" (Document ID == Telegram ID) መሆኑን እንፈትሽ
+        // ይህ ፈጣን ነው እና ለአዳዲስ ተጠቃሚዎች ቀጥታ ይሰራል።
+        const directDocRef = doc(db, "users", strTelegramId);
+        const directDocSnap = await getDoc(directDocRef);
+
+        if (directDocSnap.exists()) {
+            // ✅ ሁኔታ A: ተጠቃሚው በአዲሱ ሲስተም ተገኝቷል
+            console.log("User found via Direct ID (New System)");
+            currentFirebaseUserId = strTelegramId;
+            userDocRef = directDocRef;
+
+            // መረጃ ማደስ (Update)
+            try {
+                await updateDoc(userDocRef, {
+                    username: getTelegramUsername(),
+                    photo_url: WebApp.initDataUnsafe.user?.photo_url || null,
+                    last_active: serverTimestamp()
+                });
+            } catch (e) { console.warn("Update failed", e); }
 
         } else {
-            // ✅ ሁኔታ ለ፡ በጭራሽ የለም (አዲስ ተጠቃሚ ነው)
-            isNewUser = true;
-            
-            // 💡 ምክር፡ ለወደፊቱ እንዳይምታታ አዲስ ሲፈጥሩ የ Document IDውን የ Telegram ID ያድርጉት።
-            // ከዚህ በፊት በ UID ከፈጠሩ ግን እንዳይጋጭ እዚሁ UID መጠቀም ይቻላል፣ 
-            // ነገር ግን ለወደፊት ጥራት ሲባል Telegram ID መጠቀም ይሻላል።
-            
-            // እዚህ ጋር Document IDውን telegramUserId አድርገነዋል (Robust Solution)
-            currentFirebaseUserId = telegramUserId.toString(); 
-            userDocRef = doc(db, "users", currentFirebaseUserId);
+            // 🛑 ሁኔታ B: በአዲሱ ID አልተገኘም -> የድሮ ተጠቃሚ መሆኑን በ Query እንፈልግ
+            // እዚህ ጋር telegram_id string ወይም number ሊሆን ስለሚችል ሁለቱንም እንሞክር ("in" query)
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("telegram_id", "in", [numTelegramId, strTelegramId]));
+            const querySnapshot = await getDocs(q);
 
-            const username = getTelegramUsername();
-            const photo_url = WebApp.initDataUnsafe.user?.photo_url || null;
-            
-            let referrerId = null;
-            if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) {
-                referrerId = WebApp.initDataUnsafe.start_param;
-                if (referrerId === telegramUserId) {
-                    referrerId = null; 
+            if (!querySnapshot.empty) {
+                // ✅ ሁኔታ B-1: የድሮ ተጠቃሚ ተገኝቷል (Auto-ID)
+                const existingDoc = querySnapshot.docs[0];
+                console.log("User found via Query (Old System) ID:", existingDoc.id);
+                
+                currentFirebaseUserId = existingDoc.id; // Auto-generated IDን እንይዛለን
+                userDocRef = existingDoc.ref;
+
+                try {
+                    await updateDoc(userDocRef, {
+                        username: getTelegramUsername(),
+                        photo_url: WebApp.initDataUnsafe.user?.photo_url || null,
+                        last_active: serverTimestamp()
+                    });
+                } catch (e) { console.warn("Update failed", e); }
+
+            } else {
+                // ✅ ሁኔታ C: ጨርሶ የለም -> አዲስ ተጠቃሚ እንፍጠር (Document ID = Telegram ID)
+                console.log("Creating NEW user...");
+                
+                currentFirebaseUserId = strTelegramId;
+                userDocRef = doc(db, "users", currentFirebaseUserId);
+        
+                await setDoc(userDocRef, {
+                    telegram_id: numTelegramId, // እንደ ቁጥር እናስቀምጠዋለን
+                    username: getTelegramUsername(),
+                    photo_url: WebApp.initDataUnsafe.user?.photo_url || null,
+                    created_at: serverTimestamp(),
+                    tickets: 0,
+                    total_score: 0,
+                    referrer_id: (String(referrerId) === strTelegramId) ? null : referrerId,
+                    daily_streak: 0,
+                    slot_spins_left: 10,
+                    smart_coin_balance: 0,
+                    invite_count: 0
+                });
+
+                // Referrer ካለ ቦነስ መስጠት
+                if (referrerId && String(referrerId) !== strTelegramId) {
+                    try {
+                        // Referrer አዲሱ ወይም አሮጌው መሆኑን ስለማናውቅ በ Query መፈለግ ይሻላል
+                        // ነገር ግን ለአሁኑ ቀጥታ በID እንሞክር (ብዙ ጊዜ ID ስለሚሆን)
+                        const refRef = doc(db, "users", String(referrerId));
+                        await updateDoc(refRef, {
+                            total_score: increment(500),
+                            invite_count: increment(1)
+                        }).catch(async () => {
+                            // በID ካልተገኘ በQuery እንፈልግ (ለድሮ ተጠቃሚዎች)
+                            const qRef = query(usersRef, where("telegram_id", "==", Number(referrerId)));
+                            const qSnap = await getDocs(qRef);
+                            if(!qSnap.empty) {
+                                await updateDoc(qSnap.docs[0].ref, {
+                                    total_score: increment(500),
+                                    invite_count: increment(1)
+                                });
+                            }
+                        });
+                    } catch(e) { console.error("Referrer update failed", e); }
                 }
             }
-
-            await setDoc(userDocRef, {
-                telegram_id: telegramUserId,
-                username: username, 
-                photo_url: photo_url,
-                created_at: serverTimestamp(),
-                tickets: 0, 
-                total_score: 0, 
-                referrer_id: referrerId || null,
-                daily_streak: 0,
-                last_streak_claim_time: null,
-                slot_spins_left: 10, // SLOTS_MAX_SPINS
-                last_slot_reset_time: null,
-                staked_amount: 0,
-                stake_start_time: null,
-                smart_coin_balance: 0
-            });
         }
 
-        // በመጨረሻም Listenerውን እንጠራለን (ይህ መረጃውን ወደ ስክሪኑ ያመጣል)
-        setupCurrentUserListener(currentFirebaseUserId);
+        // =================================================================
+        // 🛑 በጣም ወሳኝ፡ Listener እዚህ መጥራት አለበት
+        // =================================================================
+        if (currentFirebaseUserId) {
+            console.log("Setting up listener for:", currentFirebaseUserId);
+            setupCurrentUserListener(currentFirebaseUserId);
+        } else {
+            throw new Error("User ID could not be determined");
+        }
 
     } catch (error) {
-        WebApp.showAlert("Firebase Login Failed: " + error.message);
-        console.error("Firebase Login Failed:", error);
+        console.error("Login Error:", error);
+        WebApp.showAlert("መግባት አልተቻለም: " + error.message);
+        
+        // Loading screen እንዳይቀር እናጥፋው (Error ቢኖርም)
+        const ld = document.getElementById('loading-container');
+        if(ld) ld.style.display = 'none';
     }
 }
 
@@ -10098,17 +10147,15 @@ window.cashoutMines = async () => {
           checkAdminStatus();
 
         }
-
-
-
-
-
 // ======================================================================
 //                              INITIALIZATION (የተስተካከለ)
 // ======================================================================
 window.onload = async () => {
     WebApp.ready(); 
     WebApp.setHeaderColor('secondary_bg_color');
+    WebApp.expand(); // አፑ ሙሉ ስክሪን እንዲሆን (Optional)
+    
+    // ቋንቋ ማስተካከል
     updateAppLanguage(currentLanguage);
     
     // የ Main Button ክሊክ ማስተናገጃ
@@ -10122,44 +10169,34 @@ window.onload = async () => {
         await updateScore(coinsToAdd, 'Daily Gift', 'last_gift_time');
     });
     
-    // Auth እና Firebaseን መጫን
-    await new Promise(resolve => { 
-        onAuthStateChanged(auth, async (user) => {
-            
-            // 🛑 === የቴሌግራም ID አመክንዮ === 🛑
-try {
-    if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.user) {
-        telegramUserId = WebApp.initDataUnsafe.user.id.toString();
-        // Set the global variable for the "Copy" button
-        window.telegramUserId = telegramUserId; 
-    } else {
-        // Throw an error if Telegram data is missing (crucial for production security)
-        throw new Error("Missing Telegram User Data (WebApp.initDataUnsafe).");
+    // 🛑 1. የቴሌግራም ID ማግኘት (Critical Step)
+    try {
+        if (WebApp.initDataUnsafe && WebApp.initDataUnsafe.user) {
+            telegramUserId = WebApp.initDataUnsafe.user.id.toString();
+            // ለ Copy button እና ለሌሎች ግሎባል ተለዋዋጭ
+            window.telegramUserId = telegramUserId; 
+        } else {
+             // ለሙከራ (Testing) በብራውዘር የምትሰራ ከሆነ ይህንን ክፈት፡
+             // telegramUserId = "TEST_USER_123"; 
+             // window.telegramUserId = telegramUserId;
+             
+             // ለProduction ግን ይህ ያስፈልጋል፡
+             throw new Error("Missing Telegram User Data.");
+        }
+    } catch (e) {
+        console.error("CRITICAL: Failed to get Telegram User ID.", e);
+        WebApp.showAlert("ስህተት: የቴሌግራም መረጃን ማግኘት አልተቻለም።");
+        return; // ID ከሌለ መቀጠል የለበትም
     }
-} catch (e) {
-    console.error("CRITICAL: Failed to get Telegram User ID.", e);
-    WebApp.showAlert("ስህተት: የቴሌግራም መረጃን ማግኘት አልተቻለም።");
-}
-// 🛑 === የቴሌግራም ID አመክንዮ መጨረሻ === 🛑
 
-            
-            
-            if (user) {
-                currentFirebaseUserId = user.uid;
-                // ✅ ዳታው ሲመጣ Loading Screen የሚጠፋው እዚህ ፈንክሽን ውስጥ ነው
-                setupCurrentUserListener(user.uid); 
-            } else {
-                await firebaseLogin(); 
-            }
-            resolve(); 
-        });
-    });
+    // 🛑 2. Login እና Data Loading
+    // onAuthStateChanged መጠቀም አያስፈልግም፣ ምክንያቱም firebaseLogin ራሱ 
+    // ተጠቃሚውን ፈልጎ (Old vs New) ስለሚያመጣ።
+    await firebaseLogin(); 
     
+    // ወደ መጀመሪያው ገጽ ውሰድ
     switchPage('tasks-page'); 
-
-   
 };
-
-   </script>
+ </script>
 </body>
 </html>
