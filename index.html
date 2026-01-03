@@ -5799,24 +5799,29 @@ async function firebaseLogin() {
         let userDocRef;
         let referrerId = (WebApp.initDataUnsafe && WebApp.initDataUnsafe.start_param) ? WebApp.initDataUnsafe.start_param : null;
 
-        if (!querySnapshot.empty) {
-            // ✅ የድሮ ተጠቃሚ
-            const existingDoc = querySnapshot.docs[0];
-            currentFirebaseUserId = existingDoc.id; // እዚህ ጋር ID መያዙን አረጋግጥ
-            userDocRef = existingDoc.ref;
+        
+if (!querySnapshot.empty) {
+    // ✅ የድሮ ተጠቃሚ
+    const existingDoc = querySnapshot.docs[0];
+    
+    // 🛑 ማስተካከያ፡ እዚህ ጋር IDውን በትክክል መያዝህን አረጋግጥ
+    currentFirebaseUserId = existingDoc.id; 
+    userDocRef = existingDoc.ref;
 
-            try {
-                await updateDoc(userDocRef, {
-                    username: getTelegramUsername(),
-                    photo_url: WebApp.initDataUnsafe.user?.photo_url || null
-                });
-            } catch (e) { console.warn("Update failed", e); }
+    console.log("Existing user found with ID:", currentFirebaseUserId); // ለዲባግ ይረዳሃል
 
-        } else {
-            // ✅ አዲስ ተጠቃሚ
-            currentFirebaseUserId = telegramUserId.toString(); 
-            userDocRef = doc(db, "users", currentFirebaseUserId);
+    try {
+        await updateDoc(userDocRef, {
+            username: getTelegramUsername(),
+            photo_url: WebApp.initDataUnsafe.user?.photo_url || null
+        });
+    } catch (e) { console.warn("Update failed", e); }
 
+} else {
+    // ✅ አዲስ ተጠቃሚ (IDው የቴሌግራም ID ይሆናል)
+    currentFirebaseUserId = telegramUserId.toString(); 
+    userDocRef = doc(db, "users", currentFirebaseUserId);
+    
             await setDoc(userDocRef, {
                 telegram_id: telegramUserId,
                 username: getTelegramUsername(),
