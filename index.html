@@ -5801,14 +5801,14 @@ async function firebaseLogin() {
 
         
 if (!querySnapshot.empty) {
-    // ✅ የድሮ ተጠቃሚ
+    // ✅ የድሮ ተጠቃሚ በ telegram_id ተገኝቷል
     const existingDoc = querySnapshot.docs[0];
     
-    // 🛑 ማስተካከያ፡ እዚህ ጋር IDውን በትክክል መያዝህን አረጋግጥ
+    // በጣም ወሳኝ፡ የFirebase Document ID (Auto-ID) መያዝ አለበት
     currentFirebaseUserId = existingDoc.id; 
     userDocRef = existingDoc.ref;
 
-    console.log("Existing user found with ID:", currentFirebaseUserId); // ለዲባግ ይረዳሃል
+    console.log("Existing user found. Document ID:", currentFirebaseUserId);
 
     try {
         await updateDoc(userDocRef, {
@@ -5818,13 +5818,16 @@ if (!querySnapshot.empty) {
     } catch (e) { console.warn("Update failed", e); }
 
 } else {
-    // ✅ አዲስ ተጠቃሚ (IDው የቴሌግራም ID ይሆናል)
+    // ✅ አዲስ ተጠቃሚ - የቴሌግራም IDን እንደ Document ID እንጠቀማለን
     currentFirebaseUserId = telegramUserId.toString(); 
     userDocRef = doc(db, "users", currentFirebaseUserId);
     
-            await setDoc(userDocRef, {
-                telegram_id: telegramUserId,
-                username: getTelegramUsername(),
+    console.log("New user. Using Telegram ID as Doc ID:", currentFirebaseUserId);
+
+    await setDoc(userDocRef, {
+        telegram_id: telegramUserId,
+        username: getTelegramUsername(),
+  
                 photo_url: WebApp.initDataUnsafe.user?.photo_url || null,
                 created_at: serverTimestamp(),
                 tickets: 0,
