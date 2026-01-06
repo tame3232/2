@@ -5896,7 +5896,7 @@ function removeMiniAppMaintenanceScreen() {
                     photo_url: window.Telegram.WebApp.initDataUnsafe.user?.photo_url || null,
                     total_score: startBonus,
                     smart_coin_balance: 0,
-                    tickets: 0,
+                    tickets: 3,
                     slot_spins_left: 10,
                     invite_count: 0,
                     referrer_id: validReferrerDocId || null,
@@ -5921,17 +5921,36 @@ function removeMiniAppMaintenanceScreen() {
                     })
                 }).catch(e => console.log("Notif failed", e));
                 
+                        
                 WebApp.showAlert(`🎉 በግብዣ ስለመጡ ${startBonus} coin አግኝተዋል!`);
             }
+        } 
 
-            setupCurrentUserListener(strTelegramId);
+        // =================================================================
+        // 🛑 2. Listener ከሁለቱም (Login/Register) ውጪ እዚህ መሆን አለበት
+        // =================================================================
+        if (currentFirebaseUserId) {
+            console.log("Setting up listener for:", currentFirebaseUserId);
+            setupCurrentUserListener(currentFirebaseUserId);
+        } else {
+            throw new Error("User ID could not be determined");
         }
 
-    } catch (error) {
+    } catch (error) { // <--- የ try ብሎክ መዝጊያ
         console.error("Login Error:", error);
-        WebApp.showAlert("Error logging in: " + error.message);
+        WebApp.showAlert("መግባት አልተቻለም: " + error.message);
+        
+        const ld = document.getElementById('loading-container');
+        if(ld) ld.style.display = 'none';
     }
 }
+
+
+
+
+
+
+
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
             if (!currentFirebaseUserId) {
