@@ -5765,7 +5765,7 @@ function removeMiniAppMaintenanceScreen() {
     }
 }
 
-async function firebaseLogin() {
+  async function firebaseLogin() {
     try {
         setupMiniAppMaintenance();
 
@@ -5820,6 +5820,9 @@ async function firebaseLogin() {
         // ============================================
         
         if (userExists) {
+            // 🔥🔥🔥 ማስተካከያ 1፡ Global Variable ማዘመን 🔥🔥🔥
+            currentFirebaseUserId = currentDocId; 
+
             // ✅ LOGIN (Update Only)
             const userDocRef = doc(db, 'users', currentDocId);
             try {
@@ -5833,33 +5836,34 @@ async function firebaseLogin() {
             setupCurrentUserListener(currentDocId);
 
         } else {
+            // 🔥🔥🔥 ማስተካከያ 2፡ Global Variable ማዘመን 🔥🔥🔥
+            currentFirebaseUserId = strTelegramId;
+
             // ✅ REGISTER (New User)
             console.log("Creating NEW user...");
             
             const initData = window.Telegram.WebApp.initDataUnsafe;
             let rawReferrerId = initData.start_param || null;
-            let validReferrerDocId = null; // የጋባዡ ትክክለኛ Document ID
+            let validReferrerDocId = null; 
 
             // ራስን መጋበዝ መከላከል
             if (rawReferrerId && String(rawReferrerId) === strTelegramId) {
                 rawReferrerId = null;
             }
 
-            // 🔥 FIX: Transaction ውስጥ Query ስለማይቻል፣ እዚህ ጋር ጋባዡን እንፈልገው
+            // ጋባዡን መፈለግ
             if (rawReferrerId) {
-                // 1. Direct ID Check
                 const refDocRef = doc(db, "users", String(rawReferrerId));
                 const refSnap = await getDoc(refDocRef);
                 
                 if (refSnap.exists()) {
                     validReferrerDocId = String(rawReferrerId);
                 } else {
-                    // 2. Query Check (ለድሮ ተጠቃሚዎች)
                     const usersRef = collection(db, "users");
                     const qRef = query(usersRef, where("telegram_id", "==", Number(rawReferrerId)));
                     const qSnap = await getDocs(qRef);
                     if (!qSnap.empty) {
-                        validReferrerDocId = qSnap.docs[0].id; // የድሮውን ID አገኘን!
+                        validReferrerDocId = qSnap.docs[0].id;
                     }
                 }
             }
@@ -5869,7 +5873,6 @@ async function firebaseLogin() {
             let startBonus = 0;
 
             await runTransaction(db, async (transaction) => {
-                // ጋባዥ ካለ ሽልማት መስጠት (አሁን ትክክለኛውን ID ስለምናውቅ ቀጥታ Get ማድረግ እንችላለን)
                 if (validReferrerDocId) {
                     const referrerRef = doc(db, 'users', validReferrerDocId);
                     const referrerDoc = await transaction.get(referrerRef);
@@ -5886,7 +5889,6 @@ async function firebaseLogin() {
                     }
                 }
 
-                // አዲሱን ተጠቃሚ መፍጠር
                 transaction.set(newUserRef, {
                     telegram_id: numTelegramId,
                     first_name: window.Telegram.WebApp.initDataUnsafe.user.first_name || 'User',
@@ -5894,10 +5896,10 @@ async function firebaseLogin() {
                     photo_url: window.Telegram.WebApp.initDataUnsafe.user?.photo_url || null,
                     total_score: startBonus,
                     smart_coin_balance: 0,
-                    tickets: 3,
+                    tickets: 0,
                     slot_spins_left: 10,
                     invite_count: 0,
-                    referrer_id: validReferrerDocId || null, // ትክክለኛው የreferrer Doc ID ይቀመጣል
+                    referrer_id: validReferrerDocId || null,
                     created_at: serverTimestamp(),
                     is_banned: false
                 });
@@ -5905,14 +5907,12 @@ async function firebaseLogin() {
 
             // Notification
             if (validReferrerDocId && startBonus > 0) {
-                 // ማስታወሻ: እዚህ ጋር ለ Bot Notification መላክ ያለብን የጋባዡን Telegram ID ነው።
-                 // validReferrerDocId የድሮው Auto-ID ሊሆን ስለሚችል፣ ለ Bot የምንልከው rawReferrerId ይሻላል።
                  const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
                  fetch(botUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        custom_chat_id: String(rawReferrerId), // ለ Bot ይህ ነው የሚጠቅመው
+                        custom_chat_id: String(rawReferrerId), 
                         message: `🎉 <b>እንኳን ደስ አለዎት!</b>\n\n` +
          `👥 ጓደኛዎ <b>${window.Telegram.WebApp.initDataUnsafe.user.first_name || 'ጓደኛዎ'}</b> የእርስዎን ግብዣ ተቀብሎ ምዝገባውን አጠናቋል።\n\n` +
          `💰 ለዚህ ግብዣ <b>+500 Coins</b> ሽልማት ወደ አካውንትዎ ተጨምሯል!\n\n` +
@@ -5932,7 +5932,7 @@ async function firebaseLogin() {
         WebApp.showAlert("Error logging in: " + error.message);
     }
 }
-  
+
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
             if (!currentFirebaseUserId) {
                 WebApp.showAlert("እባክዎ መተግበሪያው እስኪጫን ይጠብቁ (Login Failed).");
