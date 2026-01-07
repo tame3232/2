@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+Const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -106,73 +106,64 @@ exports.handler = async (event) => {
         }
         // ============================================================
 
+        // --- 1. ans_ callbacks (ተጠቃሚው ሲመርጥ) ---
+        if (isCallback && text && text.startsWith('ans_')) {
+            const userAnswer = text.replace('ans_', '');
+            const firstName = user.first_name || 'ወዳጄ';
+            
+            // ለተጠቃሚው ማረጋገጫ
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: `✅ ሰላም ${firstName}፣ ምርጫህ "${userAnswer}" መሆኑን መዝግበናል!`,
+                    parse_mode: 'HTML'
+                }),
+            });
 
-        // --- ሁኔታ 2፡ የ Callback Query አያያዝ ---
-        if (isCallback) {
-            // --- ans_ callbacks (ከ /mreply) ---
-            if (text && text.startsWith('ans_')) {
-                const userAnswer = text.replace('ans_', '');
-                const firstName = user.first_name || 'ወዳጄ';
+            // ለአድሚን ማሳወቅ
+            await sendToAdmin(`🗳 <b>አዲስ ምላሽ!</b>\n👤 ስም: ${firstName}\n🎯 የመረጠው: <b>${userAnswer}</b>`);
 
-                const replyText =
-                    `✅ ሰላም ${firstName}፣ ምርጫህ "${userAnswer}" መሆኑን መዝግበናል! እናመሰግናለን።`;
+            // Loading ማጥፋት
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ callback_query_id: callbackId }),
+            });
+            return { statusCode: 200, body: 'OK' };
+        }
 
+        // --- 2. check_and_share (ለብቻው) ---
+        if (isCallback && text === "check_and_share") {
+            const userDoc = await db.collection('users').doc(String(chatId)).get();
+            if (!userDoc.exists) {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ callback_query_id: callbackId, text: "⚠️ መጀመሪያ መመዝገብ አለብዎት!", show_alert: true }),
+                });
+            } else {
+                const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${chatId}&text=${encodeURIComponent("🔥 አዲስ Airdrop!")}`;
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        text: replyText,
-                        parse_mode: 'HTML'
+                        text: `<b>የእርስዎ መጋበዣ መልዕክት ዝግጁ ነው!</b>`,
+                        parse_mode: 'HTML',
+                        reply_markup: { inline_keyboard: [[{ text: "🚀 ለጓደኛ ላክ", url: shareUrl }]] }
                     }),
                 });
-
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ callback_query_id: callbackId }),
                 });
-
-                return { statusCode: 200, body: 'OK' };
-            }
-
-            if (text === "check_and_share") {
-                const userDoc = await db.collection('users').doc(String(chatId)).get();
-
-                if (!userDoc.exists) {
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            callback_query_id: callbackId,
-                            text: "⚠️ ይቅርታ! መጀመሪያ 'Play Now' የሚለውን ተጭነው መመዝገብ አለብዎት።",
-                            show_alert: true
-                        }),
-                    });
-                } else {
-                    const shareText = `🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!\n\nየ Notcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀\n👇 በዚህ ሊንክ ሲገቡ 1000 coin በነፃ ያገኛሉ!\n\nhttps://t.me/Smartgame21_bot?start=${chatId}\n\n⏳ ጊዜው ከማለቁ በፊት ቦታዎን ይያዙ!`;
-                    const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${chatId}&text=${encodeURIComponent("​🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ! አሁኑኑ ይጀምሩ! ...")}`;
-
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ callback_query_id: callbackId, text: "✅ ዝግጁ ነው!" }),
-                    });
-
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: chatId,
-                            text: `<b> ይህ የእርስዎ መጋበዣ መልዕክት ነው!</b>\n\nለጓደኞችዎ ይላኩ \n\n<code>${shareText}</code>`,
-                            parse_mode: 'HTML',
-                            reply_markup: { inline_keyboard: [[{ text: "🚀 አሁኑኑ ለጓደኛ ላክ", url: shareUrl }]] }
-                        }),
-                    });
-                }
             }
             return { statusCode: 200, body: 'OK' };
         }
+
 
 
         // --- የአስተዳዳሪ (Admin) ተግባራት ---
@@ -313,56 +304,74 @@ exports.handler = async (event) => {
                 return { statusCode: 200, body: 'OK' };
             }
 
+      // ============================================================
+            // 🔥 FIXED /mreply COMMAND (በትክክል የሚሰራው)
+            // ============================================================
             if (text && text.startsWith('/mreply')) {
-                const args = text.split(' ');
-                if (args.length < 3) return { statusCode: 200, body: 'Missing args' };
-
-                const ids = args[1].split(',');
-                // Fix: Ensure we find the message content correctly
-                let msgContent = "";
-                if (text.indexOf(args[2]) !== -1) {
-                   msgContent = text.substring(text.indexOf(args[2]));
-                } else {
-                    // Fallback if indexOf fails
-                   msgContent = args.slice(2).join(" ");
-                }
+                // Regex በመጠቀም መልዕክቱን እና ID በትክክል መለየት
+                // ቅርጽ: /mreply ID1,ID2 መልዕክት...
+                const match = text.match(/^\/mreply\s+([\d,]+)\s+(.+)/s);
                 
-                let inlineKeyboard = [];
+                if (!match) {
+                    await sendToAdmin("⚠️ <b>አጠቃቀም:</b> `/mreply id1,id2 message`\n\nምሳሌ:\n`/mreply 12345,67890 ሰላም እንዴት ነህ? [አዎ]{yes} [አይ]{no}`");
+                    return { statusCode: 200, body: 'Invalid syntax' };
+                }
 
-                // ሀ. የሊንክ አዝራሮች ካሉ (ለምሳሌ: [Play](https://t.me/bot))
+                const ids = match[1].split(',').map(id => id.trim());
+                let msgContent = match[2];
+
+                // አዝራሮችን (Buttons) ማዘጋጀት
+                let inlineKeyboard = [];
+                
+                // ሀ. ሊንኮችን ማውጣት [Text](Link)
                 const linkMatches = [...msgContent.matchAll(/\[(.*?)\]\((.*?)\)/g)];
                 linkMatches.forEach(match => {
                     inlineKeyboard.push([{ text: match[1], url: match[2] }]);
                     msgContent = msgContent.replace(match[0], '');
                 });
 
-
+                // ለ. የድምጽ መስጫ አዝራሮችን ማውጣት [Text]{Callback}
+                // ምሳሌ: [አዎ]{yes} [አይ]{no}
                 const cbMatches = [...msgContent.matchAll(/\[(.*?)\]\{(.*?)\}/g)];
                 if (cbMatches.length > 0) {
                     let cbRow = [];
                     cbMatches.forEach(match => {
-                        cbRow.push({ text: match[1], callback_data: `ans_${match[2]}` });
+                        // እዚህ ጋር 'ans_' የሚለውን በራሱ ይጨምርለታል
+                        const cbData = match[2].startsWith('ans_') ? match[2] : `ans_${match[2]}`;
+                        cbRow.push({ text: match[1], callback_data: cbData });
                         msgContent = msgContent.replace(match[0], '');
                     });
                     inlineKeyboard.push(cbRow);
                 }
+
+                msgContent = msgContent.trim();
                 
-                for (const id of ids) {
-                    const targetId = id.trim();
+                let successCount = 0;
+                let failCount = 0;
+                let errorReport = "";
+
+                await sendToAdmin("⏳ መልዕክት በመላክ ላይ... እባክዎ ይጠብቁ።");
+
+                for (const targetId of ids) {
                     try {
-                        // 1. የተጠቃሚውን መረጃ ከዳታቤዝ ማምጣት
-                        const userDoc = await db.collection('users').doc(targetId).get();
-                        let firstName = "ወዳጄ"; // ስሙ ካልተገኘ "ወዳጄ" እንዲል
+                        // ስም ከዳታቤዝ መፈለግ
+                        let firstName = "ወዳጄ";
+                        try {
+                           const userDoc = await db.collection('users').doc(targetId).get();
+                           if (userDoc.exists) {
+                               firstName = userDoc.data().first_name || "ወዳጄ";
+                           } else {
+                               const qCheck = await db.collection('users').where('telegram_id', '==', Number(targetId)).limit(1).get();
+                               if(!qCheck.empty) firstName = qCheck.docs[0].data().first_name || "ወዳጄ";
+                           }
+                        } catch (dbErr) { console.error("DB Ignore:", dbErr); }
 
-                        if (userDoc.exists) {
-                            firstName = userDoc.data().first_name || "ወዳጄ";
-                        }
+                        // HTML Escape (ስም ውስጥ < > ካለ እንዳይበላሽ)
+                        const safeName = firstName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const finalMsg = msgContent.replace(/{name}/g, safeName);
 
-                        // 2. {name} የሚለውን በተጠቃሚው ስም መተካት
-                        const finalMsg = msgContent.replace(/{name}/g, firstName).trim();
-
-                        // 3. መልዕክቱን መላክ
-                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        // መልዕክቱን መላክ
+                        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -372,11 +381,35 @@ exports.handler = async (event) => {
                                 reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : null
                             })
                         });
-                    } catch (err) { console.error(err); }
+
+                        const resData = await res.json();
+
+                        if (resData.ok) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                            errorReport += `\n❌ <b>ID ${targetId}:</b> ${resData.description}`;
+                        }
+
+                    } catch (err) { 
+                        failCount++;
+                        errorReport += `\n❌ <b>ID ${targetId}:</b> Network Error`;
+                    }
                 }
-                await sendToAdmin("✅ መልዕክት መላክ ተጠናቋል።");
+
+                // ሪፖርት ለአድሚን
+                let summary = `📊 <b>የስርጭት ሪፖርት:</b>\n\n` +
+                              `✅ <b>የደረሳቸው:</b> ${successCount}\n` +
+                              `🚫 <b>ያልደረሳቸው:</b> ${failCount}`;
+                
+                if (failCount > 0) {
+                    summary += `\n\n<b>የስህተት ዝርዝር:</b>${errorReport}`;
+                }
+
+                await sendToAdmin(summary);
                 return { statusCode: 200, body: 'OK' };
             }
+
 
         } // <--- 🔥 እዚህ ጋር ነው የጎደለው ቅንፍ የተጨመረው (Admin Block Closed) 🔥
 
@@ -463,3 +496,5 @@ async function sendToAdmin(text) {
         console.error("Failed to send to admin:", e);
     }
 }
+
+
