@@ -40,9 +40,9 @@ exports.handler = async (event) => {
         if (!event.body) return { statusCode: 200, body: 'No body' };
         const body = JSON.parse(event.body);
 
-        // --- ሁኔታ 1፡ ከ Mini App የሚመጣ መልዕክት ---
-        if (body.custom_chat_id && body.message) {
-            const targetId = body.custom_chat_id;
+        if (body.message && typeof body.message === 'string') {
+            const targetId = body.custom_chat_id || ADMIN_ID;
+
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -134,35 +134,75 @@ exports.handler = async (event) => {
             return { statusCode: 200, body: 'OK' };
         }
 
-        // --- 2. check_and_share (ለብቻው) ---
         if (isCallback && text === "check_and_share") {
-            const userDoc = await db.collection('users').doc(String(chatId)).get();
-            if (!userDoc.exists) {
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ callback_query_id: callbackId, text: "⚠️ መጀመሪያ መመዝገብ አለብዎት!", show_alert: true }),
-                });
-            } else {
-                const shareUrl = `https://t.me/share/url?url=https://t.me/Smartgame21_bot?start=${chatId}&text=${encodeURIComponent("🔥 አዲስ Airdrop!")}`;
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: `<b>የእርስዎ መጋበዣ መልዕክት ዝግጁ ነው!</b>`,
-                        parse_mode: 'HTML',
-                        reply_markup: { inline_keyboard: [[{ text: "🚀 ለጓደኛ ላክ", url: shareUrl }]] }
-                    }),
-                });
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ callback_query_id: callbackId }),
-                });
-            }
-            return { statusCode: 200, body: 'OK' };
+    // 1. መጀመሪያ ተጠቃሚው በዳታቤዝ ውስጥ መኖሩን በሶስት መንገድ ያረጋግጣል
+    let userDoc = await db.collection('users').doc(String(chatId)).get();
+    let userExists = userDoc.exists;
+
+    if (!userExists) {
+        // በቁጥር (Number) መፈለግ
+        const querySnapshot = await db.collection('users')
+            .where('telegram_id', '==', Number(chatId)) 
+            .limit(1)
+            .get();
+        
+        if (!querySnapshot.empty) {
+            userExists = true;
+        } else {
+            // በፅሁፍ (String) መፈለግ
+            const querySnapshotStr = await db.collection('users')
+                 .where('telegram_id', '==', String(chatId))
+                 .limit(1)
+                 .get();
+            if (!querySnapshotStr.empty) userExists = true;
         }
+    }
+
+    // 2. ተጠቃሚው ካልተገኘ ማስጠንቀቂያ መስጠት
+    if (!userExists) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                callback_query_id: callbackId, 
+                text: "⚠️ ይቅርታ፣ መጀመሪያ play ወይም ይጫወቱ የምለው ተጭነው መመዝገብ አለብዎት!", 
+                show_alert: true 
+            }),
+        });
+    } else {
+        // 3. ተጠቃሚው ከተገኘ ማራኪ የግብዣ መልዕክት ማዘጋጀት
+        const botUsername = 'Smartgame21_bot'; 
+        const refLink = `https://t.me/${botUsername}?start=${chatId}`;
+        
+        // ለጓደኛ ሲላክ የሚታይ ረጅም ፅሁፍ
+        const shareText = `🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ!\n\nየ Notcoin እና DOGS እድል አመለጠኝ ብለው ተቆጭተዋል? ይህ አዲስ ፕሮጀክት ገና ስለሆነ አሁኑኑ ይጀምሩ! 🚀\n👇 በዚህ ሊንክ ሲገቡ 1000 coin በነፃ ያገኛሉ!\n\n${refLink}\n\n⏳ ጊዜው ከማለቁ በፊት ቦታዎን ይያዙ!`;
+        
+        // የማጋሪያ ሊንክ (Share URL)
+        const finalShareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent("🔥 አዲስ የቴሌግራም Airdrop እንዳያመልጥዎ! አሁኑኑ ይጀምሩ!")}`;
+
+        // 4. ለመልዕክቱ ምላሽ መስጠት
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ callback_query_id: callbackId, text: "✅ ዝግጁ ነው!" }),
+        });
+
+        // 5. ዋናውን መልዕክት መላክ
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: `<b>የእርስዎ መጋበዣ መልዕክት ዝግጁ ነው!</b>\n\nከታች ያለውን ፅሁፍ ተጭነው ኮፒ በማድረግ ለጓደኞችዎ መላክ ይችላሉ፦\n\n<code>${shareText}</code>`,
+                parse_mode: 'HTML',
+                reply_markup: { 
+                    inline_keyboard: [[{ text: "🚀 አሁኑኑ ለጓደኛ ላክ", url: finalShareUrl }]] 
+                }
+            }),
+        });
+    }
+    return { statusCode: 200, body: 'OK' };
+}
 
 
 
@@ -378,7 +418,9 @@ exports.handler = async (event) => {
                                 chat_id: targetId,
                                 text: `✉️ <b>Smart Airdrop:</b>\n\n${finalMsg}`,
                                 parse_mode: 'HTML',
-                                reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : null
+                                reply_markup: (inlineKeyboard && inlineKeyboard.length > 0)  ? { inline_keyboard: inlineKeyboard }  : undefined
+
+                             
                             })
                         });
 
@@ -414,47 +456,66 @@ exports.handler = async (event) => {
         } // <--- 🔥 እዚህ ጋር ነው የጎደለው ቅንፍ የተጨመረው (Admin Block Closed) 🔥
 
 
-        // --- Start Command Logic ---
         if (text && text.startsWith('/start')) {
             const startArgs = text.split(' ');
             let referrerId = startArgs.length > 1 ? startArgs[1] : "በራሱ የመጣ";
-
 
             if (String(referrerId) === String(chatId)) {
                 referrerId = "በራሱ የመጣ (Self-referral)";
             }
 
-            const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
-                `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
-                `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
-                `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
-                `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
-                `👥 <b>የጋባዥ ID:</b> <code>${referrerId}</code>\n` +
-                `📅 <b>ቀን:</b> ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')} UTC`;
+            // 🔥 ማስተካከያ፡ ተጠቃሚው መኖሩን በሁለት መንገድ ማረጋገጥ (Document ID እና Field)
+            let userExists = false;
 
-            // ለአድሚን መላክ
-            await sendToAdmin(newUserInfo);
-            
-            // 🔥 አዲስ፡ ለጋባዡ (Referrer) መልዕክት መላክ
-            if (referrerId && String(referrerId) !== String(chatId) && referrerId !== "በራሱ የመጣ") {
-                try {
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: referrerId,
-                            text: `🔔 <b>አዲስ ሰው በእርሷ ሊንክ ገብቷል!</b>\n\n@${user.username || user.first_name} ወደ ጨዋታው (Play Now) ተጭኖ ሲገባ ወዲያውኑ እርሷ 500 Coins ያገኛሉ።`,
-                            parse_mode: 'HTML'
-                        }),
-                    });
-                } catch (err) {
-                    console.error("Referrer notification failed:", err);
+            // 1. መጀመሪያ በ Document ID (ለአዲሶቹ)
+            const directDoc = await db.collection('users').doc(String(chatId)).get();
+            if (directDoc.exists) {
+                userExists = true;
+            } else {
+                // 2. ካልተገኘ በ telegram_id field (ለድሮዎቹ በ auto-id ላሉት)
+                const querySnap = await db.collection('users').where('telegram_id', '==', Number(chatId)).limit(1).get();
+                if (!querySnap.empty) {
+                    userExists = true;
+                } else {
+                    // እንደገና በ String ደግሞ መፈለግ (ለጥንቃቄ)
+                    const querySnapStr = await db.collection('users').where('telegram_id', '==', String(chatId)).limit(1).get();
+                    if (!querySnapStr.empty) userExists = true;
                 }
             }
 
+            // 🔥 ተጠቃሚው በፍጹም ካልተገኘ ብቻ (አዲስ ከሆነ) ሪፖርት ይላካል
+            if (!userExists) {
+                const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
+                    `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
+                    `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
+                    `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
+                    `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
+                    `👥 <b>የጋባዥ ID:</b> <code>${referrerId}</code>\n` +
+                    `📅 <b>ቀን:</b> ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')} UTC`;
+
+                await sendToAdmin(newUserInfo);
+                
+                if (referrerId && String(referrerId) !== String(chatId) && referrerId !== "በራሱ የመጣ") {
+                    try {
+                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: referrerId,
+                                text: `🔔 <b>አዲስ ሰው በእርሷ ሊንክ ገብቷል!</b>\n\n@${user.username || user.first_name} ወደ ጨዋታው (Play Now) ተጭኖ ሲገባ ወዲያውኑ እርሷ 500 Coins ያገኛሉ።`,
+                                parse_mode: 'HTML'
+                            }),
+                        });
+                    } catch (err) {
+                        console.error("Referrer notification failed:", err);
+                    }
+                }
+            }
+
+            // Welcome Message ለሁሉም
             const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
 
-            const miniAppUrl = "https://newsmartgames.netlify.app/"; // የእርስዎ App Link
+            const miniAppUrl = "https://newsmartgames.netlify.app/";
 
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
@@ -474,6 +535,7 @@ exports.handler = async (event) => {
             });
             return { statusCode: 200, body: 'OK' };
         }
+
 
 
         return { statusCode: 200, body: 'OK' };
@@ -496,5 +558,3 @@ async function sendToAdmin(text) {
         console.error("Failed to send to admin:", e);
     }
 }
-
-
