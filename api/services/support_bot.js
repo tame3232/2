@@ -14,7 +14,8 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const SUPPORT_BOT_TOKEN = process.env.SUPPORT_BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_ID;
+const ADMIN_ID = String(process.env.ADMIN_ID).trim();
+
 
 exports.handler = async (event) => {
     try {
@@ -73,7 +74,10 @@ exports.handler = async (event) => {
             console.error("Database Fetch Error:", e);
         }
     }
-    await sendMessage(chatId, "👋 <b>ሰላም! ወደ Smart Airdrop የድጋፍ ማዕከል እንኳን መጡ።</b>\n\nጥያቄዎን ወይም ያጋጠመዎትን ችግር እዚህ ይጻፉ። የቴክኒክ ቡድናችን መረጃዎን አይቶ በፍጥነት ይመልስልዎታል።");
+    const firstName = body.message.from.first_name || 'ተጠቃሚ';
+
+await sendMessage(chatId, `👋 <b>ሰላም ${firstName}! ወደ Smart Airdrop የድጋፍ ማዕከል እንኳን መጡ።</b>\n\nጥያቄዎን ወይም ያጋጠመዎትን ችግር እዚህ ይጻፉ። የቴክኒክ ቡድናችን መረጃዎን አይቶ በፍጥነት ይመልስልዎታል።`);
+
     return { statusCode: 200 };
 }
 
@@ -126,6 +130,51 @@ exports.handler = async (event) => {
 
         // --- 4. ተጠቃሚው ጥያቄ ሲልክ ወደ አድሚን Forward ማድረግ ---
         if (String(chatId) !== String(ADMIN_ID)) {
+            
+            // ለመልዕክቱ የሚሆን ባዶ መያዣ
+            let userInfoMsg = `⚠️ <b>መረጃ:</b> ስለ ID <code>${chatId}</code> መረጃ በዳታቤዝ አልተገኘም።`;
+            let userData = null;
+
+            try {
+                // 1ኛ ሙከራ፡ በቀጥታ በ Document ID (Auto ID ወይም የተቀመጠበት ስም) መፈለግ
+                const docRef = await db.collection('users').doc(String(chatId)).get();
+                
+                if (docRef.exists) {
+                    userData = docRef.data();
+                } else {
+                    // 2ኛ ሙከራ፡ Document ID ካልተገኘ፣ በ 'telegram_id' field መፈለግ
+                    // ማሳሰቢያ፡ አንዳንዴ ቁጥር (Number) አንዳንዴ ጽሁፍ (String) ሊሆን ስለሚችል በሁለቱም እንፈልጋለን
+                    const querySnapshot = await db.collection('users')
+                        .where('telegram_id', 'in', [chatId, Number(chatId), String(chatId)])
+                        .limit(1)
+                        .get();
+
+                    if (!querySnapshot.empty) {
+                        userData = querySnapshot.docs[0].data();
+                    }
+                }
+
+                // መረጃው ከተገኘ መልዕክቱን ማዘጋጀት
+                if (userData) {
+                    const d = userData;
+                     userInfoMsg = `📢 <b>አዲስ መልዕክት!</b>\n\n` +
+                        `👤 <b>ስም:</b> ${d.first_name || 'ያልታወቀ'}\n` +
+                        `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
+                        `💰 <b>Score:</b> ${(d.total_score || 0).toLocaleString()}\n` +
+                        `👥 <b>Invites:</b> ${d.invite_count || 0}\n` +
+                        `🚦 <b>ሁኔታ:</b> ${d.is_banned ? '🚫 Banned' : '✅ Active'}\n\n` +
+                        `👉 ለመመለስ: <code>/reply ${chatId} መልዕክት</code>`;
+                }
+
+            } catch (err) {
+                console.error("DB Fetch Error:", err);
+                userInfoMsg = `⚠️ <b>Error:</b> ዳታቤዝ ለመፈተሽ ችግር አጋጥሟል (ID: ${chatId})`;
+            }
+
+            // 1. የተጠቃሚውን መረጃ ለአድሚኑ መላክ
+            await sendMessage(ADMIN_ID, userInfoMsg);
+
+            // 2. የተጠቃሚውን ኦሪጅናል መልዕክት Forward ማድረግ
             const forwardRes = await fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/forwardMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -136,16 +185,20 @@ exports.handler = async (event) => {
                 })
             });
             
+            // Forward ማድረግ ካልተቻለ (Privacy ምክንያት)
             const forwardData = await forwardRes.json();
-            
-            // ተጠቃሚው Forwarding Privacy ካበራ አድሚኑ እንዲያውቅ
             if (forwardData.ok && !forwardData.result.forward_from) {
-                await sendMessage(ADMIN_ID, `⚠️ <b>ማሳሰቢያ:</b> ይህ ተጠቃሚ Forwarding ስለከለከለ ቀጥታ Reply ማድረግ አይቻልም። ለመመለስ <code>/reply ${chatId}</code> ይጠቀሙ።`);
+                await sendMessage(ADMIN_ID, `ℹ️ <b>ማስታወሻ:</b> ተጠቃሚው Hidden Forwarding ስለሚጠቀም ቀጥታ Reply ማድረግ አይቻልም። እባክዎ ከላይ ያለውን ID ኮፒ አድርገው <code>/reply</code> ይጠቀሙ።`);
             }
 
-            await sendMessage(chatId, "✅ <b>መልዕክትዎ ለድጋፍ ሰጪ ቡድናችን ተልኳል።</b>\nበቅርቡ ምላሽ እንሰጥዎታለን።");
+           
+          
+      await sendMessage(chatId, `👋 ሰላም ${body.message.from.first_name || 'ተጠቃሚ'}! መልዕክትዎ ለድጋፍ ሰጪ ቡድናችን ደርሷል። በቅርቡ ምላሽ እንሰጥዎታለን።`);
+
+            
             return { statusCode: 200 };
         }
+
 
         return { statusCode: 200 };
     } catch (error) {
@@ -167,3 +220,4 @@ async function sendMessage(id, msg) {
         return false;
     }
 }
+
