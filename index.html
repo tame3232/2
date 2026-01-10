@@ -5332,25 +5332,23 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
     const button = document.getElementById(taskElementId);
     if (!button) return;
 
-    // 1. የዳታቤዝ ፍተሻ (Has Completed?)
     const { hasCompleted } = checkDailyLimit(field);
 
     if (hasCompleted) {
-        // ✅ ከዚህ በፊት ከተሰራ (Firebase ላይ መረጃው ካለ)
-        button.innerText = `Completed ✅`;
+        // ✅ t() ፋንክሽንህን በመጠቀም 'btn_completed' የሚለውን ትርጉም ጥራ
+        button.innerText = t('btn_completed'); 
         button.classList.remove('join-style');
         button.classList.add('completed-style');
-        button.onclick = null; // ክሊክ መከልከል
+        button.onclick = null;
         button.disabled = true;
-        // ⚠️ data-stateን ማስወገድ (Timer Logic ካለህ)
         button.removeAttribute('data-state'); 
     } else {
-        // ❌ ካልተሰራ፣ አዝራሩን ለስራ ማዘጋጀት
-        const actionText = actionType === 'subscribe' ? 'Subscribe' : 'Join';
+        // 'btn_subscribe' ወይም 'btn_join' የሚለውን ትርጉም ጥራ
+        const actionKey = actionType === 'subscribe' ? 'btn_subscribe' : 'btn_join';
         
-        // Timer እየሮጠ ካልሆነ ብቻ ወደ Join መመለስ
-        if (!button.innerText.includes('Checking')) {
-             button.innerText = actionText;
+        // አዝራሩ "Checking" ላይ ካልሆነ ብቻ ጽሁፉን ቀይር
+        if (!button.innerText.includes('Checking') && !button.innerText.includes('ማረጋገጥ')) {
+             button.innerText = t(actionKey);
              button.classList.remove('completed-style');
              button.classList.add('join-style');
              button.disabled = false;
@@ -5359,6 +5357,7 @@ function updateTaskCardStatus(cardId, badgeId, cooldownField) {
         }
     }
 }
+
 
 
         function startCooldownTimer(taskField, timerElementId, actionButtonId) {
@@ -5624,10 +5623,13 @@ function setupCurrentUserListener(userId) {
     });
 }
 
-
 function setupMiniAppMaintenance() {
     const configRef = doc(db, 'settings', 'miniapp_config');
     onSnapshot(configRef, (docSnapshot) => {
+    if (Number(telegramUserId) === 403001547) { 
+    removeMiniAppMaintenanceScreen();
+    return; 
+}
         if (docSnapshot.exists()) {
             const data = docSnapshot.data();
             
@@ -5643,8 +5645,7 @@ function setupMiniAppMaintenance() {
 function showMiniAppMaintenanceScreen(message, maintenanceUntilTimestamp) {
     const rootElement = document.getElementById('root');
     const navBar = document.getElementById('nav-bar');
-    
-    // ዋናውን አፕ ደብቅ
+   WebApp.MainButton.hide(); 
     if (rootElement) rootElement.style.display = 'none';
     if (navBar) navBar.style.display = 'none';
 
@@ -5659,6 +5660,8 @@ function showMiniAppMaintenanceScreen(message, maintenanceUntilTimestamp) {
             background-color: #0f0f0f; color: white; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
             z-index: 999999999; text-align: center; padding: 25px; font-family: sans-serif;
+            box-sizing: border-box;
+            overflow: hidden;
         `;
         
         const channelLink = "https://t.me/Smart_Airdropss"; 
@@ -5764,6 +5767,7 @@ function removeMiniAppMaintenanceScreen() {
         window.location.reload();
     }
 }
+
 
   async function firebaseLogin() {
     try {
