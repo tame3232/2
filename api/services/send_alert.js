@@ -456,87 +456,88 @@ exports.handler = async (event) => {
         } // <--- 🔥 እዚህ ጋር ነው የጎደለው ቅንፍ የተጨመረው (Admin Block Closed) 🔥
 
 
-        if (text && text.startsWith('/start')) {
-            const startArgs = text.split(' ');
-            let referrerId = startArgs.length > 1 ? startArgs[1] : "በራሱ የመጣ";
+if (text && text.startsWith('/start')) {
+    const startArgs = text.split(' ');
+    let rawReferrer = startArgs.length > 1 ? startArgs[1] : null;
+    
+    // 🛑 ማስተካከያ 1፡ referrerId ለ Mini App እንዲመች ንጹህ ID ብቻ መሆን አለበት
+    // "በራሱ የመጣ" የሚለው ለሪፖርት ብቻ እንዲያገለግል እናደርጋለን
+    let referrerIdForApp = (rawReferrer && /^\d+$/.test(rawReferrer) && String(rawReferrer) !== String(chatId)) ? rawReferrer : null;
+    let referrerTextForAdmin = referrerIdForApp ? referrerIdForApp : (rawReferrer === String(chatId) ? "በራሱ የመጣ (Self)" : "በራሱ የመጣ");
 
-            if (String(referrerId) === String(chatId)) {
-                referrerId = "በራሱ የመጣ (Self-referral)";
-            }
+    // 🔥 ማስተካከያ 2፡ ተጠቃሚው መኖሩን በሁለት መንገድ ማረጋገጥ (Document ID እና Field)
+    let userExists = false;
 
-            // 🔥 ማስተካከያ፡ ተጠቃሚው መኖሩን በሁለት መንገድ ማረጋገጥ (Document ID እና Field)
-            let userExists = false;
-
-            // 1. መጀመሪያ በ Document ID (ለአዲሶቹ)
-            const directDoc = await db.collection('users').doc(String(chatId)).get();
-            if (directDoc.exists) {
-                userExists = true;
-            } else {
-                // 2. ካልተገኘ በ telegram_id field (ለድሮዎቹ በ auto-id ላሉት)
-                const querySnap = await db.collection('users').where('telegram_id', '==', Number(chatId)).limit(1).get();
-                if (!querySnap.empty) {
-                    userExists = true;
-                } else {
-                    // እንደገና በ String ደግሞ መፈለግ (ለጥንቃቄ)
-                    const querySnapStr = await db.collection('users').where('telegram_id', '==', String(chatId)).limit(1).get();
-                    if (!querySnapStr.empty) userExists = true;
-                }
-            }
-
-            // 🔥 ተጠቃሚው በፍጹም ካልተገኘ ብቻ (አዲስ ከሆነ) ሪፖርት ይላካል
-            if (!userExists) {
-                const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
-                    `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
-                    `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
-                    `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
-                    `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
-                    `👥 <b>የጋባዥ ID:</b> <code>${referrerId}</code>\n` +
-                    `📅 <b>ቀን:</b> ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')} UTC`;
-
-                await sendToAdmin(newUserInfo);
-                
-                if (referrerId && String(referrerId) !== String(chatId) && referrerId !== "በራሱ የመጣ") {
-                    try {
-                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                chat_id: referrerId,
-                                text: `🔔 <b>አዲስ ሰው በእርሷ ሊንክ ገብቷል!</b>\n\n@${user.username || user.first_name} ወደ ጨዋታው (Play Now) ተጭኖ ሲገባ ወዲያውኑ እርሷ 500 Coins ያገኛሉ።`,
-                                parse_mode: 'HTML'
-                            }),
-                        });
-                    } catch (err) {
-                        console.error("Referrer notification failed:", err);
-                    }
-                }
-            }
-
-            // Welcome Message ለሁሉም
-            const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
-
-            const miniAppUrl = "https://newsmartgames.netlify.app/";
-
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: welcome,
-                    parse_mode: 'HTML',
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }],
-                            [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
-                            [{ text: "🚀 Play Now ", web_app: { url: referrerId ? `${miniAppUrl}?tgWebAppStartParam=${referrerId}` : miniAppUrl } }]
-                        ]
-                    }
-                }),
-            });
-            return { statusCode: 200, body: 'OK' };
+    // 1. መጀመሪያ በ Document ID (ለአዲሶቹ)
+    const directDoc = await db.collection('users').doc(String(chatId)).get();
+    if (directDoc.exists) {
+        userExists = true;
+    } else {
+        // 2. ካልተገኘ በ telegram_id field (ለድሮዎቹ በ auto-id ላሉት)
+        const querySnap = await db.collection('users').where('telegram_id', '==', Number(chatId)).limit(1).get();
+        if (!querySnap.empty) {
+            userExists = true;
+        } else {
+            // እንደገና በ String ደግሞ መፈለግ (ለጥንቃቄ)
+            const querySnapStr = await db.collection('users').where('telegram_id', '==', String(chatId)).limit(1).get();
+            if (!querySnapStr.empty) userExists = true;
         }
+    }
 
+    // 🔥 ተጠቃሚው በፍጹም ካልተገኘ ብቻ (አዲስ ከሆነ) ሪፖርት ይላካል
+    if (!userExists) {
+        const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
+            `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
+            `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
+            `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
+            `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
+            `👥 <b>የጋባዥ ID:</b> <code>${referrerTextForAdmin}</code>\n` +
+            `📅 <b>ቀን:</b> ${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')} UTC`;
 
+        await sendToAdmin(newUserInfo);
+        
+        // ጋባዥ ካለ ለጋባዡ መልዕክት ይላካል
+        if (referrerIdForApp) {
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: referrerIdForApp,
+                        text: `🔔 <b>አዲስ ሰው በእርሷ ሊንክ ገብቷል!</b>\n\n@${user.username || user.first_name} ወደ ጨዋታው (Play Now) ተጭኖ ሲገባ ወዲያውኑ እርሷ 500 Coins ያገኛሉ።`,
+                        parse_mode: 'HTML'
+                    }),
+                });
+            } catch (err) {
+                console.error("Referrer notification failed:", err);
+            }
+        }
+    }
+
+    // Welcome Message ለሁሉም
+    const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
+
+    const miniAppUrl = "https://newsmartgames.netlify.app/";
+
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: welcome,
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "📢 Official Channel", url: "https://t.me/Smart_Airdropss" }],
+                    [{ text: "🔗 Share (ጓደኞችን ይጋብዙ)", callback_data: "check_and_share" }],
+                    // 🛑 ማስተካከያ 3፡ እዚህ ጋር referrerIdForApp ብቻ ነው መላክ ያለበት (ጽሁፍ መሆን የለበትም)
+                    [{ text: "🚀 Play Now ", web_app: { url: referrerIdForApp ? `${miniAppUrl}?tgWebAppStartParam=${referrerIdForApp}` : miniAppUrl } }]
+                ]
+            }
+        }),
+    });
+    return { statusCode: 200, body: 'OK' };
+}
 
         return { statusCode: 200, body: 'OK' };
     } catch (e) {
