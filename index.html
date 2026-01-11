@@ -3471,12 +3471,62 @@
     border-radius: 15px;
 }
 
+/* 1. የሳንቲሙ አኒሜሽን (መዞር እና መለጠጥ) */
+.coin-spinner {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
+    /* spin እና pulse-scale በአንድ ላይ */
+    animation: spin 1.5s linear infinite, pulse-scale 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-scale {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* 2. የጽሁፉ አቀማመጥ */
+#loading-text {
+    display: flex; /* ጽሁፉና ነጠብጣቦቹ ጎን ለጎን እንዲሆኑ */
+    justify-content: center;
+    align-items: center;
+    color: #FFC107;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+    margin-top: 15px;
+}
+
+/* 3. ነጠብጣቦቹ (Dots) እንዲንቀሳቀሱ የሚያደርግ */
+.dots-container::after {
+    content: '';
+    display: inline-block;
+    width: 20px; /* ነጥቦቹ ሲመጡ ጽሁፉ እንዳይነቃነቅ */
+    text-align: left;
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+    0% { content: ''; }
+    33% { content: '.'; }
+    66% { content: '..'; }
+    100% { content: '...'; }
+}
 
 </style>
 <body>
 <div id="loading-container">
     <img id="coin-image" class="coin-spinner" src="smart_airdrop_coin.png" alt="Coin Loading" />
-    <p id="loading-text" data-lang="loading_text">SMART AIRDROP Loading...</p>
+    <div id="loading-text">
+        <span data-lang="loading_text">SMART AIRDROP Loading</span><span class="dots-container"></span>
+    </div>
 </div>
 
 <div id="game-loading-overlay">
@@ -5872,6 +5922,8 @@ function removeMiniAppMaintenanceScreen() {
                 }
             }
 
+            
+
             // Transaction
             const newUserRef = doc(db, 'users', strTelegramId);
             let startBonus = 0;
@@ -5882,8 +5934,12 @@ function removeMiniAppMaintenanceScreen() {
                     const referrerDoc = await transaction.get(referrerRef);
 
                     if (referrerDoc.exists()) {
-                        const currentInvites = referrerDoc.data().invite_count || 0;
-                        const currentScore = referrerDoc.data().total_score || 0;
+                        const refData = referrerDoc.data();
+                        
+                        // 🛑 ማስተካከያ፡ ወደ ቁጥር መቀየር (Number Safety)
+                        // invite_count ከሌለ 0 አድርግ
+                        const currentInvites = Number(refData.invite_count) || 0;
+                        const currentScore = Number(refData.total_score) || 0;
 
                         transaction.update(referrerRef, {
                             invite_count: currentInvites + 1,
@@ -5908,7 +5964,7 @@ function removeMiniAppMaintenanceScreen() {
                     is_banned: false
                 });
             });
-
+          
             // Notification
             if (validReferrerDocId && startBonus > 0) {
                  const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
@@ -6050,7 +6106,7 @@ async function fetchLeaderboard() {
     
     // መጫኑን ለማሳየት (ከዚህ በፊት ዳታ ከሌለ ብቻ)
     if (!leaderboardContainer.innerHTML.includes('leaderboard-item')) {
-        leaderboardContainer.innerHTML = '<p style="text-align: center; color: var(--tg-hint); padding: 10px;">እባክዎን ትንሽ ይጠብቁ...</p>';
+        leaderboardContainer.innerHTML = '<p style="text-align: center; color: var(--tg-hint); padding: 10px;">loading...</p>';
     }
 
     const now = Date.now();
