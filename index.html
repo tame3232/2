@@ -5798,18 +5798,20 @@ function removeMiniAppMaintenanceScreen() {
         window.location.reload();
     }
 }
-
-
-  async function firebaseLogin() {
+async function firebaseLogin() {
     try {
         setupMiniAppMaintenance();
 
+        // 1. Telegram User ID ማረጋገጥ
         if (!telegramUserId) {
             console.error("Telegram User ID አልተገኘም!");
+            // ID ከሌለ Loading ማጥፋት አለብን
+            const ld = document.getElementById('loading-container');
+            if (ld) ld.style.display = 'none';
             return;
         }
 
-        // 1. Session Check
+        // 2. Session Check (የተጠቃሚ ለውጥ ካለ ማፅዳት)
         const savedTelegramId = localStorage.getItem('last_telegram_id');
         if (savedTelegramId && savedTelegramId !== telegramUserId.toString()) {
             await auth.signOut();
@@ -5819,7 +5821,7 @@ function removeMiniAppMaintenanceScreen() {
         }
         localStorage.setItem('last_telegram_id', telegramUserId.toString());
 
-        // 2. Anonymous Login
+        // 3. Anonymous Login
         await signInAnonymously(auth);
 
         const strTelegramId = telegramUserId.toString();
@@ -5828,7 +5830,11 @@ function removeMiniAppMaintenanceScreen() {
         let currentDocId = strTelegramId;
         let userExists = false;
 
-        // ደረጃ 1፡ ነባር ተጠቃሚ መሆን አለመሆኑን ማጣራት
+        // ============================================================
+        // 🔥 ተጠቃሚን መፈለግ (HYBRID SEARCH - ለድሮ እና አዲስ) 🔥
+        // ============================================================
+        
+        // ሀ. መጀመሪያ በቀጥታ ID (ለአዲስ ተጠቃሚዎች አወቃቀር)
         const directDocRef = doc(db, "users", strTelegramId);
         const directDocSnap = await getDoc(directDocRef);
 
@@ -5836,6 +5842,7 @@ function removeMiniAppMaintenanceScreen() {
             userExists = true;
             currentDocId = strTelegramId;
         } else {
+            // ለ. ካልተገኘ፣ በ telegram_id field መፈለግ (ለድሮ Auto-ID ተጠቃሚዎች)
             const usersRef = collection(db, "users");
             const q = query(usersRef, where("telegram_id", "in", [numTelegramId, strTelegramId]));
             const querySnapshot = await getDocs(q);
@@ -5846,10 +5853,16 @@ function removeMiniAppMaintenanceScreen() {
             }
         }
 
-        // ደረጃ 2፡ Login or Register
+        // ============================================================
+        // ✅ LOGIN or REGISTER ACTION
+        // ============================================================
+
         if (userExists) {
+            // --- ነባር ተጠቃሚ (LOGIN) ---
             currentFirebaseUserId = currentDocId; 
             const userDocRef = doc(db, 'users', currentDocId);
+            
+            // መረጃ ማደስ (Update Info)
             try {
                 await updateDoc(userDocRef, {
                     username: window.Telegram.WebApp.initDataUnsafe.user?.username || '',
@@ -5859,31 +5872,38 @@ function removeMiniAppMaintenanceScreen() {
             } catch (e) { console.warn("Update failed", e); }
             
         } else {
-            // አዲስ ተጠቃሚ ምዝገባ
+            // --- አዲስ ተጠቃሚ (REGISTER) ---
             currentFirebaseUserId = strTelegramId;
             const initData = window.Telegram.WebApp.initDataUnsafe;
-            let rawReferrerId = initData.start_param || null;
-            let validReferrerDocId = null; 
-
-            // ራስን መጋበዝ መከላከል
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            let rawReferrerId = initData.start_param || urlParams.get('tgWebAppStartParam');
+            
+            // ራስን ከመጋበዝ መጠበቅ (Anti-Self-Referral)
             if (rawReferrerId && String(rawReferrerId) === strTelegramId) {
                 rawReferrerId = null;
             }
 
-            // ጋባዡን መፈለግ (በሁለቱም መንገድ - ID እና Field)
+            // -----------------------------------------------------
+            // 🕵️‍♂️ ጋባዥ መፈለግ (REFERRER SEARCH)
+            // -----------------------------------------------------
+            let finalReferrerDocId = null; // ይህ ለዳታቤዝ Update የምንጠቀምበት ID ነው
+
             if (rawReferrerId) {
-                const refDocRef = doc(db, "users", String(rawReferrerId));
-                const refSnap = await getDoc(refDocRef);
-                
-                if (refSnap.exists()) {
-                    validReferrerDocId = String(rawReferrerId);
+                // 1. መጀመሪያ እንደ አዲስ ተጠቃሚ (Direct ID Check)
+                const tryDirectRef = doc(db, "users", String(rawReferrerId));
+                const tryDirectSnap = await getDoc(tryDirectRef);
+
+                if (tryDirectSnap.exists()) {
+                    finalReferrerDocId = String(rawReferrerId);
                 } else {
+                    // 2. ካልተገኘ፣ የድሮ ተጠቃሚ ሊሆን ስለሚችል በ Query እንፈልግ (Auto-ID Check)
                     const usersRef = collection(db, "users");
-                    // እዚህ ጋር በቁጥርም በፅሁፍም እንፈልጋለን
                     const qRef = query(usersRef, where("telegram_id", "in", [Number(rawReferrerId), String(rawReferrerId)]));
                     const qSnap = await getDocs(qRef);
+
                     if (!qSnap.empty) {
-                        validReferrerDocId = qSnap.docs[0].id;
+                        finalReferrerDocId = qSnap.docs[0].id; // የድሮ ተጠቃሚ Auto-ID ተገኘ
                     }
                 }
             }
@@ -5891,14 +5911,19 @@ function removeMiniAppMaintenanceScreen() {
             const newUserRef = doc(db, 'users', strTelegramId);
             let startBonus = 0;
 
+            // -----------------------------------------------------
+            // 💾 ዳታቤዝ መመዝገብ (TRANSACTION)
+            // -----------------------------------------------------
             await runTransaction(db, async (transaction) => {
-                if (validReferrerDocId) {
-                    const referrerRef = doc(db, 'users', validReferrerDocId);
+                // ጋባዥ ከተገኘ ቦነስ መስጠት
+                if (finalReferrerDocId) {
+                    const referrerRef = doc(db, 'users', finalReferrerDocId);
                     const referrerDoc = await transaction.get(referrerRef);
 
                     if (referrerDoc.exists()) {
-                        const currentInvites = referrerDoc.data().invite_count || 0;
-                        const currentScore = referrerDoc.data().total_score || 0;
+                        const refData = referrerDoc.data();
+                        const currentInvites = Number(refData.invite_count) || 0;
+                        const currentScore = Number(refData.total_score) || 0;
 
                         transaction.update(referrerRef, {
                             invite_count: currentInvites + 1,
@@ -5908,8 +5933,9 @@ function removeMiniAppMaintenanceScreen() {
                     }
                 }
 
+                // አዲሱን ተጠቃሚ መመዝገብ
                 transaction.set(newUserRef, {
-                    telegram_id: numTelegramId, // ለአዲሶች ሁልጊዜ Number እናደርጋለን
+                    telegram_id: numTelegramId, 
                     first_name: initData.user?.first_name || 'User',
                     username: initData.user?.username || '',
                     photo_url: initData.user?.photo_url || null,
@@ -5918,48 +5944,58 @@ function removeMiniAppMaintenanceScreen() {
                     tickets: 3,
                     slot_spins_left: 10,
                     invite_count: 0,
-                    referrer_id: validReferrerDocId || null,
+                    referrer_id: finalReferrerDocId || null, 
                     created_at: serverTimestamp(),
                     is_banned: false
                 });
             });
 
-            // ማሳሰቢያ መላክ (Notification)
-            if (validReferrerDocId && startBonus > 0) {
-                const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+            // -----------------------------------------------------
+            // 🔔 ማሳወቂያዎች (NOTIFICATIONS)
+            // -----------------------------------------------------
+            if (startBonus > 0) {
+                WebApp.showAlert(`🎉 እንኳን ደስ አለዎት! በግብዣ ስለመጡ ${startBonus} coin አግኝተዋል!`);
                 
-                // Fetch ጥሪው እንዲሳካ await መጠቀም ወይም የራሱን try/catch መያዝ አለበት
-                fetch(botUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        // ለቦቱ የሚላከው ID የግድ የሰውየው ትክክለኛ Telegram ID መሆን አለበት
-                        custom_chat_id: String(rawReferrerId), 
-                        message: `🎉 <b>እንኳን ደስ አለዎት!</b>\n\n` +
+                // ለጋባዡ መልዕክት መላክ (ለዚህኛው rawReferrerId መጠቀም አለብን - ምክንያቱም የTelegram ID ስለሆነ)
+                if (rawReferrerId) {
+                    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+                    
+                    fetch(botUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            custom_chat_id: String(rawReferrerId), // ለቦቱ የሚላከው የTelegram ID ነው
+                            message: `🎉 <b>እንኳን ደስ አለዎት!</b>\n\n` +
          `👥 ጓደኛዎ <b>${window.Telegram.WebApp.initDataUnsafe.user.first_name || 'ጓደኛዎ'}</b> የእርስዎን ግብዣ ተቀብሎ ምዝገባውን አጠናቋል።\n\n` +
          `💰 ለዚህ ግብዣ <b>+500 Coins</b> ሽልማት ወደ አካውንትዎ ተጨምሯል!\n\n` +
          `🔗 መጋበዝዎን ይቀጥሉ፣ ብዙ ያግኙ! 🚀`
    
-                    })
-                }).catch(e => console.error("Notification trigger failed:", e));
-                
-                window.Telegram.WebApp.showAlert(`🎉 በግብዣ ስለመጡ ${startBonus} coin አግኝተዋል!`);
+                        })
+                    }).catch(e => console.error("Notification trigger failed:", e));
+                }
             }
         } 
 
-        // Listener Setup
+        // 4. Listener Setup (Real-time update ለመጀመር)
         if (currentFirebaseUserId) {
             setupCurrentUserListener(currentFirebaseUserId);
         }
 
     } catch (error) {
+        // 🛑 ERROR HANDLING (እዚህ ጋር ነው Loading Screen ማጥፊያው የተጨመረው)
         console.error("Login Error:", error);
-        window.Telegram.WebApp.showAlert("መግባት አልተቻለም: " + error.message);
+        WebApp.showAlert("Login Error: " + error.message);
+        
         const ld = document.getElementById('loading-container');
-        if(ld) ld.style.display = 'none';
-
+        if(ld) ld.style.display = 'none'; // 🔥 ይሄ አሁን ተጨምሯል
     }
 }
+
+
+
+
+  
+        
 
 
 
