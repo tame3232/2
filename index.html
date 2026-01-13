@@ -5800,6 +5800,7 @@ function removeMiniAppMaintenanceScreen() {
 }
 async function firebaseLogin() {
     try {
+        Window.Telegram.WebApp.ready(); 
         setupMiniAppMaintenance();
 
         // 1. Telegram User ID ማረጋገጥ
@@ -5865,6 +5866,7 @@ async function firebaseLogin() {
             // መረጃ ማደስ (Update Info)
             try {
                 await updateDoc(userDocRef, {
+                    first_name: window.Telegram.WebApp.initDataUnsafe.user?.first_name || 'User',  
                     username: window.Telegram.WebApp.initDataUnsafe.user?.username || '',
                     photo_url: window.Telegram.WebApp.initDataUnsafe.user?.photo_url || null,
                     last_active: serverTimestamp()
@@ -5936,7 +5938,7 @@ async function firebaseLogin() {
                 // አዲሱን ተጠቃሚ መመዝገብ
                 transaction.set(newUserRef, {
                     telegram_id: numTelegramId, 
-                    first_name: initData.user?.first_name || 'User',
+                    first_name: initData.user?.first_name || initData.user?.username || 'user', 
                     username: initData.user?.username || '',
                     photo_url: initData.user?.photo_url || null,
                     total_score: startBonus,
@@ -6241,7 +6243,8 @@ function renderLeaderboard(data) {
                         ${rankDisplay} 
                     </span> 
                     <div class="leaderboard-item-photo">${avatarHtml}</div> 
-                    <span class="leaderboard-item-name">${player.username || 'ያልታወቀ ተጫዋች'}</span>
+                   <span class="leaderboard-item-name">${player.username ? '@' + player.username : (player.first_name || 'ተጫዋች')}</span>
+
                     <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
                 </div>
             `;
