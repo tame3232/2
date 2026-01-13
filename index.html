@@ -6243,7 +6243,7 @@ function renderLeaderboard(data) {
                         ${rankDisplay} 
                     </span> 
                     <div class="leaderboard-item-photo">${avatarHtml}</div> 
-                   <span class="leaderboard-item-name">${player.username ? '@' + player.username : (player.first_name || 'ተጫዋች')}</span>
+                   <span class="leaderboard-item-name">${player.username || 'ያልታወቀ ተጫዋች'}</span>
 
                     <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
                 </div>
