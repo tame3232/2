@@ -285,10 +285,9 @@ exports.handler = async (event) => {
                         return { statusCode: 200, body: 'User not found' };
                     }
 
-                    const inviteSnapshot = await db.collection('users').where('referrer_id', '==', String(targetIdString)).get();
-                    const inviteCount = inviteSnapshot.size;
+                    const inviteCount = userData.invite_count || 0;
 
-                    const name = userData.username || userData.first_name || 'ያልታወቀ';
+                    const name = userData.first_name || userData.username || 'ያልታወቀ';
                     const score = userData.total_score || 0;
                     const createdAt = userData.created_at ? userData.created_at.toDate().toLocaleString('en-GB') : 'ያልታወቀ';
                     const isBanned = userData.is_banned ? "🚫 የታገደ (Banned)" : "✅ ንቁ (Active)";
