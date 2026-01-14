@@ -3737,7 +3737,7 @@
             </div>
         </div>
 
-        <h2 style="font-size: 20px; margin-bottom: 15px; color: var(--tg-text);" data-lang="title_leaderboard">🥇 Top Users (Top 50)</h2>
+        <h2 style="font-size: 20px; margin-bottom: 15px; color: var(--tg-text);" data-lang="title_leaderboard">🥇 Top Users (Top 100)</h2>
 
         <div id="leaderboard-container">
             <p style="text-align: center; color: var(--tg-hint); padding: 10px;" data-lang="msg_wait">እባክዎን ትንሽ ይጠብቁ።</p>
@@ -5912,7 +5912,7 @@ async function firebaseLogin() {
 
             const newUserRef = doc(db, 'users', strTelegramId);
             let startBonus = 0;
-
+            let updatedInviteCount = 0;
             // -----------------------------------------------------
             // 💾 ዳታቤዝ መመዝገብ (TRANSACTION)
             // -----------------------------------------------------
@@ -5970,6 +5970,7 @@ async function firebaseLogin() {
                             message: `🎉 <b>እንኳን ደስ አለዎት!</b>\n\n` +
          `👥 ጓደኛዎ <b>${window.Telegram.WebApp.initDataUnsafe.user.first_name || 'ጓደኛዎ'}</b> የእርስዎን ግብዣ ተቀብሎ ምዝገባውን አጠናቋል።\n\n` +
          `💰 ለዚህ ግብዣ <b>+500 Coins</b> ሽልማት ወደ አካውንትዎ ተጨምሯል!\n\n` +
+         `📊 <b>እስካሁን የጋበዙት:</b> ${updatedInviteCount} ሰዎች\n\n` +
          `🔗 መጋበዝዎን ይቀጥሉ፣ ብዙ ያግኙ! 🚀`
    
                         })
