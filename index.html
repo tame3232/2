@@ -10523,7 +10523,10 @@ window.cashoutMines = async () => {
 // =========================================================
 
 const ADMIN_WALLET_ID = "MPrYYot9ldV9qbfxJA1uXC0wUzi2"; // 🛑 እዚህ የአድሚኑን ID አስገባ
-const ADMIN_TELEGRAM_ID = 403001547;
+if (typeof ADMIN_TELEGRAM_ID === 'undefined') {
+    window.ADMIN_TELEGRAM_ID = 403001547;
+}
+
 const P2P_FEE_PERCENT = 0.05; // 5% ክፍያ
 let p2pSearchType = 'id'; // 'id' or 'username'
 let verifiedRecipientDoc = null; // የተረጋገጠ ተቀባይ ዳታ
