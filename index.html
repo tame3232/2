@@ -3500,6 +3500,296 @@
     66% { content: '..'; }
     100% { content: '...'; }
 }
+/* P2P Tabs */
+.p2p-tabs {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+.p2p-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #888;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+.p2p-tab.active {
+    background: var(--et-yellow);
+    color: black;
+    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+}
+
+/* Toggle Buttons */
+.toggle-search-type {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.toggle-btn {
+    flex: 1;
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.toggle-btn.active {
+    background: var(--et-blue);
+    border-color: var(--et-blue);
+}
+
+/* Recipient Card */
+.recipient-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(145deg, #1a1a1a, #252525);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--et-green);
+    margin-top: 15px;
+    animation: fadeIn 0.5s ease;
+}
+.recipient-avatar {
+    width: 50px;
+    height: 50px;
+    background: #444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+}
+.recipient-info p { margin: 0; }
+.recipient-name { font-weight: bold; color: white; font-size: 16px; }
+.recipient-status { font-size: 12px; color: var(--et-green); }
+
+.verify-btn {
+    width: 100%;
+    background: #333;
+    color: var(--et-yellow);
+    border: 1px dashed var(--et-yellow);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+.fee-text { font-size: 12px; color: #888; margin-top: 5px; text-align: right; }
+
+/* Custom Modal */
+.custom-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 10000;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-content {
+    background: #1e1e1e; padding: 20px; border-radius: 15px;
+    width: 85%; max-width: 350px; text-align: center;
+    border: 1px solid var(--et-yellow);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+.summary-box {
+    background: #2a2a2a; padding: 15px; border-radius: 10px;
+    margin: 15px 0; text-align: left;
+}
+.summary-box p { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+.confirm-btn { flex: 1; background: var(--et-green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+.cancel-btn { flex: 1; background: #d32f2f; color: white; border: none; padding: 12px; border-radius: 8px; }
+/* ================= P2P MODERN STYLING ================= */
+
+/* 1. Main Container & Balance */
+.p2p-balance-card {
+    background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.p2p-balance-card p {
+    color: #aaa;
+    margin: 0;
+    font-size: 14px;
+}
+
+.p2p-balance-card h1 {
+    color: var(--et-yellow, #FFD700);
+    margin: 5px 0 0;
+    font-size: 32px;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* 2. Tabs */
+.p2p-tabs {
+    display: flex;
+    background: #111;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #333;
+}
+
+.p2p-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #666;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.p2p-tab.active {
+    background: var(--et-yellow, #FFD700);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+/* 3. Inputs (ማስተካከያ የተደረገበት ክፍል) */
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-label {
+    display: block;
+    color: #ddd;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.modern-input {
+    width: 100%;
+    background-color: #2a2a2a !important; /* ግልጽ የሆነ background */
+    color: #ffffff !important; /* ነጭ ጽሁፍ */
+    border: 1px solid #444;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+    box-sizing: border-box; /* ሳጥኑ እንዳይፈስ */
+}
+
+.modern-input:focus {
+    border-color: var(--et-yellow, #FFD700);
+    background-color: #333 !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
+}
+
+/* Placeholder color */
+.modern-input::placeholder {
+    color: #666;
+}
+
+/* 4. Buttons */
+.toggle-search-type {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.toggle-btn {
+    flex: 1;
+    background: #222;
+    border: 1px solid #444;
+    color: #888;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+}
+
+.toggle-btn.active {
+    background: rgba(33, 150, 243, 0.2);
+    border-color: #2196F3;
+    color: #2196F3;
+    font-weight: bold;
+}
+
+.verify-btn {
+    width: 100%;
+    background: #333;
+    color: var(--et-yellow, #FFD700);
+    border: 1px dashed var(--et-yellow, #FFD700);
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.verify-btn:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.modern-exchange-btn {
+    width: 100%;
+    background: linear-gradient(180deg, var(--et-yellow, #FFD700) 0%, #FFC107 100%);
+    color: #000;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 0 #b38f00; /* 3D effect */
+    transition: transform 0.1s;
+}
+
+.modern-exchange-btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.modern-exchange-btn:disabled, .disabled-btn {
+    background: #444;
+    color: #888;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* 5. Recipient Card */
+.recipient-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--et-green, #4CAF50);
+    margin-top: 15px;
+    animation: fadeIn 0.4s ease;
+}
+
+.recipient-avatar {
+    width: 45px;
+    height: 45px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 2px solid var(--et-green, #4CAF50);
+}
 
 </style>
 <body>
@@ -3784,15 +4074,14 @@
         <span data-lang="btn_swap">Swap</span>
     </button>
 
-    <button class="action-btn airdrop">
-        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 0 1 14.625 7.5H15a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V8.25A.75.75 0 0 1 9 7.5h.375A2.625 2.625 0 0 1 12 4.875Z" />
+<button class="action-btn airdrop" onclick="window.switchPage('p2p-page')">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h18m-7.5-12L21 9m0 0L16.5 4.5M21 9H3" />
         </svg>
-        <span data-lang="btn_airdrop">Airdrop</span>
+        <span>P2P Transfer</span>
     </button>
-</div>
-
-        </div>
+ </div>
+   </div>
 
     <h2 class="profile-section-header" data-lang="title_settings">Settings</h2>
 <button class="profile-action-button" onclick="handleWalletConnect()">
@@ -4220,6 +4509,77 @@
         </div>
         <button class="game-back-button" onclick="window.showMainLobby()" data-lang="btn_back_home">← ወደ ዋና ገፅ ተመለስ</button>
     </div>
+<div id="p2p-page" class="game-page-container" style="display: none;">
+    <h2 class="page-title">P2P Transfer 💸</h2>
+
+    <div class="p2p-tabs">
+        <div class="p2p-tab active" onclick="window.switchP2PTab('send')">Send</div>
+        <div class="p2p-tab" onclick="window.switchP2PTab('history')">History</div>
+        <div class="p2p-tab" onclick="window.switchP2PTab('rules')">Rules</div>
+    </div>
+
+    <div id="p2p-section-send" class="p2p-content-section">
+        
+        <div class="p2p-balance-card">
+            <p>የእርስዎ ቀሪ ሂሳብ</p>
+            <h1 id="p2p-user-balance">0.00 💰</h1>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">ተቀባይ (Recipient)</label>
+            
+            <div class="toggle-search-type">
+                <button id="btn-search-id" class="toggle-btn active" onclick="window.setP2PSearchType('id')">By User ID</button>
+                <button id="btn-search-user" class="toggle-btn" onclick="window.setP2PSearchType('username')">By @Username</button>
+            </div>
+            
+            <input type="text" id="p2p-recipient-input" class="modern-input" placeholder="User ID ያስገቡ..." oninput="window.resetP2PVerification()">
+            
+            <button class="verify-btn" onclick="window.verifyP2PUser()">ተቀባዩን አረጋግጥ (Verify) 🔍</button>
+        </div>
+
+        <div id="p2p-recipient-preview" class="recipient-card" style="display: none;">
+            <div class="recipient-avatar" id="p2p-preview-avatar">👤</div>
+            <div class="recipient-info">
+                <p class="recipient-name" id="p2p-preview-name">User Name</p>
+                <p class="recipient-status">✅ የተረጋገጠ ተጠቃሚ</p>
+            </div>
+        </div>
+
+        <div class="input-group" style="margin-top: 20px;">
+            <label class="input-label">የሚልኩት መጠን (Coin)</label>
+            <input type="number" id="p2p-amount-input" class="modern-input" placeholder="Example: 1000" min="500">
+            <p class="fee-text" style="color: #888; font-size: 12px; margin-top: 5px; text-align: right;">
+                አገልግሎት ክፍያ (Fee): <span id="p2p-fee-display" style="color: var(--et-red);">0</span> coin (5%)
+            </p>
+        </div>
+
+        <button id="p2p-send-btn" class="modern-exchange-btn disabled-btn" onclick="window.initiateP2PTransfer()" disabled>
+            TRANSFER NOW 🚀
+        </button>
+    </div>
+
+    <div id="p2p-section-history" class="p2p-content-section" style="display: none;">
+        <div id="p2p-history-list">
+            <p style="text-align: center; color: #888; padding: 20px;">Loading history...</p>
+        </div>
+    </div>
+
+    <div id="p2p-section-rules" class="p2p-content-section" style="display: none;">
+        <div class="modern-card" style="text-align: left; padding: 15px; background: #222; border: 1px dashed #444;">
+            <h3 style="color: var(--et-yellow); margin-top: 0;">📜 የ P2P ህግጋት</h3>
+            <ul style="color: #ccc; font-size: 14px; line-height: 1.8; padding-left: 20px;">
+                <li>ዝቅተኛ መላክ የሚቻለው: <strong style="color: white;">500 Coin</strong></li>
+                <li>የአገልግሎት ክፍያ (Service Fee): <strong style="color: var(--et-red);">5%</strong></li>
+                <li>ተቀባዩን በ ID ወይም በ Username መፈለግ ይችላሉ።</li>
+                <li>ለተሳሳተ ዝውውር ቦቱ ኃላፊነት አይወስድም፣ እባክዎ ከመላክዎ በፊት ስሙን ያረጋግጡ።</li>
+            </ul>
+        </div>
+    </div>
+
+    <button class="game-back-button" onclick="window.switchPage('profile-page')">← Back to Profile</button>
+</div>
+
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">💣 Mines Rush</h2>
@@ -4552,7 +4912,11 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
             'btn_subscribe': 'Subscribe',
 'btn_claiming': 'Claiming...',
 'btn_claim_reward_social': 'Claim Reward',
-'btn_checking_timer': 'Checking... ({seconds}s)',
+// እነዚህን ስሞች በ 'en' ውስጥ ካሉት ጋር ቀይራቸው
+'msg_checking_timer': 'Checking... ({seconds}s)',
+'msg_claiming': 'Claiming...',
+'msg_completed': 'Completed ✅',
+
      'btn_spinning': 'SPINNING...',
      'btn_spin_default': 'እሽክርክሪት ለመጀመር ይጫኑ \n SPIN',
    'btn_back_home': 'ወደ ዋና ገፅ ተመለስ',
@@ -4891,7 +5255,10 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
             'btn_subscribe': 'Subscribe',
 'btn_claiming': 'Claiming...',
 'btn_claim_reward_social': 'Claim Reward',
-'btn_checking_timer': 'Checking... ({seconds}s)',
+'msg_checking_timer': 'Checking... ({seconds}s)',
+'msg_claiming': 'Claiming...',
+'msg_completed': 'Completed ✅',
+
  'btn_spin_default': 'Press to Start \n SPIN',
     'btn_spinning': 'SPINNING...',
    'btn_back_home': 'Back to Home',
@@ -5798,6 +6165,7 @@ function removeMiniAppMaintenanceScreen() {
         window.location.reload();
     }
 }
+
 async function firebaseLogin() {
     try {
         window.Telegram.WebApp.ready(); 
@@ -5926,7 +6294,7 @@ async function firebaseLogin() {
                         const refData = referrerDoc.data();
                         const currentInvites = Number(refData.invite_count) || 0;
                         const currentScore = Number(refData.total_score) || 0;
-
+                        updatedInviteCount = currentInvites + 1;
                         transaction.update(referrerRef, {
                             invite_count: currentInvites + 1,
                             total_score: currentScore + 500
@@ -5993,14 +6361,6 @@ async function firebaseLogin() {
         if(ld) ld.style.display = 'none'; // 🔥 ይሄ አሁን ተጨምሯል
     }
 }
-
-
-
-
-  
-        
-
-
 
         async function updateScore(coinsToAdd, source, timestampField = null, extraUpdateData = {}) { 
             if (!currentFirebaseUserId) {
@@ -6356,6 +6716,7 @@ window.showStreakWithLoading = () => {
                 'daily-cipher-page', 
                 'memory-game-page',  
                  'mines-game-page',
+                 'transaction-history-page', 'p2p-page',
                 'transaction-history-page'
                 // 'staking-page' ከዚህ ተወግዷል
             ];
@@ -6441,7 +6802,11 @@ window.showStreakWithLoading = () => {
                 // ✅ 🛑 ማስተካከያ: 'staking-page' እዚህ ገብቷል (ከ 'mainPages' ጋር)
                 } else if (pageIdToShow === 'staking-page') {
                     window.initStakingPage();
-
+                 } else if (pageIdToShow === 'p2p-page') { 
+        // ✅ P2P ገጽ ሲከፈት ይህ ይሠራል
+        window.switchP2PTab('send'); // መጀመሪያ Send tab ይክፈት
+        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
+        window.resetP2PVerification();
                 } else if (pageIdToShow === 'mystery-box-page') { 
                     startCooldownTimer('last_mystery_time', 'mystery-box-timer', 'mystery-box-action');
                     window.resetMysteryBox(false);
@@ -10152,6 +10517,359 @@ window.cashoutMines = async () => {
     window.triggerConfetti(winAmount);
 }
 
+
+// =========================================================
+// ✅ P2P TRANSFER SYSTEM LOGIC
+// =========================================================
+
+const ADMIN_WALLET_ID = "MPrYYot9ldV9qbfxJA1uXC0wUzi2"; // 🛑 እዚህ የአድሚኑን ID አስገባ
+const ADMIN_TELEGRAM_ID = 403001547;
+const P2P_FEE_PERCENT = 0.05; // 5% ክፍያ
+let p2pSearchType = 'id'; // 'id' or 'username'
+let verifiedRecipientDoc = null; // የተረጋገጠ ተቀባይ ዳታ
+
+window.switchP2PTab = (tab) => {
+    // UI Tabs Update
+    document.querySelectorAll('.p2p-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.p2p-tab')[tab === 'send' ? 0 : tab === 'history' ? 1 : 2].classList.add('active');
+
+    // Section Update
+    document.querySelectorAll('.p2p-content-section').forEach(s => s.style.display = 'none');
+    document.getElementById(`p2p-section-${tab}`).style.display = 'block';
+
+    if (tab === 'send') {
+        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
+    } else if (tab === 'history') {
+        fetchP2PHistory();
+    }
+};
+
+window.setP2PSearchType = (type) => {
+    p2pSearchType = type;
+    document.getElementById('btn-search-id').classList.toggle('active', type === 'id');
+    document.getElementById('btn-search-user').classList.toggle('active', type === 'username');
+    
+    const input = document.getElementById('p2p-recipient-input');
+    input.placeholder = type === 'id' ? "የተቀባዩን User ID ያስገቡ" : "የተቀባዩን Telegram @Username ያስገቡ";
+    input.value = '';
+    window.resetP2PVerification();
+};
+
+window.resetP2PVerification = () => {
+    verifiedRecipientDoc = null;
+    document.getElementById('p2p-recipient-preview').style.display = 'none';
+    document.getElementById('p2p-send-btn').disabled = true;
+    document.getElementById('p2p-send-btn').classList.add('disabled-btn');
+};
+
+// 🔥 HYBRID SEARCH LOGIC (እንደጠየቅከው)
+window.verifyP2PUser = async () => {
+    const inputVal = document.getElementById('p2p-recipient-input').value.trim();
+    const btn = document.querySelector('.verify-btn');
+    
+    if (!inputVal) return WebApp.showAlert("እባክዎ መረጃ ያስገቡ");
+    if (inputVal === currentFirebaseUserId || inputVal === telegramUserId) return WebApp.showAlert("ለራስዎ መላክ አይችሉም!");
+
+    btn.innerText = "Checking...";
+    btn.disabled = true;
+
+    try {
+        let foundDoc = null;
+
+        if (p2pSearchType === 'id') {
+            // 1. መጀመሪያ በቀጥታ በ Doc ID ፈልግ (Direct Search)
+            const directRef = doc(db, "users", inputVal);
+            const directSnap = await getDoc(directRef);
+            
+            if (directSnap.exists()) {
+                foundDoc = { id: directSnap.id, ...directSnap.data() };
+            } else {
+                // 2. ካልተገኘ በ telegram_id field ፈልግ (Query Search)
+                const q = query(collection(db, "users"), where("telegram_id", "in", [Number(inputVal), String(inputVal)]));
+                const qSnap = await getDocs(q);
+                if (!qSnap.empty) {
+                    foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+                }
+            }
+        } else {
+            // Username Search (ያለ @ ምልክት)
+            const cleanUser = inputVal.replace('@', '');
+            const q = query(collection(db, "users"), where("username", "==", cleanUser));
+            const qSnap = await getDocs(q);
+            if (!qSnap.empty) {
+                foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+            }
+        }
+
+        if (foundDoc) {
+            // ተጠቃሚው ተገኝቷል!
+            if (foundDoc.id === currentFirebaseUserId) {
+                 WebApp.showAlert("ይህ የእርስዎ አካውንት ነው። ለራስዎ መላክ አይችሉም።");
+            } else {
+                verifiedRecipientDoc = foundDoc;
+                
+                // UI ማሳያ
+                document.getElementById('p2p-preview-name').innerText = foundDoc.first_name || foundDoc.username || "Unknown";
+                document.getElementById('p2p-preview-avatar').innerHTML = getAvatarHtml(foundDoc.username, foundDoc.photo_url);
+                document.getElementById('p2p-recipient-preview').style.display = 'flex';
+                document.getElementById('p2p-send-btn').disabled = false;
+                document.getElementById('p2p-send-btn').classList.remove('disabled-btn');
+            }
+        } else {
+            WebApp.showAlert("❌ ተጠቃሚው አልተገኘም። እባክዎ ID ወይም Username በትክክል ያስገቡ።");
+            window.resetP2PVerification();
+        }
+
+    } catch (e) {
+        console.error(e);
+        WebApp.showAlert("Error verifying user.");
+    } finally {
+        btn.innerText = "ተቀባዩን አረጋግጥ (Verify) 🔍";
+        btn.disabled = false;
+    }
+};
+
+window.initiateP2PTransfer = () => {
+    const amount = parseInt(document.getElementById('p2p-amount-input').value);
+    
+    if (!amount || amount < 500) {
+        return WebApp.showAlert("ዝቅተኛው የመላኪያ መጠን 500 Coin ነው።");
+    }
+    if (!verifiedRecipientDoc) {
+        return WebApp.showAlert("እባክዎ መጀመሪያ ተቀባዩን ያረጋግጡ።");
+    }
+
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
+    const totalDeduct = amount + fee;
+
+    if (currentScore < totalDeduct) {
+        return WebApp.showAlert(`በቂ ቀሪ ሂሳብ የለዎትም። \nያስፈልጋል: ${totalDeduct} \nያለዎት: ${currentScore}`);
+    }
+
+    // Modal Update
+    document.getElementById('confirm-name').innerText = verifiedRecipientDoc.first_name;
+    document.getElementById('confirm-amount').innerText = amount.toLocaleString() + " Coin";
+    document.getElementById('confirm-fee').innerText = fee + " Coin";
+    document.getElementById('confirm-total').innerText = totalDeduct.toLocaleString() + " Coin";
+    
+    document.getElementById('p2p-confirm-modal').style.display = 'flex';
+};
+
+window.executeP2PTransaction = async () => {
+    const modal = document.getElementById('p2p-confirm-modal');
+    modal.style.display = 'none';
+    
+    const amount = parseInt(document.getElementById('p2p-amount-input').value);
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
+    const totalDeduct = amount + fee;
+    const recipientId = verifiedRecipientDoc.id;
+    const senderId = currentFirebaseUserId;
+
+    // Loading...
+    WebApp.MainButton.showProgress();
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            // 1. የላኪውን አሁናዊ መረጃ አንብብ (Security Check)
+            const senderRef = doc(db, "users", senderId);
+            const senderDoc = await transaction.get(senderRef);
+            if (!senderDoc.exists()) throw "Sender doc not found";
+            
+            const currentSenderBalance = senderDoc.data().total_score || 0;
+            if (currentSenderBalance < totalDeduct) {
+                throw "Insufficient funds during transaction";
+            }
+
+            // 2. የተቀባዩን መረጃ አንብብ
+            const recipientRef = doc(db, "users", recipientId);
+            const recipientDoc = await transaction.get(recipientRef);
+            if (!recipientDoc.exists()) throw "Recipient doc not found";
+
+            // 3. አድሚን ሪፈረንስ (ክፍያው የሚገባበት)
+            const adminRef = doc(db, "users", ADMIN_WALLET_ID);
+            
+            // --- OPERATIONS ---
+            
+            // A. ከላኪው ቀንስ
+            transaction.update(senderRef, {
+                total_score: increment(-totalDeduct)
+            });
+
+            // B. ለተቀባዩ ጨምር
+            transaction.update(recipientRef, {
+                total_score: increment(amount)
+            });
+
+            // C. ክፍያውን ለአድሚን ጨምር (አድሚን ዶክመንት ካለ)
+            if (ADMIN_WALLET_ID && ADMIN_WALLET_ID.length > 5) {
+                transaction.update(adminRef, {
+                    total_score: increment(fee), // ወይም ወደ የተለየ field: 'collected_fees': increment(fee)
+                }).catch(e => console.warn("Admin update skipped", e)); // አድሚን ባይኖር ትራንዛክሽኑ እንዳይቋረጥ
+            }
+
+            // D. ታሪክ መመዝገብ (History Collection)
+            const transferRef = doc(collection(db, "transfers"));
+            transaction.set(transferRef, {
+                sender_id: senderId,
+                sender_name: currentUserDocData.first_name || "User",
+                recipient_id: recipientId,
+                recipient_name: verifiedRecipientDoc.first_name || "Unknown",
+                amount: amount,
+                fee: fee,
+                timestamp: serverTimestamp(),
+                type: 'p2p_transfer'
+            });
+        });
+
+        // SUCCESS!
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert(`✅ ${amount} Coin ለ ${verifiedRecipientDoc.first_name} በተሳካ ሁኔታ ተላልፏል!`);
+        
+        // ድምፅ እና ኮንፌቲ
+        if(window.playSound) window.playSound('win');
+        
+        // ኖቲፊኬሽን ለተቀባዩ (በቦት በኩል)
+        const recipientTgId = verifiedRecipientDoc.telegram_id;
+        if (recipientTgId) {
+             sendP2PNotification(recipientTgId, amount, currentUserDocData.first_name);
+        }
+        // ✅ ለአድሚን ሪፖርት መላክ
+        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') {
+            sendAdminP2PReport(
+                ADMIN_TELEGRAM_ID, 
+                currentUserDocData.first_name, 
+                verifiedRecipientDoc.first_name, 
+                amount, 
+                fee
+            );
+        }
+
+        // ፎርሙን አጽዳ
+        document.getElementById('p2p-amount-input').value = '';
+        window.resetP2PVerification();
+        window.switchP2PTab('history'); // ወደ ታሪክ ውሰድ
+        
+        // ግሎባል ነጥብ አድስ
+        currentScore -= totalDeduct;
+        renderPageContent();
+
+    } catch (e) {
+        WebApp.MainButton.hideProgress();
+        console.error("Transfer Error:", e);
+        WebApp.showAlert("❌ Transaction Failed: " + (e === "Insufficient funds during transaction" ? "በቂ ቀሪ ሂሳብ የለዎትም" : "የኢንተርኔት ወይም የሲስተም ችግር አጋጥሟል"));
+    }
+};
+
+// ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
+function sendP2PNotification(targetTgId, amount, senderName) {
+    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+    
+    fetch(botUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            custom_chat_id: String(targetTgId),
+            message: `💸 <b>የገንዘብ ዝውውር (Incoming Transfer)</b>\n\n` +
+                     `👤 <b>ከ:</b> ${senderName}\n` +
+                     `💰 <b>መጠን:</b> +${amount.toLocaleString()} Coins\n` +
+                     `📅 <b>ቀን:</b> ${new Date().toLocaleDateString()}\n\n` +
+                     `አሁን ወደ ጨዋታው ገብተው ቀሪ ሂሳብዎን ያረጋግጡ! 🚀`
+        })
+    }).catch(e => console.log("Notification trigger failed", e));
+}
+// ✅ ለአድሚን ሪፖርት የሚልክ አዲስ ፈንክሽን
+function sendAdminP2PReport(adminTgId, senderName, recipientName, amount, fee) {
+    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+    
+    fetch(botUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            custom_chat_id: String(adminTgId), // የአድሚኑ ቴሌግራም ID
+            message: `👮‍♂️ <b>P2P Transaction Report</b>\n\n` +
+                     `📤 <b>ላኪ:</b> ${senderName}\n` +
+                     `📥 <b>ተቀባይ:</b> ${recipientName}\n` +
+                     `💰 <b>የተላከው:</b> ${amount.toLocaleString()} Coins\n` +
+                     `💵 <b>ኮሚሽን (Income):</b> +${fee.toLocaleString()} Coins\n` +
+                     `📅 <b>ቀን:</b> ${new Date().toLocaleString()}\n\n` +
+                     `System Log.`
+        })
+    }).catch(e => console.log("Admin notification failed", e));
+}
+
+
+// ታሪክ ማምጣት
+async function fetchP2PHistory() {
+    const list = document.getElementById('p2p-history-list');
+    list.innerHTML = '<div class="game-spinner" style="margin: 20px auto;"></div>';
+
+    try {
+        const transfersRef = collection(db, "transfers");
+        // እኔ የላኩት ወይም ለእኔ የተላከ
+        const q = query(transfersRef, 
+            where("sender_id", "==", currentFirebaseUserId),
+            orderBy("timestamp", "desc"), 
+            limit(20)
+        );
+        // Note: Firestore OR query is tricky, so we might need two queries or just fetch sender side for now to keep it simple without composite index
+        // Let's implement a client-side merge for better UX or just show Sent items for now. 
+        // For simplicity and to avoid Index errors, let's show "Sent History" mostly.
+        
+        const snapshot = await getDocs(q);
+        
+        // Also fetch received
+        const q2 = query(transfersRef, 
+             where("recipient_id", "==", currentFirebaseUserId),
+             orderBy("timestamp", "desc"),
+             limit(20)
+        );
+        const snapshot2 = await getDocs(q2);
+
+        let allTransfers = [];
+        snapshot.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'out'}));
+        snapshot2.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'in'}));
+        
+        // Sort by time
+        allTransfers.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+        if (allTransfers.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">ምንም የዝውውር ታሪክ የለም።</p>';
+            return;
+        }
+
+        let html = '';
+        allTransfers.forEach(t => {
+            const isIn = t.dir === 'in';
+            const color = isIn ? '#4CAF50' : '#F44336';
+            const sign = isIn ? '+' : '-';
+            const icon = isIn ? '📥' : '📤';
+            const name = isIn ? `From: ${t.sender_name}` : `To: ${t.recipient_name}`;
+            const date = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleDateString() : 'Just now';
+
+            html += `
+            <div class="modern-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 20px;">${icon}</div>
+                    <div>
+                        <div style="font-weight: bold; color: white; font-size: 14px;">${name}</div>
+                        <div style="font-size: 11px; color: #777;">${date}</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; color: ${color};">${sign}${t.amount}</div>
+                    ${!isIn ? `<div style="font-size: 10px; color: #555;">Fee: ${t.fee}</div>` : ''}
+                </div>
+            </div>`;
+        });
+
+        list.innerHTML = html;
+
+    } catch (e) {
+        console.error(e);
+        list.innerHTML = `<p style="color: var(--et-red); text-align: center;">Error loading history: Create Index maybe required.</p>`;
+        // Note: If you get "Index required" error in console, click the link provided in console to create it in Firebase.
+    }
+}
 
 
         // ======================================================================
