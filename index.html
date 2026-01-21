@@ -4579,7 +4579,23 @@
 
     <button class="game-back-button" onclick="window.switchPage('profile-page')">← Back to Profile</button>
 </div>
-
+    
+<div id="p2p-confirm-modal" class="custom-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>⚠️ ዝውውር ማረጋገጫ</h2>
+            <div class="summary-box">
+                <p>ለ: <span id="confirm-name" style="color: var(--et-yellow);">---</span></p>
+                <p>መጠን: <span id="confirm-amount" style="color: white; font-weight: bold;">---</span></p>
+                <p>ክፍያ (Fee): <span id="confirm-fee" style="color: var(--et-red);">---</span></p>
+                <hr style="border-color: #444;">
+                <p>ጠቅላላ ወጪ: <span id="confirm-total" style="color: var(--et-green);">---</span></p>
+            </div>
+            <div class="modal-actions">
+                <button onclick="document.getElementById('p2p-confirm-modal').style.display='none'" class="cancel-btn">ሰርዝ</button>
+                <button onclick="window.executeP2PTransaction()" class="confirm-btn">አረጋግጥና ላክ ✅</button>
+            </div>
+        </div>
+    </div>
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">💣 Mines Rush</h2>
