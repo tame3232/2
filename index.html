@@ -3791,6 +3791,18 @@
     border: 2px solid var(--et-green, #4CAF50);
 }
 
+    #p2p-amount-input {
+    margin-bottom: 5px;
+}
+.fee-preview-text {
+    font-weight: bold;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 </style>
 <body>
 <div id="loading-container">
@@ -10534,7 +10546,12 @@ window.cashoutMines = async () => {
 }
 
 
-// =========================================================
+ 
+
+
+         
+        
+            // =========================================================
 // ✅ P2P TRANSFER SYSTEM LOGIC
 // =========================================================
 
@@ -10647,6 +10664,27 @@ window.verifyP2PUser = async () => {
         btn.disabled = false;
     }
 };
+// HTML ላይ የ Fee ማሳያ ቦታ ከሌለ በ JS እንጨምር ወይም Input ስር <div id="fee-preview"></div> እንዳለ አረጋግጥ
+document.getElementById('p2p-amount-input').addEventListener('input', function(e) {
+    const val = parseInt(e.target.value) || 0;
+    const feeDisplay = document.querySelector('.fee-preview-text') || document.createElement('div');
+    
+    // ለ Fee ማሳያ የሚሆን ቦታ እንፍጠር (ካለ ዝለለው)
+    if (!document.querySelector('.fee-preview-text')) {
+        feeDisplay.className = 'fee-preview-text';
+        feeDisplay.style.fontSize = '12px';
+        feeDisplay.style.marginTop = '5px';
+        feeDisplay.style.color = '#FFA500'; // Orange color
+        e.target.parentNode.appendChild(feeDisplay);
+    }
+
+    if (val >= 500) {
+        const fee = Math.ceil(val * 0.05); // 5%
+        feeDisplay.innerText = `💡 Fee (5%): ${fee} Coin | Total: ${val + fee}`;
+    } else {
+        feeDisplay.innerText = '';
+    }
+});
 
 window.initiateP2PTransfer = () => {
     const amount = parseInt(document.getElementById('p2p-amount-input').value);
@@ -10679,7 +10717,7 @@ window.executeP2PTransaction = async () => {
     modal.style.display = 'none';
     
     const amount = parseInt(document.getElementById('p2p-amount-input').value);
-    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT); // 0.05
     const totalDeduct = amount + fee;
     const recipientId = verifiedRecipientDoc.id;
     const senderId = currentFirebaseUserId;
@@ -10689,14 +10727,14 @@ window.executeP2PTransaction = async () => {
 
     try {
         await runTransaction(db, async (transaction) => {
-            // 1. የላኪውን አሁናዊ መረጃ አንብብ (Security Check)
+            // 1. የላኪውን አሁናዊ መረጃ አንብብ
             const senderRef = doc(db, "users", senderId);
             const senderDoc = await transaction.get(senderRef);
             if (!senderDoc.exists()) throw "Sender doc not found";
             
             const currentSenderBalance = senderDoc.data().total_score || 0;
             if (currentSenderBalance < totalDeduct) {
-                throw "Insufficient funds during transaction";
+                throw "Insufficient funds"; // በቂ ቀሪ ሂሳብ ከሌለ
             }
 
             // 2. የተቀባዩን መረጃ አንብብ
@@ -10704,29 +10742,39 @@ window.executeP2PTransaction = async () => {
             const recipientDoc = await transaction.get(recipientRef);
             if (!recipientDoc.exists()) throw "Recipient doc not found";
 
-            // 3. አድሚን ሪፈረንስ (ክፍያው የሚገባበት)
+            // 3. ✅ ወሳኝ እርምት፡ የአድሚን ዶክመንትን መጀመሪያ ማንበብ አለብን!
             const adminRef = doc(db, "users", ADMIN_WALLET_ID);
+            const adminDoc = await transaction.get(adminRef);
+
+            // --- OPERATIONS (WRITES) ---
             
-            // --- OPERATIONS ---
-            
-            // A. ከላኪው ቀንስ
+            // A. ከላኪው ላይ መቀነስ
             transaction.update(senderRef, {
                 total_score: increment(-totalDeduct)
             });
 
-            // B. ለተቀባዩ ጨምር
+            // B. ለተቀባዩ መጨመር
             transaction.update(recipientRef, {
                 total_score: increment(amount)
             });
 
-            // C. ክፍያውን ለአድሚን ጨምር (አድሚን ዶክመንት ካለ)
+            // C. ክፍያውን ለአድሚን መጨመር (ዶክመንቱ ካለ update፣ ከሌለ set)
             if (ADMIN_WALLET_ID && ADMIN_WALLET_ID.length > 5) {
-                transaction.update(adminRef, {
-                    total_score: increment(fee), // ወይም ወደ የተለየ field: 'collected_fees': increment(fee)
-                }).catch(e => console.warn("Admin update skipped", e)); // አድሚን ባይኖር ትራንዛክሽኑ እንዳይቋረጥ
+                if (adminDoc.exists()) {
+                    transaction.update(adminRef, {
+                        total_score: increment(fee)
+                    });
+                } else {
+                    // አድሚን ዶክመንት ከሌለ አዲስ ፍጠር (Safety fallback)
+                    transaction.set(adminRef, {
+                        total_score: fee,
+                        username: "AdminWallet",
+                        is_admin: true
+                    });
+                }
             }
 
-            // D. ታሪክ መመዝገብ (History Collection)
+            // D. ታሪክ መመዝገብ
             const transferRef = doc(collection(db, "transfers"));
             transaction.set(transferRef, {
                 sender_id: senderId,
@@ -10740,19 +10788,17 @@ window.executeP2PTransaction = async () => {
             });
         });
 
-        // SUCCESS!
+        // ✅ SUCCESS!
         WebApp.MainButton.hideProgress();
         WebApp.showAlert(`✅ ${amount} Coin ለ ${verifiedRecipientDoc.first_name} በተሳካ ሁኔታ ተላልፏል!`);
         
-        // ድምፅ እና ኮንፌቲ
         if(window.playSound) window.playSound('win');
         
-        // ኖቲፊኬሽን ለተቀባዩ (በቦት በኩል)
+        // Notification Logic...
         const recipientTgId = verifiedRecipientDoc.telegram_id;
         if (recipientTgId) {
              sendP2PNotification(recipientTgId, amount, currentUserDocData.first_name);
         }
-        // ✅ ለአድሚን ሪፖርት መላክ
         if (typeof ADMIN_TELEGRAM_ID !== 'undefined') {
             sendAdminP2PReport(
                 ADMIN_TELEGRAM_ID, 
@@ -10763,21 +10809,30 @@ window.executeP2PTransaction = async () => {
             );
         }
 
-        // ፎርሙን አጽዳ
+        // Cleanup
         document.getElementById('p2p-amount-input').value = '';
-        window.resetP2PVerification();
-        window.switchP2PTab('history'); // ወደ ታሪክ ውሰድ
+        const feePreview = document.querySelector('.fee-preview-text');
+        if(feePreview) feePreview.innerText = ''; // Fee text አጥፋ
         
-        // ግሎባል ነጥብ አድስ
+        window.resetP2PVerification();
+        window.switchP2PTab('history'); 
+        
         currentScore -= totalDeduct;
         renderPageContent();
 
     } catch (e) {
         WebApp.MainButton.hideProgress();
-        console.error("Transfer Error:", e);
-        WebApp.showAlert("❌ Transaction Failed: " + (e === "Insufficient funds during transaction" ? "በቂ ቀሪ ሂሳብ የለዎትም" : "የኢንተርኔት ወይም የሲስተም ችግር አጋጥሟል"));
+        console.error("Transfer Error Full Log:", e);
+        
+        // Error Handling
+        let msg = "የኢንተርኔት ወይም የሲስተም ችግር አጋጥሟል።";
+        if (e === "Insufficient funds") msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
+        if (e === "Recipient doc not found") msg = "የተቀባዩ አድራሻ ላይ ችግር አለ።";
+        
+        WebApp.showAlert("❌ Transaction Failed: " + msg);
     }
 };
+
 
 // ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
 function sendP2PNotification(targetTgId, amount, senderName) {
@@ -10889,6 +10944,8 @@ async function fetchP2PHistory() {
         // Note: If you get "Index required" error in console, click the link provided in console to create it in Firebase.
     }
 }
+
+
 
 
         // ======================================================================
