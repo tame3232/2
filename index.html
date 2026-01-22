@@ -3802,173 +3802,103 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
-/* Launch Ad Styles */
+/* --- Launch Ad Overlay Styles --- */
 #launch-ad-overlay {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 99999; /* ከሁሉም በላይ */
-    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* ከጀርባ ያለውን ገጽ ለማሳየት ከፊል ጥቁር (Semi-transparent) */
+    background-color: rgba(0, 0, 0, 0.75); 
+    backdrop-filter: blur(3px); /* ከጀርባ ያለው ብዥ እንዲል */
+    z-index: 10000; /* ከሁሉም በላይ */
+    
+    /* መሃል ላይ ለማድረግ */
+    display: none; /* በ JS ወደ flex ይቀየራል */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    perspective: 1000px;
 }
 
-.ad-backdrop {
-    position: absolute;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    animation: fadeIn 0.5s ease;
-}
-
-.ad-content-wrapper {
-    position: relative;
-    width: 85%;
-    max-width: 380px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    animation: slideUpPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* 3D Card Style */
 .ad-card-3d {
-    width: 100%;
-    background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+    position: relative;
+    width: 85%; /* ስክሪኑን ሙሉ አይሞላም */
+    max-width: 320px; /* በጣም ሰፊ እንዳይሆን */
+    background: #1e1e1e; /* የካርዱ ቀለም */
     border-radius: 20px;
-    border: 1px solid rgba(255, 215, 0, 0.3); /* Gold border */
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.5),
-        0 0 15px rgba(255, 215, 0, 0.1);
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid #333;
+    text-align: center;
     overflow: hidden;
-    transform-style: preserve-3d;
-    transition: transform 0.2s;
-    cursor: pointer;
+    transform: scale(0.9);
+    animation: popIn 0.3s ease forwards;
 }
 
-.ad-card-3d:active {
-    transform: scale(0.98);
-}
-
+/* ምስሉ የሚቀመጥበት ሳጥን */
 .ad-image-container {
     width: 100%;
-    height: 350px; /* ምስሉ ረዘም እንዲል */
-    position: relative;
-    background: #000;
+    height: 160px; /* ቋሚ ቁመት */
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    background-color: #333; /* ምስሉ እስኪመጣ የሚታይ ቀለም */
 }
 
+/* ምስሉ ራሱ */
 #ad-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover; /* ምስሉ እንዳይለጠጥ */
+    display: block;
 }
 
 .ad-badge {
     position: absolute;
-    top: 10px; right: 10px;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
+    top: 25px;
+    right: 25px;
+    background: #ffc107;
+    color: #000;
+    font-weight: bold;
+    font-size: 10px;
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-    border: 1px solid rgba(255,255,255,0.2);
 }
 
-.ad-text-content {
-    padding: 15px;
-    text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,1), rgba(30,30,30,0));
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+.ad-text-content h3 {
+    margin: 10px 0 5px;
+    color: #fff;
 }
-
-#ad-title {
-    color: var(--et-yellow, #ffd700);
-    margin: 0;
-    font-size: 20px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
-
-#ad-desc {
-    color: #eee;
+.ad-text-content p {
+    color: #aaa;
     font-size: 14px;
-    margin: 5px 0 12px 0;
+    margin-bottom: 15px;
 }
 
 .ad-cta-btn {
-    background: var(--et-blue, #2196F3);
+    background: linear-gradient(45deg, #007bff, #0056b3);
     color: white;
-    padding: 10px;
-    border-radius: 8px;
+    padding: 12px;
+    border-radius: 10px;
     font-weight: bold;
-    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.4);
+    cursor: pointer;
 }
 
-/* Close Button with Timer Ring */
+/* የመዝጊያ ቁልፍ እና ታይመር */
 .ad-close-container {
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.progress-ring {
-    position: relative;
-    width: 50px;
-    height: 50px;
-}
-
-.progress-ring svg {
-    width: 50px; height: 50px;
-    transform: rotate(-90deg);
-}
-
-.progress-ring circle {
-    fill: transparent;
-    stroke-width: 3;
-}
-
-.progress-ring circle:first-child {
-    stroke: rgba(255,255,255,0.2);
-}
-
-#ad-timer-circle {
-    stroke: var(--et-yellow, #ffd700);
-    stroke-dasharray: 138;
-    stroke-dashoffset: 0; /* 138 to 0 for animation */
-    transition: stroke-dashoffset 4s linear;
-}
-
-.ad-close-btn {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: #333;
-    border: 1px solid #555;
-    color: white;
-    font-size: 16px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.close-text {
-    margin-top: 5px;
-    color: #888;
-    font-size: 12px;
+/* Pop-in animation */
+@keyframes popIn {
+    to { transform: scale(1); }
 }
 
-@keyframes slideUpPop {
-    0% { transform: translateY(100px) scale(0.8); opacity: 0; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-}
 
 /* 3D Grid Layout Container */
 .games-grid-container {
@@ -4146,6 +4076,7 @@
             </button>
             
             <div id="tasks-ad-container"></div>
+             <div class="games-grid-container">
          <div class="game-card-3d" onclick="window.showAdsgramAd()">
         <div class="card-badge-dot ready"></div>
         <div class="game-card-icon icon-bg-blue">
@@ -11231,13 +11162,12 @@ async function fetchP2PHistory() {
 // ==========================================
 
 let currentAdLink = ""; 
+let autoCloseTimer = null; // የ4 ሰከንዱን ቆጣሪ ለመያዝ
 
 async function initLaunchAd() {
-    // ቀድሞውኑ ክፍት ከሆነ ወይም ከዚህ በፊት ታይቶ ከሆነ መድገም አያስፈልግም
+    // ቀድሞውኑ ክፍት ከሆነ መድገም አያስፈልግም
     if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
 
-    console.log("Checking for launch ads...");
-    
     try {
         const docRef = doc(db, "app_settings", "launch_ad");
         const docSnap = await getDoc(docRef);
@@ -11246,12 +11176,14 @@ async function initLaunchAd() {
             const adData = docSnap.data();
 
             if (adData.isActive) {
-                // ምስሉን Preload እናደርጋለን
+                // ምስሉን Preload እናደርጋለን (ምስሉ መምጣቱን ለማረጋገጥ)
                 const img = new Image();
                 img.src = adData.imageUrl;
                 img.onload = () => {
-                    // ምስሉ ዝግጁ ሲሆን ብቻ UIውን እናሳያለን
                     showLaunchAdUI(adData);
+                };
+                img.onerror = () => {
+                    console.error("Ad Image failed to load:", adData.imageUrl);
                 };
             }
         }
@@ -11262,8 +11194,6 @@ async function initLaunchAd() {
 
 function showLaunchAdUI(data) {
     const overlay = document.getElementById('launch-ad-overlay');
-    
-    // ኤለመንቶቹ መኖራቸውን ማረጋገጥ
     if (!overlay) return;
 
     const adImg = document.getElementById('ad-image');
@@ -11277,30 +11207,58 @@ function showLaunchAdUI(data) {
     adDesc.innerText = data.description || "Check this out!";
     currentAdLink = data.targetUrl;
 
-    // UI ማሳየት
+    // UI ማሳየት (በ CSS በኩል መሃል ላይ እንዲሆን ተደርጓል)
     overlay.style.display = 'flex';
+    overlay.style.opacity = '1';
 
-    // Animation Timer
-    setTimeout(() => {
-        if(timerCircle) timerCircle.style.strokeDashoffset = '138'; 
-    }, 100);
+    // የክብ አኒሜሽን ማስጀመር
+    if(timerCircle) {
+        timerCircle.style.transition = 'stroke-dashoffset 4s linear';
+        setTimeout(() => {
+            timerCircle.style.strokeDashoffset = '138'; 
+        }, 100);
+    }
+
+    // 🛑 ራስ-ሰር መዝጊያ (ከ 4 ሰከንድ በኋላ)
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    autoCloseTimer = setTimeout(() => {
+        closeLaunchAd();
+    }, 4000); 
 }
 
 // ማስታወቂያውን መዝጊያ
 window.closeLaunchAd = (event) => {
     if(event) event.stopPropagation();
+    
+    // ቆጣሪውን ማቆም
+    if (autoCloseTimer) {
+        clearTimeout(autoCloseTimer);
+        autoCloseTimer = null;
+    }
+
     const overlay = document.getElementById('launch-ad-overlay');
     if(!overlay) return;
 
-    overlay.style.animation = 'fadeOut 0.3s ease forwards';
+    // የመዝጊያ አኒሜሽን
+    overlay.style.transition = 'opacity 0.3s ease';
+    overlay.style.opacity = '0';
+    
     setTimeout(() => {
         overlay.style.display = 'none';
-        overlay.style.animation = ''; 
+        // የክቡን አኒሜሽን Reset ማድረግ ለሚቀጥለው ጊዜ
+        const timerCircle = document.getElementById('ad-timer-circle');
+        if(timerCircle) {
+            timerCircle.style.transition = 'none';
+            timerCircle.style.strokeDashoffset = '0';
+        }
     }, 300);
 };
 
 // ክሊክ ማስተናገጃ
 window.handleAdClick = () => {
+    // ተጠቃሚው ከነካው ራሱ እንዲዘጋ አንፈልግም (ሊንኩ እስኪከፈት)
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+
     if (currentAdLink) {
         if (currentAdLink.includes('t.me')) {
             window.Telegram.WebApp.openTelegramLink(currentAdLink);
@@ -11310,6 +11268,7 @@ window.handleAdClick = () => {
         closeLaunchAd();
     }
 };
+
 
 
 
@@ -11440,7 +11399,7 @@ window.onload = async () => {
     }
     await firebaseLogin(); 
     switchPage('tasks-page'); 
-            initLaunchAd(); 
+    initLaunchAd(); 
 };
  </script>
 </body>
