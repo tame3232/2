@@ -3802,6 +3802,280 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* Launch Ad Styles */
+#launch-ad-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 99999; /* ከሁሉም በላይ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+}
+
+.ad-backdrop {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.5s ease;
+}
+
+.ad-content-wrapper {
+    position: relative;
+    width: 85%;
+    max-width: 380px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    animation: slideUpPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 3D Card Style */
+.ad-card-3d {
+    width: 100%;
+    background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3); /* Gold border */
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.5),
+        0 0 15px rgba(255, 215, 0, 0.1);
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.ad-card-3d:active {
+    transform: scale(0.98);
+}
+
+.ad-image-container {
+    width: 100%;
+    height: 350px; /* ምስሉ ረዘም እንዲል */
+    position: relative;
+    background: #000;
+}
+
+#ad-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ad-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.ad-text-content {
+    padding: 15px;
+    text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,1), rgba(30,30,30,0));
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+#ad-title {
+    color: var(--et-yellow, #ffd700);
+    margin: 0;
+    font-size: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+#ad-desc {
+    color: #eee;
+    font-size: 14px;
+    margin: 5px 0 12px 0;
+}
+
+.ad-cta-btn {
+    background: var(--et-blue, #2196F3);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.4);
+}
+
+/* Close Button with Timer Ring */
+.ad-close-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.progress-ring {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.progress-ring svg {
+    width: 50px; height: 50px;
+    transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+    fill: transparent;
+    stroke-width: 3;
+}
+
+.progress-ring circle:first-child {
+    stroke: rgba(255,255,255,0.2);
+}
+
+#ad-timer-circle {
+    stroke: var(--et-yellow, #ffd700);
+    stroke-dasharray: 138;
+    stroke-dashoffset: 0; /* 138 to 0 for animation */
+    transition: stroke-dashoffset 4s linear;
+}
+
+.ad-close-btn {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-text {
+    margin-top: 5px;
+    color: #888;
+    font-size: 12px;
+}
+
+@keyframes slideUpPop {
+    0% { transform: translateY(100px) scale(0.8); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* 3D Grid Layout Container */
+.games-grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 እኩል ክፍሎች */
+    gap: 8px; /* ክፍተቱን ትንሽ ቀነስ አድርገነዋል ስክሪኑ እንዲበቃው */
+    padding: 10px;
+    width: 100%; /* ሙሉ ስፋት እንዲወስድ */
+    box-sizing: border-box; /* padding ስፋቱን እንዳያበላሸው */
+}
+
+/* 3D Game Card Style */
+.game-card-3d {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #2b2b2b, #1a1a1a); /* 3D Gradient */
+    border-radius: 16px;
+    padding: 12px 5px;
+    min-height: 110px;
+    box-shadow: 
+        5px 5px 10px #0f0f0f, 
+        -2px -2px 6px #3d3d3d; /* ጥላ ለ 3D እይታ */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    overflow: hidden;
+    text-align: center;
+}
+
+/* ክሊክ ሲደረግ የሚፈጠር አኒሜሽን */
+.game-card-3d:active {
+    transform: scale(0.95);
+    box-shadow: inset 3px 3px 5px #0f0f0f, inset -3px -3px 5px #3d3d3d;
+}
+
+/* Icon Container */
+.game-card-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+}
+
+/* Text Styles */
+.game-card-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: #e0e0e0;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.game-card-reward {
+    font-size: 10px;
+    color: var(--et-yellow); /* ወይም የመረጡት ቀለም */
+    font-weight: normal;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Status Badge (Ready/Timer) - Top Right */
+.card-badge-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #555; /* Default inactive */
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.card-badge-dot.ready {
+    background-color: var(--et-green);
+    box-shadow: 0 0 8px var(--et-green);
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* ልዩ ቀለማት ለ Icons */
+.icon-bg-blue { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+.icon-bg-purple { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
+.icon-bg-orange { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
+.icon-bg-red { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+.icon-bg-green { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+.icon-bg-yellow { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
+
 
 </style>
 <body>
@@ -3872,113 +4146,88 @@
             </button>
             
             <div id="tasks-ad-container"></div>
-            <button class="card-button" onclick="window.showAdsgramAd()">
-    <div class="card-icon-circle" style="background-color: #0088cc;">
-        <span class="emoji-animate anim-pulse">📺</span>
-    </div>
-    <div class="card-text-container">
-        <div class="card-title">Adsgram Watch Ad</div>
-        <div class="card-subtitle">ቪዲዮ አይተው +1000 Coin ያግኙ!</div>
-    </div>
-    <div class="status-badge ready">WATCH</div>
-    <div class="arrow-icon">→</div>
-</button>
-
-
-            <button class="card-button" id="daily-cipher-card" onclick="window.showGameWithLoading('daily-cipher-page')">
-                <div class="card-icon-circle" style="background-color: #9C27B0;">
-                    <span class="emoji-animate anim-glow">🕵️</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_cipher_title">Daily Cipher</div>
-                    <div class="card-subtitle" data-lang="card_cipher_desc">የዕለቱን ሚስጥራዊ ኮድ ይፍቱ (+50,000 Coin)</div>
-                </div>
-                <div id="daily-cipher-badge" class="status-badge">...</div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-            <button class="card-button" id="memory-game-card" onclick="window.showGameWithLoading('memory-game-page')">
-                <div class="card-icon-circle" style="background-color: #FF9800;">
-                    <span class="emoji-animate anim-flip">🃏</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_memory_title">Memory Match</div>
-                    <div class="card-subtitle" data-lang="card_memory_desc">ጥንድ ካርዶችን በማገናኘት አእምሮዎን ይፈትኑ!</div>
-                </div>
-                <div id="memory-game-badge" class="status-badge">...</div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-            <button class="card-button" id="mystery-box-card" onclick="window.showGameWithLoading('mystery-box-page')">
-                <div class="card-icon-circle" style="background-color: var(--et-red);">
-                    <span class="emoji-animate anim-shake">🎁</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_mystery_title">Mystery Box Game</div>
-                    <div class="card-subtitle" data-lang="card_mystery_desc">ሚስጥራዊ ሣጥን ክፈት እና የዘፈቀደ coin አግኝ።</div>
-                </div>
-                <div id="mystery-box-badge" class="status-badge">...</div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-            <button class="card-button" id="daily-spin-card" onclick="window.showGameWithLoading('daily-spin-page')">
-                <div class="card-icon-circle" style="background-color: var(--et-blue);">
-                    <span class="emoji-animate anim-spin">🎡</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_spin_title">Daily Spin</div>
-                    <div class="card-subtitle" data-lang="card_spin_desc">ዕለታዊ ሽክርክር (Spin) ያሽከርክሩና coin ያሸንፉ።</div>
-                </div>
-                <div id="daily-spin-badge" class="status-badge">...</div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-<button class="card-button" onclick="window.showGameWithLoading('mines-game-page')">
-    <div class="card-icon-circle" style="background-color: #555;">
-        <span class="icon-mine-tremble">💣</span>
-    </div>
-    <div class="card-text-container">
-        <div class="card-title">Mines Rush</div>
-        <div class="card-subtitle">ቦምቡን ይሽሹ፣ አልማዙን ይሰብስቡ!</div>
-    </div>
-    <div class="arrow-icon">→</div>
-</button>
-
-            <button class="card-button" id="reflex-game-card" onclick="window.showGameWithLoading('reflex-game-page')">
-                <div class="card-icon-circle" style="background-color: var(--et-green);">
-                    <span class="emoji-animate anim-pulse">⚡</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_reflex_title">Reflex Game</div>
-                    <div class="card-subtitle" data-lang="card_reflex_desc">በፍጥነት ምላሽ ሰጥተው coin ያግኙ።</div>
-                </div>
-                <div id="reflex-game-badge" class="status-badge">...</div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-            <button class="card-button" id="social-tasks-card" onclick="handleCardClick('social-tasks-page')">
-                <div class="card-icon-circle" style="background-color: var(--et-purple);">
-                    <span class="emoji-animate anim-bounce">🌐</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_social_title">Social Tasks</div>
-                    <div class="card-subtitle" data-lang="card_social_desc">ማህበራዊ ተግባራትን ያጠናቅቁ እና ትልቅ coin ይውሰዱ!</div>
-                </div>
-                <div class="arrow-icon">→</div>
-            </button>
-
-            <button class="card-button" id="slots-game-card" onclick="window.showGameWithLoading('slots-game-page')">
-                <div class="card-icon-circle" style="background-color: var(--et-red);">
-                    <span class="emoji-animate anim-slot">🎰</span>
-                </div>
-                <div class="card-text-container">
-                    <div class="card-title" data-lang="card_slots_title">Lucky Slot Game</div>
-                    <div class="card-subtitle" data-lang="card_slots_desc">እለታዊ እሽክርክሪት አሸንፈው coin ያግኙ!</div>
-                </div>
-                <div class="arrow-icon">→</div>
-            </button>
+         <div class="game-card-3d" onclick="window.showAdsgramAd()">
+        <div class="card-badge-dot ready"></div>
+        <div class="game-card-icon icon-bg-blue">
+            <span class="emoji-animate">📺</span>
         </div>
+        <div class="game-card-title">Watch Ad</div>
+        <div class="game-card-reward">+1000</div>
     </div>
+
+    <div class="game-card-3d" id="daily-cipher-card" onclick="window.showGameWithLoading('daily-cipher-page')">
+        <div class="card-badge-dot" id="daily-cipher-badge-dot"></div>
+        <div class="game-card-icon icon-bg-purple">
+            <span class="emoji-animate anim-glow">🕵️</span>
+        </div>
+        <div class="game-card-title" data-lang="card_cipher_title">Cipher</div>
+        <div class="game-card-reward">+50K</div>
+    </div>
+
+    <div class="game-card-3d" id="memory-game-card" onclick="window.showGameWithLoading('memory-game-page')">
+        <div class="card-badge-dot" id="memory-game-badge-dot"></div>
+        <div class="game-card-icon icon-bg-orange">
+            <span class="emoji-animate anim-flip">🃏</span>
+        </div>
+        <div class="game-card-title" data-lang="card_memory_title">Memory</div>
+        <div class="game-card-reward">Play</div>
+    </div>
+
+    <div class="game-card-3d" id="mystery-box-card" onclick="window.showGameWithLoading('mystery-box-page')">
+        <div class="card-badge-dot" id="mystery-box-badge-dot"></div>
+        <div class="game-card-icon icon-bg-red">
+            <span class="emoji-animate anim-shake">🎁</span>
+        </div>
+        <div class="game-card-title" data-lang="card_mystery_title">Mystery</div>
+        <div class="game-card-reward">Random</div>
+    </div>
+
+    <div class="game-card-3d" id="daily-spin-card" onclick="window.showGameWithLoading('daily-spin-page')">
+        <div class="card-badge-dot" id="daily-spin-badge-dot"></div>
+        <div class="game-card-icon icon-bg-blue">
+            <span class="emoji-animate anim-spin">🎡</span>
+        </div>
+        <div class="game-card-title" data-lang="card_spin_title">Spin</div>
+        <div class="game-card-reward">Win Big</div>
+    </div>
+
+    <div class="game-card-3d" onclick="window.showGameWithLoading('mines-game-page')">
+        <div class="card-badge-dot ready"></div> <div class="game-card-icon" style="background: rgba(85,85,85,0.2); color: #fff;">
+            <span class="icon-mine-tremble">💣</span>
+        </div>
+        <div class="game-card-title">Mines</div>
+        <div class="game-card-reward">Bet</div>
+    </div>
+
+    <div class="game-card-3d" id="reflex-game-card" onclick="window.showGameWithLoading('reflex-game-page')">
+        <div class="card-badge-dot" id="reflex-game-badge-dot"></div>
+        <div class="game-card-icon icon-bg-green">
+            <span class="emoji-animate anim-pulse">⚡</span>
+        </div>
+        <div class="game-card-title" data-lang="card_reflex_title">Reflex</div>
+        <div class="game-card-reward">Speed</div>
+    </div>
+
+    <div class="game-card-3d" id="social-tasks-card" onclick="handleCardClick('social-tasks-page')">
+        <div class="card-badge-dot ready"></div>
+        <div class="game-card-icon icon-bg-purple">
+            <span class="emoji-animate anim-bounce">🌐</span>
+        </div>
+        <div class="game-card-title" data-lang="card_social_title">Social</div>
+        <div class="game-card-reward">Tasks</div>
+    </div>
+
+    <div class="game-card-3d" id="slots-game-card" onclick="window.showGameWithLoading('slots-game-page')">
+        <div class="card-badge-dot" id="slots-game-badge-dot"></div>
+        <div class="game-card-icon icon-bg-red">
+            <span class="emoji-animate anim-slot">🎰</span>
+        </div>
+        <div class="game-card-title" data-lang="card_slots_title">Slot</div>
+        <div class="game-card-reward">Jackpot</div>
+    </div>
+</div>
+</div>
+</div>
 
     <div id="slots-game-page" class="game-page-container" style="display: none; text-align: center;">
         <h2 class="page-title" data-lang="title_slots">Lucky Slot Machine</h2>
@@ -4675,6 +4924,33 @@
     </button>
     <button class="game-back-button" onclick="showMainPage()" data-lang="btn_back_home">← ወደ ዋና ገፅ ተመለስ</button>
 </div>
+<div id="launch-ad-overlay" style="display: none;">
+    <div class="ad-backdrop"></div>
+    <div class="ad-content-wrapper">
+        <div class="ad-card-3d" onclick="handleAdClick()">
+            <div class="ad-image-container">
+                <img id="ad-image" src="" alt="Special Offer">
+                <div class="ad-badge">SPONSORED</div>
+            </div>
+            <div class="ad-text-content">
+                <h3 id="ad-title">Special Bonus!</h3>
+                <p id="ad-desc">Join now and earn big rewards.</p>
+                <div class="ad-cta-btn">OPEN NOW 🚀</div>
+            </div>
+        </div>
+
+        <div class="ad-close-container">
+            <div class="progress-ring">
+                <svg>
+                   <circle cx="25" cy="25" r="22"></circle>
+                   <circle cx="25" cy="25" r="22" id="ad-timer-circle"></circle>
+                </svg>
+                <button class="ad-close-btn" onclick="closeLaunchAd(event)">✕</button>
+            </div>
+            <span class="close-text">Close</span>
+        </div>
+    </div>
+</div>
 
 
     <div id="memory-game-page" class="game-page-container" style="display: none;">
@@ -4853,14 +5129,14 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
         const WebApp = window.Telegram.WebApp;
         let currentFirebaseUserId = null; 
         let telegramUserId = null; 
-        let currentScore = 0; // 
+        let currentScore = 0; 
         let currentSmartCoinBalance = 0;
         let currentTickets = 0; 
         let currentUserDocData = null; 
         let currentRank = 'N/A'; 
         let isReflexGameRunning = false; 
         let timerIntervals = {}; // ለሁሉም Cooldown Timers የሚውል
-
+        let hasLaunchAdShown = false;
 // ======================================================================
     // ✅ 🛑 TRANSLATIONS (ሙሉ በሙሉ የተስተካከለ)
     // ======================================================================
@@ -6037,6 +6313,10 @@ function setupCurrentUserListener(userId) {
                  loadingContainer.style.opacity = '0';
                 setTimeout(() => {
                     loadingContainer.style.display = 'none';
+                    if (!hasLaunchAdShown) {
+            initLaunchAd(); 
+            hasLaunchAdShown = true; // ደጋግሞ እንዳይመጣ እንዘጋዋለን
+        }
                 }, 500); 
             }
             
@@ -6632,7 +6912,8 @@ function renderLeaderboard(data) {
                         ${rankDisplay} 
                     </span> 
                     <div class="leaderboard-item-photo">${avatarHtml}</div> 
-                   <span class="leaderboard-item-name">${player.username || 'ያልታወቀ ተጫዋች'}</span>
+                   <span class="leaderboard-item-name">${player.first_name || player.username || 'ያልታወቀ ተጫዋች'}</span>
+
 
                     <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
                 </div>
@@ -10945,6 +11226,90 @@ async function fetchP2PHistory() {
     }
 }
 
+// ==========================================
+// 📺 LAUNCH AD SYSTEM INTEGRATION
+// ==========================================
+
+let currentAdLink = ""; 
+
+async function initLaunchAd() {
+    // ቀድሞውኑ ክፍት ከሆነ ወይም ከዚህ በፊት ታይቶ ከሆነ መድገም አያስፈልግም
+    if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
+
+    console.log("Checking for launch ads...");
+    
+    try {
+        const docRef = doc(db, "app_settings", "launch_ad");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const adData = docSnap.data();
+
+            if (adData.isActive) {
+                // ምስሉን Preload እናደርጋለን
+                const img = new Image();
+                img.src = adData.imageUrl;
+                img.onload = () => {
+                    // ምስሉ ዝግጁ ሲሆን ብቻ UIውን እናሳያለን
+                    showLaunchAdUI(adData);
+                };
+            }
+        }
+    } catch (error) {
+        console.warn("Ad fetch skipped:", error);
+    }
+}
+
+function showLaunchAdUI(data) {
+    const overlay = document.getElementById('launch-ad-overlay');
+    
+    // ኤለመንቶቹ መኖራቸውን ማረጋገጥ
+    if (!overlay) return;
+
+    const adImg = document.getElementById('ad-image');
+    const adTitle = document.getElementById('ad-title');
+    const adDesc = document.getElementById('ad-desc');
+    const timerCircle = document.getElementById('ad-timer-circle');
+
+    // ዳታ መሙላት
+    adImg.src = data.imageUrl;
+    adTitle.innerText = data.title || "Special Offer";
+    adDesc.innerText = data.description || "Check this out!";
+    currentAdLink = data.targetUrl;
+
+    // UI ማሳየት
+    overlay.style.display = 'flex';
+
+    // Animation Timer
+    setTimeout(() => {
+        if(timerCircle) timerCircle.style.strokeDashoffset = '138'; 
+    }, 100);
+}
+
+// ማስታወቂያውን መዝጊያ
+window.closeLaunchAd = (event) => {
+    if(event) event.stopPropagation();
+    const overlay = document.getElementById('launch-ad-overlay');
+    if(!overlay) return;
+
+    overlay.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.animation = ''; 
+    }, 300);
+};
+
+// ክሊክ ማስተናገጃ
+window.handleAdClick = () => {
+    if (currentAdLink) {
+        if (currentAdLink.includes('t.me')) {
+            window.Telegram.WebApp.openTelegramLink(currentAdLink);
+        } else {
+            window.Telegram.WebApp.openLink(currentAdLink);
+        }
+        closeLaunchAd();
+    }
+};
 
 
 
@@ -11031,6 +11396,7 @@ async function fetchP2PHistory() {
           checkAdminStatus();
 
         }
+        window.renderPageContent = renderPageContent;
 // ======================================================================
 //                              INITIALIZATION (የተስተካከለ)
 // ======================================================================
@@ -11072,15 +11438,9 @@ window.onload = async () => {
         WebApp.showAlert("ስህተት: የቴሌግራም መረጃን ማግኘት አልተቻለም።");
         return; // ID ከሌለ መቀጠል የለበትም
     }
-
-    // 🛑 2. Login እና Data Loading
-    // onAuthStateChanged መጠቀም አያስፈልግም፣ ምክንያቱም firebaseLogin ራሱ 
-    // ተጠቃሚውን ፈልጎ (Old vs New) ስለሚያመጣ።
     await firebaseLogin(); 
-    
-    // ወደ መጀመሪያው ገጽ ውሰድ
     switchPage('tasks-page'); 
-};
+
  </script>
 </body>
 </html>
