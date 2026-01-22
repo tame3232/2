@@ -1,3 +1,4 @@
+   
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
@@ -286,8 +287,14 @@ exports.handler = async (event) => {
                     }
 
                     const inviteCount = userData.invite_count || 0;
+              const rankRes = await db.collection('users')
+           .where('total_score', '>', userData.total_score || 0)
+          .count().get();
+          const userRank = rankRes.data().count + 1;
 
-                    const name = userData.first_name || userData.username || 'ያልታወቀ';
+                    
+                   const name = userData.first_name || userData.username || 'ያልታወቀ';
+
                     const score = userData.total_score || 0;
                     const createdAt = userData.created_at ? userData.created_at.toDate().toLocaleString('en-GB') : 'ያልታወቀ';
                     const isBanned = userData.is_banned ? "🚫 የታገደ (Banned)" : "✅ ንቁ (Active)";
@@ -297,6 +304,7 @@ exports.handler = async (event) => {
                         `👤 <b>ስም:</b> ${name}\n` +
                         `🆔 <b>ID:</b> <code>${targetIdString}</code>\n` +
                         `💰 <b>Score:</b> ${score.toLocaleString()}\n` +
+                        `🏆 <b>ደረጃ:</b> #${userRank}\n` + 
                         `👥 <b>Invites:</b> ${inviteCount}\n` +
                         `📅 <b>የተመዘገበው:</b> ${createdAt}\n` +
                         `🚦 <b>ሁኔታ:</b> ${isBanned}\n` +
@@ -486,7 +494,7 @@ if (text && text.startsWith('/start')) {
     // 🔥 ተጠቃሚው በፍጹም ካልተገኘ ብቻ (አዲስ ከሆነ) ሪፖርት ይላካል
     if (!userExists) {
         const newUserInfo = `🔔 <b>አዲስ ተጠቃሚ ተቀላቅሏል!</b>\n\n` +
-            `👤 <b>ስም:</b> ${user.first_name || 'ያልታወቀ'}\n` +
+            `👤 <b>ስም:</b> <a href="tg://user?id=${chatId}">${user.first_name || 'ያልታወቀ'}</a>\n` +        
             `🆔 <b>ID:</b> <code>${chatId}</code>\n` +
             `🔗 <b>Username:</b> ${user.username ? '@' + user.username : 'የለውም'}\n` +
             `🌍 <b>ቋንቋ:</b> ${user.language_code || 'ያልታወቀ'}\n` +
@@ -517,6 +525,39 @@ if (text && text.startsWith('/start')) {
     const welcome = `<b>እንኳን በደህና መጡ ወደ Smart Airdrop 🚀</b>\n\n💎 ይህ የሽልማት ዓለም ነው — የብዙዎች ዕድል እና የብቸኛዎች ግንባር!\nእያንዳንዱ ነጥብ ዕድል ነው፣ እያንዳንዱ ጨዋታ ተስፋ ነው 🎯\n🌟 ዛሬ የአንተ ቀን ነው — ጀምር እና አሸንፈው!\n\n🚀 ለመጀመር ከታች ያለውን አዝራር ይጫኑ።`;
 
     const miniAppUrl = "https://newsmartgames.netlify.app/";
+ 
+
+    // ============================================================
+    // 🔥 አዲስ የተጨመረ፡ MENU BUTTON DYNAMIC UPDATE 🔥
+    // ተጠቃሚው በሪፈራል ከመጣ፣ የታችኛው Menu Button መረጃውን እንዲይዝ እናደርጋለን
+    // ============================================================
+    
+
+    if (referrerIdForApp) {
+        try {
+            // ለዚህ ተጠቃሚ ብቻ የታችኛውን ቁልፍ እንቀይራለን
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    menu_button: {
+                        type: "web_app",
+                        text: "Play Now 🚀", // ቁልፉ ላይ የሚፃፈው
+                        web_app: { 
+                            // እዚህ ጋር ነው ምስጢሩ! መረጃውን ከሊንኩ ጋር አብረን እንልካለን
+                            url: `${miniAppUrl}?tgWebAppStartParam=${referrerIdForApp}` 
+                        }
+                    }
+                })
+            });
+        } catch (err) {
+            console.error("Menu Button Update Failed:", err);
+        }
+    }
+    // ============================================================
+
+    
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -557,4 +598,4 @@ async function sendToAdmin(text) {
     } catch (e) {
         console.error("Failed to send to admin:", e);
     }
-}
+   
