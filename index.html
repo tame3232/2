@@ -3802,109 +3802,215 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
-/* --- Launch Ad Overlay Styles --- */
+
+/* Loading Overlay Styling */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* ዳራውን እንዲያጨልም */
+    z-index: 20000;
+    display: none; /* መጀመሪያ እንዳይታይ */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 215, 0, 0.1);
+    border-left-color: #FFD700; /* ቢጫ ከለር */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: white;
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: bold;
+}
+/* =========================================
+   1. LAUNCH AD OVERLAY STYLES (POP-UP) 
+   ========================================= */
+
 #launch-ad-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* ከጀርባ ያለውን ገጽ ለማሳየት ከፊል ጥቁር (Semi-transparent) */
-    background-color: rgba(0, 0, 0, 0.75); 
-    backdrop-filter: blur(3px); /* ከጀርባ ያለው ብዥ እንዲል */
-    z-index: 10000; /* ከሁሉም በላይ */
+    background-color: rgba(0, 0, 0, 0.0); /* ጠቆር ያለ ይሁን */
+    backdrop-filter: blur(0.1px);
+    z-index: 99999; /* ከሁሉም በላይ */
     
-    /* መሃል ላይ ለማድረግ */
-    display: none; /* በ JS ወደ flex ይቀየራል */
+    display: none; /* JS ወደ flex ይቀይረዋል */
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.ad-card-3d {
+/* እዚህ ጋር ስሙን ቀይረነዋል: .ad-card-3d -> .launch-card */
+.launch-card {
     position: relative;
-    width: 85%; /* ስክሪኑን ሙሉ አይሞላም */
-    max-width: 320px; /* በጣም ሰፊ እንዳይሆን */
-    background: #1e1e1e; /* የካርዱ ቀለም */
+    width: 90%; 
+    max-width: 340px; /* ስክሪኑን እንዳይሞላ */
+    background: #1e1e1e;
     border-radius: 20px;
-    padding: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid #333;
+    padding: 0; /* Padding ውስጡ ላሉት እንሰጣለን */
+    border: 1.5px solid #ffc107; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 193, 7, 0.2);
+    
+    
+    
     text-align: center;
-    overflow: hidden;
-    transform: scale(0.9);
-    animation: popIn 0.3s ease forwards;
+    overflow: hidden; /* ክቡ ጠርዝ እንዳይበላሽ */
+    animation: popUpBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ምስሉ የሚቀመጥበት ሳጥን */
-.ad-image-container {
+/* አኒሜሽን */
+@keyframes popUpBounce {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* የምስል ሳጥን */
+.launch-img-container {
     width: 100%;
-    height: 160px; /* ቋሚ ቁመት */
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 15px;
-    background-color: #333; /* ምስሉ እስኪመጣ የሚታይ ቀለም */
+    height: 160px; /* ቁመቱ እንዳይበዛ */
+    position: relative;
+    background-color: #333;
 }
 
-/* ምስሉ ራሱ */
-#ad-image {
+#launch-image {
     width: 100%;
     height: 100%;
     object-fit: cover; /* ምስሉ እንዳይለጠጥ */
     display: block;
 }
 
-.ad-badge {
+.launch-badge {
     position: absolute;
-    top: 25px;
-    right: 25px;
+    top: 10px;
+    right: 10px;
     background: #ffc107;
     color: #000;
-    font-weight: bold;
     font-size: 10px;
+    font-weight: 900;
     padding: 4px 8px;
     border-radius: 4px;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
-.ad-text-content h3 {
-    margin: 10px 0 5px;
-    color: #fff;
+/* ጽሁፍ እና አዝራር */
+.launch-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-.ad-text-content p {
+
+.launch-content h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 20px;
+}
+
+.launch-content p {
+    margin: 0;
     color: #aaa;
     font-size: 14px;
-    margin-bottom: 15px;
+    line-height: 1.4;
 }
 
-.ad-cta-btn {
-    background: linear-gradient(45deg, #007bff, #0056b3);
+.launch-cta-btn {
+    margin-top: 10px;
+    background: linear-gradient(90deg, #007bff, #0056b3);
     color: white;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 14px;
+    border-radius: 12px;
     font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+    transition: transform 0.2s;
 }
 
-/* የመዝጊያ ቁልፍ እና ታይመር */
-.ad-close-container {
-    margin-top: 20px;
+.launch-cta-btn:active {
+    transform: scale(0.95);
+}
+
+/* የመዝጊያ ክበብ እና ቁልፍ */
+.launch-close-area {
+    margin-top: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    position: relative;
     cursor: pointer;
 }
 
-/* Pop-in animation */
-@keyframes popIn {
-    to { transform: scale(1); }
+.progress-ring {
+    position: relative;
+    width: 50px;
+    height: 50px;
 }
 
+.progress-ring svg {
+    width: 50px;
+    height: 50px;
+    transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+    fill: transparent;
+    stroke: #444;
+    stroke-width: 3;
+}
+
+#launch-timer-circle {
+    stroke: #fff;
+    stroke-dasharray: 138;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 4s linear;
+}
+
+.launch-close-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.close-text {
+    color: #888;
+    font-size: 12px;
+    margin-top: 5px;
+}
 
 /* 3D Grid Layout Container */
 .games-grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 እኩል ክፍሎች */
-    gap: 8px; /* ክፍተቱን ትንሽ ቀነስ አድርገነዋል ስክሪኑ እንዲበቃው */
+    gap: 15px; /* ክፍተቱን ትንሽ ቀነስ አድርገነዋል ስክሪኑ እንዲበቃው */
     padding: 10px;
     width: 100%; /* ሙሉ ስፋት እንዲወስድ */
     box-sizing: border-box; /* padding ስፋቱን እንዳያበላሸው */
@@ -3918,9 +4024,9 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(145deg, #2b2b2b, #1a1a1a); /* 3D Gradient */
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 12px 5px;
-    min-height: 110px;
+    min-height: 140px;
     box-shadow: 
         5px 5px 10px #0f0f0f, 
         -2px -2px 6px #3d3d3d; /* ጥላ ለ 3D እይታ */
@@ -3934,6 +4040,7 @@
 /* ክሊክ ሲደረግ የሚፈጠር አኒሜሽን */
 .game-card-3d:active {
     transform: scale(0.95);
+    filter: brightness(1.2);
     box-shadow: inset 3px 3px 5px #0f0f0f, inset -3px -3px 5px #3d3d3d;
 }
 
@@ -3947,7 +4054,7 @@
     justify-content: center;
     font-size: 22px;
     margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    
     box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1);
     backdrop-filter: blur(5px);
 }
@@ -3998,14 +4105,12 @@
     100% { opacity: 1; }
 }
 
-/* ልዩ ቀለማት ለ Icons */
-.icon-bg-blue { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
-.icon-bg-purple { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
-.icon-bg-orange { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
-.icon-bg-red { background: rgba(244, 67, 54, 0.2); color: #F44336; }
-.icon-bg-green { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
-.icon-bg-yellow { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
-
+.card-red { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+.card-blue { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.card-green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+.card-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+.card-orange { background: linear-gradient(135deg, #f6d365, #fda085); }
+.card-dark { background: linear-gradient(135deg, #434343, #000000); }
 
 </style>
 <body>
@@ -4123,12 +4228,13 @@
     </div>
 
     <div class="game-card-3d" onclick="window.showGameWithLoading('mines-game-page')">
-        <div class="card-badge-dot ready"></div> <div class="game-card-icon" style="background: rgba(85,85,85,0.2); color: #fff;">
-            <span class="icon-mine-tremble">💣</span>
-        </div>
-        <div class="game-card-title">Mines</div>
-        <div class="game-card-reward">Bet</div>
+    <div class="card-badge-dot ready"></div> 
+    <div class="game-card-icon icon-bg-dark">
+        <span class="icon-mine-tremble">💣</span>
     </div>
+    <div class="game-card-title">Mines</div>
+    <div class="game-card-reward">Bet</div>
+</div>
 
     <div class="game-card-3d" id="reflex-game-card" onclick="window.showGameWithLoading('reflex-game-page')">
         <div class="card-badge-dot" id="reflex-game-badge-dot"></div>
@@ -4159,7 +4265,6 @@
 </div>
 </div>
 </div>
-
     <div id="slots-game-page" class="game-page-container" style="display: none; text-align: center;">
         <h2 class="page-title" data-lang="title_slots">Lucky Slot Machine</h2>
 
@@ -4788,6 +4893,12 @@
             </div>
         </div>
     </div>
+    <div id="p2p-loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-text">processing... ⏳</p>
+</div>
+
+
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">💣 Mines Rush</h2>
@@ -4855,31 +4966,29 @@
     </button>
     <button class="game-back-button" onclick="showMainPage()" data-lang="btn_back_home">← ወደ ዋና ገፅ ተመለስ</button>
 </div>
-<div id="launch-ad-overlay" style="display: none;">
-    <div class="ad-backdrop"></div>
-    <div class="ad-content-wrapper">
-        <div class="ad-card-3d" onclick="handleAdClick()">
-            <div class="ad-image-container">
-                <img id="ad-image" src="" alt="Special Offer">
-                <div class="ad-badge">SPONSORED</div>
-            </div>
-            <div class="ad-text-content">
-                <h3 id="ad-title">Special Bonus!</h3>
-                <p id="ad-desc">Join now and earn big rewards.</p>
-                <div class="ad-cta-btn">OPEN NOW 🚀</div>
-            </div>
+<div id="launch-ad-overlay">
+    <div class="launch-card" onclick="handleAdClick()">
+        <div class="launch-img-container">
+            <img id="launch-image" src="" alt="Offer">
+            <div class="launch-badge">SPONSORED</div>
         </div>
+        
+        <div class="launch-content">
+            <h3 id="launch-title">Special Bonus!</h3>
+            <p id="launch-desc">Join now and earn big rewards today.</p>
+            <div class="launch-cta-btn">OPEN NOW 🚀</div>
+        </div>
+    </div>
 
-        <div class="ad-close-container">
-            <div class="progress-ring">
-                <svg>
-                   <circle cx="25" cy="25" r="22"></circle>
-                   <circle cx="25" cy="25" r="22" id="ad-timer-circle"></circle>
-                </svg>
-                <button class="ad-close-btn" onclick="closeLaunchAd(event)">✕</button>
-            </div>
-            <span class="close-text">Close</span>
+    <div class="launch-close-area" onclick="closeLaunchAd(event)">
+        <div class="progress-ring">
+            <svg>
+               <circle cx="25" cy="25" r="22"></circle>
+               <circle cx="25" cy="25" r="22" id="launch-timer-circle"></circle>
+            </svg>
+            <button class="launch-close-btn">✕</button>
         </div>
+        <span class="close-text">Close</span>
     </div>
 </div>
 
@@ -10936,6 +11045,7 @@ window.executeP2PTransaction = async () => {
 
     // Loading...
     WebApp.MainButton.showProgress();
+document.getElementById('p2p-loading-overlay').style.display = 'flex';
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -11002,6 +11112,7 @@ window.executeP2PTransaction = async () => {
 
         // ✅ SUCCESS!
         WebApp.MainButton.hideProgress();
+        document.getElementById('p2p-loading-overlay').style.display = 'none';
         WebApp.showAlert(`✅ ${amount} Coin ለ ${verifiedRecipientDoc.first_name} በተሳካ ሁኔታ ተላልፏል!`);
         
         if(window.playSound) window.playSound('win');
@@ -11034,6 +11145,7 @@ window.executeP2PTransaction = async () => {
 
     } catch (e) {
         WebApp.MainButton.hideProgress();
+        document.getElementById('p2p-loading-overlay').style.display = 'none';
         console.error("Transfer Error Full Log:", e);
         
         // Error Handling
@@ -11044,7 +11156,6 @@ window.executeP2PTransaction = async () => {
         WebApp.showAlert("❌ Transaction Failed: " + msg);
     }
 };
-
 
 // ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
 function sendP2PNotification(targetTgId, amount, senderName) {
@@ -11196,41 +11307,44 @@ function showLaunchAdUI(data) {
     const overlay = document.getElementById('launch-ad-overlay');
     if (!overlay) return;
 
-    const adImg = document.getElementById('ad-image');
-    const adTitle = document.getElementById('ad-title');
-    const adDesc = document.getElementById('ad-desc');
-    const timerCircle = document.getElementById('ad-timer-circle');
+    // ID ስሞቹን አሻሽለናል (launch- በሚል ጀምረናል)
+    const adImg = document.getElementById('launch-image');
+    const adTitle = document.getElementById('launch-title');
+    const adDesc = document.getElementById('launch-desc');
+    const timerCircle = document.getElementById('launch-timer-circle');
 
-    // ዳታ መሙላት
-    adImg.src = data.imageUrl;
-    adTitle.innerText = data.title || "Special Offer";
-    adDesc.innerText = data.description || "Check this out!";
+    if (adImg) adImg.src = data.imageUrl;
+    if (adTitle) adTitle.innerText = data.title || "Special Offer";
+    if (adDesc) adDesc.innerText = data.description || "Check this out!";
+    
     currentAdLink = data.targetUrl;
 
-    // UI ማሳየት (በ CSS በኩል መሃል ላይ እንዲሆን ተደርጓል)
+    // UI ማሳየት
     overlay.style.display = 'flex';
-    overlay.style.opacity = '1';
-
-    // የክብ አኒሜሽን ማስጀመር
+    
+    // የክብ አኒሜሽን
     if(timerCircle) {
-        timerCircle.style.transition = 'stroke-dashoffset 4s linear';
+        // Reset and start animation
+        timerCircle.style.transition = 'none';
+        timerCircle.style.strokeDashoffset = '0';
+        
         setTimeout(() => {
+            timerCircle.style.transition = 'stroke-dashoffset 4s linear';
             timerCircle.style.strokeDashoffset = '138'; 
-        }, 100);
+        }, 50);
     }
 
-    // 🛑 ራስ-ሰር መዝጊያ (ከ 4 ሰከንድ በኋላ)
+    // ራስ-ሰር መዝጊያ
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     autoCloseTimer = setTimeout(() => {
         closeLaunchAd();
-    }, 4000); 
+    }, 6000); 
 }
 
-// ማስታወቂያውን መዝጊያ
+// መዝጊያ Function
 window.closeLaunchAd = (event) => {
     if(event) event.stopPropagation();
     
-    // ቆጣሪውን ማቆም
     if (autoCloseTimer) {
         clearTimeout(autoCloseTimer);
         autoCloseTimer = null;
@@ -11239,20 +11353,15 @@ window.closeLaunchAd = (event) => {
     const overlay = document.getElementById('launch-ad-overlay');
     if(!overlay) return;
 
-    // የመዝጊያ አኒሜሽን
     overlay.style.transition = 'opacity 0.3s ease';
     overlay.style.opacity = '0';
     
     setTimeout(() => {
         overlay.style.display = 'none';
-        // የክቡን አኒሜሽን Reset ማድረግ ለሚቀጥለው ጊዜ
-        const timerCircle = document.getElementById('ad-timer-circle');
-        if(timerCircle) {
-            timerCircle.style.transition = 'none';
-            timerCircle.style.strokeDashoffset = '0';
-        }
+        overlay.style.opacity = '1'; // ለሚቀጥለው ጊዜ ዝግጁ ማድረግ
     }, 300);
 };
+
 
 // ክሊክ ማስተናገጃ
 window.handleAdClick = () => {
@@ -11268,7 +11377,6 @@ window.handleAdClick = () => {
         closeLaunchAd();
     }
 };
-
 
 
 
