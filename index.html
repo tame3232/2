@@ -4866,10 +4866,12 @@
         <div class="modern-card" style="text-align: left; padding: 15px; background: #222; border: 1px dashed #444;">
             <h3 style="color: var(--et-yellow); margin-top: 0;">📜 የ P2P ህግጋት</h3>
             <ul style="color: #ccc; font-size: 14px; line-height: 1.8; padding-left: 20px;">
-                <li>ዝቅተኛ መላክ የሚቻለው: <strong style="color: white;">500 Coin</strong></li>
-                <li>የአገልግሎት ክፍያ (Service Fee): <strong style="color: var(--et-red);">5%</strong></li>
-                <li>ተቀባዩን በ ID ወይም በ Username መፈለግ ይችላሉ።</li>
-                <li>ለተሳሳተ ዝውውር ቦቱ ኃላፊነት አይወስድም፣ እባክዎ ከመላክዎ በፊት ስሙን ያረጋግጡ።</li>
+            <li>📤<b>ተቀባዩን በ telegram ID ወይም በ Username መፈለግ ይችላሉ።</li>
+            <li>🔓 <b>መግቢያ መስፈርት:</b> የP2P አገልግሎትን ለመጠቀም ቢያንስ <strong style="color: white;">1,000,000 💰</strong> ሊኖርዎት ይገባል።</li>
+            <li>📉 <b>ዝቅተኛ መላኪያ:</b> በአንድ ጊዜ መላክ የሚቻለው ዝቅተኛ መጠን <strong style="color: white;">500 💰</strong> ነው።</li>
+            <li>🚫 <b>የቀን ገደብ:</b> በቀን መላክ የሚቻለው ከፍተኛ መጠን <strong style="color: white;">100,000 💰</strong> ብቻ ነው።</li>
+            <li>💸 <b>የአገልግሎት ክፍያ:</b> ከሚልኩት መጠን ላይ <strong style="color: var(--et-red);">5%</strong> ተቀናሽ ይደረጋል።</li>
+            <li>🔍 <b>ጥንቃቄ:</b> ለተሳሳተ ዝውውር ቦቱ ኃላፊነት አይወስድም፣ እባክዎ ከመላክዎ በፊት ስሙን ያረጋግጡ።</li>
             </ul>
         </div>
     </div>
@@ -10870,9 +10872,7 @@ window.cashoutMines = async () => {
  
 
 
-         
-        
-            // =========================================================
+// =========================================================
 // ✅ P2P TRANSFER SYSTEM LOGIC
 // =========================================================
 
@@ -10880,7 +10880,8 @@ const ADMIN_WALLET_ID = "MPrYYot9ldV9qbfxJA1uXC0wUzi2"; // 🛑 እዚህ የአ
 if (typeof ADMIN_TELEGRAM_ID === 'undefined') {
     window.ADMIN_TELEGRAM_ID = 403001547;
 }
-
+const MIN_REQUIRED_BALANCE = 1000000;
+const DAILY_TRANSFER_LIMIT = 100000;
 const P2P_FEE_PERCENT = 0.05; // 5% ክፍያ
 let p2pSearchType = 'id'; // 'id' or 'username'
 let verifiedRecipientDoc = null; // የተረጋገጠ ተቀባይ ዳታ
@@ -11010,9 +11011,20 @@ document.getElementById('p2p-amount-input').addEventListener('input', function(e
 window.initiateP2PTransfer = () => {
     const amount = parseInt(document.getElementById('p2p-amount-input').value);
     
+    // 1. መጀመሪያ ሚኒመም ባላንስ (1 ሚሊዮን) እንዳለው ማረጋገጥ
+    if (currentScore < MIN_REQUIRED_BALANCE) {
+        return WebApp.showAlert(`ይቅርታ! የP2P ዝውውር ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`);
+    }
+
     if (!amount || amount < 500) {
         return WebApp.showAlert("ዝቅተኛው የመላኪያ መጠን 500 Coin ነው።");
     }
+
+    // 2. ከ100,000 በላይ በአንድ ጊዜ መላክ እንደማይቻል (Simple UI check)
+    if (amount > DAILY_TRANSFER_LIMIT) {
+        return WebApp.showAlert(`በአንድ ጊዜ ከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} Coin በላይ መላክ አይቻልም።`);
+    }
+
     if (!verifiedRecipientDoc) {
         return WebApp.showAlert("እባክዎ መጀመሪያ ተቀባዩን ያረጋግጡ።");
     }
@@ -11038,25 +11050,47 @@ window.executeP2PTransaction = async () => {
     modal.style.display = 'none';
     
     const amount = parseInt(document.getElementById('p2p-amount-input').value);
-    const fee = Math.ceil(amount * P2P_FEE_PERCENT); // 0.05
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
     const totalDeduct = amount + fee;
     const recipientId = verifiedRecipientDoc.id;
     const senderId = currentFirebaseUserId;
 
     // Loading...
     WebApp.MainButton.showProgress();
-document.getElementById('p2p-loading-overlay').style.display = 'flex';
+    document.getElementById('p2p-loading-overlay').style.display = 'flex';
 
     try {
         await runTransaction(db, async (transaction) => {
-            // 1. የላኪውን አሁናዊ መረጃ አንብብ
+            // 1. የላኪውን መረጃ አንብብ
             const senderRef = doc(db, "users", senderId);
             const senderDoc = await transaction.get(senderRef);
             if (!senderDoc.exists()) throw "Sender doc not found";
             
-            const currentSenderBalance = senderDoc.data().total_score || 0;
+            const senderData = senderDoc.data();
+            const currentSenderBalance = senderData.total_score || 0;
+
+            // 🔥 ህግ 1: ባላንስ ከ 1 ሚሊዮን በታች ከሆነ አግድ
+            if (currentSenderBalance < MIN_REQUIRED_BALANCE) {
+                throw "Low balance for feature"; // ከታች Error handling ላይ መልእክቱን እናስተካክላለን
+            }
+
             if (currentSenderBalance < totalDeduct) {
-                throw "Insufficient funds"; // በቂ ቀሪ ሂሳብ ከሌለ
+                throw "Insufficient funds"; 
+            }
+
+            // 🔥 ህግ 2: የ24 ሰዓት ገደብ (Daily Limit Logic)
+            const now = new Date();
+            const lastDate = senderData.last_transfer_date ? senderData.last_transfer_date.toDate() : null;
+            let currentDailyTotal = senderData.daily_sent_amount || 0;
+
+            // ቀኑ ከተቀየረ (ከ24 ሰዓት በኋላ ወይም ሌላ ቀን ከሆነ) ቆጣሪውን ወደ 0 መልስ
+            if (!lastDate || lastDate.getDate() !== now.getDate() || lastDate.getMonth() !== now.getMonth()) {
+                currentDailyTotal = 0;
+            }
+
+            // ገደቡን ማረጋገጥ
+            if ((currentDailyTotal + amount) > DAILY_TRANSFER_LIMIT) {
+                throw `Daily limit exceeded. You sent ${currentDailyTotal} today. Limit is ${DAILY_TRANSFER_LIMIT}`;
             }
 
             // 2. የተቀባዩን መረጃ አንብብ
@@ -11064,15 +11098,17 @@ document.getElementById('p2p-loading-overlay').style.display = 'flex';
             const recipientDoc = await transaction.get(recipientRef);
             if (!recipientDoc.exists()) throw "Recipient doc not found";
 
-            // 3. ✅ ወሳኝ እርምት፡ የአድሚን ዶክመንትን መጀመሪያ ማንበብ አለብን!
+            // 3. የአድሚን መረጃ
             const adminRef = doc(db, "users", ADMIN_WALLET_ID);
             const adminDoc = await transaction.get(adminRef);
 
-            // --- OPERATIONS (WRITES) ---
+            // --- WRITES ---
             
-            // A. ከላኪው ላይ መቀነስ
+            // A. ከላኪው ላይ መቀነስ + የቀን ገደብ መረጃን ማደስ
             transaction.update(senderRef, {
-                total_score: increment(-totalDeduct)
+                total_score: increment(-totalDeduct),
+                daily_sent_amount: currentDailyTotal + amount, // የላከውን መደመር
+                last_transfer_date: serverTimestamp() // የላከበትን ቀን መመዝገብ
             });
 
             // B. ለተቀባዩ መጨመር
@@ -11080,29 +11116,32 @@ document.getElementById('p2p-loading-overlay').style.display = 'flex';
                 total_score: increment(amount)
             });
 
-            // C. ክፍያውን ለአድሚን መጨመር (ዶክመንቱ ካለ update፣ ከሌለ set)
+            // C. ክፍያውን ለአድሚን
             if (ADMIN_WALLET_ID && ADMIN_WALLET_ID.length > 5) {
                 if (adminDoc.exists()) {
-                    transaction.update(adminRef, {
-                        total_score: increment(fee)
-                    });
+                    transaction.update(adminRef, { total_score: increment(fee) });
                 } else {
-                    // አድሚን ዶክመንት ከሌለ አዲስ ፍጠር (Safety fallback)
-                    transaction.set(adminRef, {
-                        total_score: fee,
-                        username: "AdminWallet",
-                        is_admin: true
-                    });
+                    transaction.set(adminRef, { total_score: fee, username: "AdminWallet", is_admin: true });
                 }
             }
 
             // D. ታሪክ መመዝገብ
+            // ተቀባዩ በምን እንደተፈለገ ለመለየት
+let sentViaValue = verifiedRecipientDoc.id; 
+if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
+    sentViaValue = "@" + verifiedRecipientDoc.username;
+} else if (verifiedRecipientDoc.telegram_id) {
+    sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
+}
+
             const transferRef = doc(collection(db, "transfers"));
             transaction.set(transferRef, {
                 sender_id: senderId,
                 sender_name: currentUserDocData.first_name || "User",
+                sender_username: currentUserDocData.username ? "@" + currentUserDocData.username : "ID: " + (currentUserDocData.telegram_id || senderId),
                 recipient_id: recipientId,
                 recipient_name: verifiedRecipientDoc.first_name || "Unknown",
+                recipient_identifier: sentViaValue,
                 amount: amount,
                 fee: fee,
                 timestamp: serverTimestamp(),
@@ -11113,29 +11152,19 @@ document.getElementById('p2p-loading-overlay').style.display = 'flex';
         // ✅ SUCCESS!
         WebApp.MainButton.hideProgress();
         document.getElementById('p2p-loading-overlay').style.display = 'none';
-        WebApp.showAlert(`✅ ${amount} Coin ለ ${verifiedRecipientDoc.first_name} በተሳካ ሁኔታ ተላልፏል!`);
+        WebApp.showAlert(`✅ ${amount} Coin ተላልፏል!`);
         
         if(window.playSound) window.playSound('win');
         
-        // Notification Logic...
+        // Notifications...
         const recipientTgId = verifiedRecipientDoc.telegram_id;
-        if (recipientTgId) {
-             sendP2PNotification(recipientTgId, amount, currentUserDocData.first_name);
-        }
-        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') {
-            sendAdminP2PReport(
-                ADMIN_TELEGRAM_ID, 
-                currentUserDocData.first_name, 
-                verifiedRecipientDoc.first_name, 
-                amount, 
-                fee
-            );
-        }
+        if (recipientTgId) sendP2PNotification(recipientTgId, amount, currentUserDocData.first_name);
+        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') sendAdminP2PReport(ADMIN_TELEGRAM_ID, currentUserDocData.first_name, verifiedRecipientDoc.first_name, amount, fee);
 
         // Cleanup
         document.getElementById('p2p-amount-input').value = '';
         const feePreview = document.querySelector('.fee-preview-text');
-        if(feePreview) feePreview.innerText = ''; // Fee text አጥፋ
+        if(feePreview) feePreview.innerText = '';
         
         window.resetP2PVerification();
         window.switchP2PTab('history'); 
@@ -11146,16 +11175,26 @@ document.getElementById('p2p-loading-overlay').style.display = 'flex';
     } catch (e) {
         WebApp.MainButton.hideProgress();
         document.getElementById('p2p-loading-overlay').style.display = 'none';
-        console.error("Transfer Error Full Log:", e);
+        console.error("Transfer Error:", e);
         
-        // Error Handling
-        let msg = "የኢንተርኔት ወይም የሲስተም ችግር አጋጥሟል።";
-        if (e === "Insufficient funds") msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
-        if (e === "Recipient doc not found") msg = "የተቀባዩ አድራሻ ላይ ችግር አለ።";
+        // Error Messages Handling
+        let msg = "Transaction Failed.";
         
-        WebApp.showAlert("❌ Transaction Failed: " + msg);
+        if (e === "Low balance for feature") {
+            msg = `ይቅርታ! ይህንን አገልግሎት ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`;
+        } else if (typeof e === 'string' && e.includes("Daily limit exceeded")) {
+             // ከላይ Daily Limit throw ያደረግነውን መልእክት እዚህ እናሳያለን
+             msg = `የቀን ገደብ አልፏል! በቀን እስከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} ብቻ መላክ ይቻላል።`;
+        } else if (e === "Insufficient funds") {
+            msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
+        } else if (e === "Recipient doc not found") {
+            msg = "የተቀባዩ አድራሻ ላይ ችግር አለ።";
+        }
+        
+        WebApp.showAlert("❌ " + msg);
     }
 };
+
 
 // ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
 function sendP2PNotification(targetTgId, amount, senderName) {
@@ -11242,6 +11281,7 @@ async function fetchP2PHistory() {
             const icon = isIn ? '📥' : '📤';
             const name = isIn ? `From: ${t.sender_name}` : `To: ${t.recipient_name}`;
             const date = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleDateString() : 'Just now';
+            let subDetail = isIn ? (t.sender_username || "ID: Hidden") : (t.recipient_identifier || "ID: " + t.recipient_id);
 
             html += `
             <div class="modern-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px;">
@@ -11249,7 +11289,9 @@ async function fetchP2PHistory() {
                     <div style="font-size: 20px;">${icon}</div>
                     <div>
                         <div style="font-weight: bold; color: white; font-size: 14px;">${name}</div>
-                        <div style="font-size: 11px; color: #777;">${date}</div>
+                      <div style="font-size: 11px; color: #aaa; margin-top: 2px;">${subDetail}</div> 
+                      <div style="font-size: 10px; color: #777;">${date}</div>
+
                     </div>
                 </div>
                 <div style="text-align: right;">
@@ -11267,6 +11309,8 @@ async function fetchP2PHistory() {
         // Note: If you get "Index required" error in console, click the link provided in console to create it in Firebase.
     }
 }
+
+
 
 // ==========================================
 // 📺 LAUNCH AD SYSTEM INTEGRATION
@@ -11338,7 +11382,7 @@ function showLaunchAdUI(data) {
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     autoCloseTimer = setTimeout(() => {
         closeLaunchAd();
-    }, 6000); 
+    }, 8000); 
 }
 
 // መዝጊያ Function
