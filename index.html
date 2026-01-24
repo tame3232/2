@@ -11158,7 +11158,7 @@ window.executeP2PTransaction = async () => {
     document.getElementById('p2p-loading-overlay').style.display = 'flex';
 
     try {
-       let transferRef;
+       const transferRef = doc(collection(db, "transfers")); 
         await runTransaction(db, async (transaction) => {
             // 1. የላኪውን መረጃ አንብብ
             const senderRef = doc(db, "users", senderId);
@@ -11233,7 +11233,7 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
     sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
 }
 
-            transferRef = doc(collection(db, "transfers"));
+            
             transaction.set(transferRef, {
                 sender_id: senderId,
                 sender_name: currentUserDocData.first_name || "User",
