@@ -3837,6 +3837,50 @@
     font-size: 16px;
     font-weight: bold;
 }
+
+/* ✅ Verified Badge */
+.verified-badge {
+    color: #00bcd4; /* ሰማያዊ ቀለም */
+    font-size: 14px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+/* ✅ Avatar Borders (Gamification) */
+.avatar-bronze { border: 2px solid #cd7f32; box-shadow: 0 0 5px #cd7f32; }
+.avatar-silver { border: 2px solid #c0c0c0; box-shadow: 0 0 8px #c0c0c0; }
+.avatar-gold { border: 3px solid #ffd700; box-shadow: 0 0 12px #ffd700; animation: pulseGold 2s infinite; }
+
+@keyframes pulseGold {
+    0% { box-shadow: 0 0 5px #ffd700; }
+    50% { box-shadow: 0 0 15px #ffd700; }
+    100% { box-shadow: 0 0 5px #ffd700; }
+}
+
+/* ✅ Receipt Modal Style */
+.receipt-paper {
+    background: #fff;
+    color: #000;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 320px;
+    font-family: 'Courier New', monospace;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background-image: radial-gradient(#ddd 1px, transparent 0);
+    background-size: 10px 10px;
+}
+.receipt-header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
+.receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;}
+.receipt-total { border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 16px; font-weight: 800; }
+.receipt-stamp {
+    position: absolute; right: 20px; bottom: 60px; 
+    border: 3px solid #28a745; color: #28a745; 
+    padding: 5px 10px; font-weight: bold; transform: rotate(-15deg);
+    font-size: 18px; opacity: 0.8;
+}
+
 /* =========================================
    1. LAUNCH AD OVERLAY STYLES (POP-UP) 
    ========================================= */
@@ -4826,11 +4870,11 @@
             <label class="input-label">ተቀባይ (Recipient)</label>
             
             <div class="toggle-search-type">
-                <button id="btn-search-id" class="toggle-btn active" onclick="window.setP2PSearchType('id')">By User ID</button>
+                <button id="btn-search-id" class="toggle-btn active" onclick="window.setP2PSearchType('id')">By Telegram ID</button>
                 <button id="btn-search-user" class="toggle-btn" onclick="window.setP2PSearchType('username')">By @Username</button>
             </div>
             
-            <input type="text" id="p2p-recipient-input" class="modern-input" placeholder="User ID ያስገቡ..." oninput="window.resetP2PVerification()">
+            <input type="text" id="p2p-recipient-input" class="modern-input" placeholder="Telegram ID ያስገቡ..." oninput="window.resetP2PVerification()">
             
             <button class="verify-btn" onclick="window.verifyP2PUser()">ተቀባዩን አረጋግጥ (Verify) 🔍</button>
         </div>
@@ -4898,6 +4942,52 @@
     <div id="p2p-loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
     <p class="loading-text">processing... ⏳</p>
+</div>
+<div id="receipt-modal" class="custom-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="receipt-paper" style="background: #fff; color: #000; padding: 20px; border-radius: 10px; width: 90%; max-width: 320px; font-family: 'Courier New', monospace; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div class="receipt-header" style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0; font-weight: 800;">SMART PAY</h2>
+            <p style="margin: 5px 0 0;">Transaction Receipt</p>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            <span>DATE:</span> <span id="rec-date">...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+    <span>REF NO:</span> <span id="rec-ref" style="color: #555;">...</span>
+</div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            <span>SENDER:</span> <span id="rec-sender">...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            <span>RECEIVER:</span> <span id="rec-receiver">...</span>
+        </div>
+        
+        <hr style="border-top: 2px dashed #000; margin: 10px 0;">
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            <span>AMOUNT:</span> <span id="rec-amount">...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            <span>FEE:</span> <span id="rec-fee">...</span>
+        </div>
+        
+        <div style="border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between;">
+            <span>TOTAL:</span> <span id="rec-total">...</span>
+        </div>
+
+        <div style="position: absolute; right: 20px; bottom: 80px; border: 3px solid #28a745; color: #28a745; padding: 5px 10px; font-weight: bold; transform: rotate(-15deg); font-size: 18px; opacity: 0.8;">
+            PAID ✅
+        </div>
+
+        <div style="margin-top: 25px;">
+            <button onclick="document.getElementById('receipt-modal').style.display='none'" 
+                style="width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Close
+            </button>
+        </div>
+    </div>
 </div>
 
 
@@ -5657,7 +5747,7 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
 'msg_close_telegram_only': 'This can only be closed from within Telegram.',
 'msg_wallet_disconnect_confirm': 'Do you want to disconnect your wallet?',
       'msg_social_db_error': '❌ Database Error! Please try again.',
-'msg_social_share_text': '🤫 Want to know a secret?\nI found a Coin mining Mini-App on Telegram that many don\'t know about yet!\n💡 Join now and start winning!',
+'msg_social_share_text': '🤫 Want to know a secret?\nI found a Coin mining Mini-App on Telegram that many don\'t know about yet!\n?? Join now and start winning!',
 'msg_press_spin': 'Press to Spin.',
 'msg_reset_ready': 'Ready to Reset!',
 'msg_slot_finished_reset': 'No Spins! Press RESET & SPIN to get more.',
@@ -6923,6 +7013,11 @@ function renderLeaderboard(data) {
          players.forEach((player) => {
              const isCurrentUser = player.id === currentFirebaseUserId;
              const avatarHtml = getAvatarHtml(player.username, player.photo_url); 
+             const score = player.total_score || 0;
+             let borderColor = 'transparent';
+             if (score > 1000000) borderColor = '#ffd700'; // Gold
+             else if (score > 100000) borderColor = '#c0c0c0'; // Silver
+
              let rankClass = '';
              let rankDisplay; 
              const rankNumber = Number(player.rank); 
@@ -6953,8 +7048,12 @@ function renderLeaderboard(data) {
                     <span class="leaderboard-item-rank ${rankHtmlClass}">
                         ${rankDisplay} 
                     </span> 
-                    <div class="leaderboard-item-photo">${avatarHtml}</div> 
-                   <span class="leaderboard-item-name">${player.first_name || player.username || 'ያልታወቀ ተጫዋች'}</span>
+                    <div class="leaderboard-item-photo" style="border: 2px solid ${borderColor}; border-radius: 50%; padding: 1px; display: inline-flex;">${avatarHtml}</div>
+                    const isVerified = player.is_verified === true;
+                     const badgeHtml = isVerified ? '<span style="color: #00bcd4; margin-left: 4px; font-size: 12px;">☑️</span>' : '';
+
+                   <span class="leaderboard-item-name">${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}</span>
+
 
 
                     <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
@@ -10871,7 +10970,6 @@ window.cashoutMines = async () => {
 
  
 
-
 // =========================================================
 // ✅ P2P TRANSFER SYSTEM LOGIC
 // =========================================================
@@ -11060,6 +11158,7 @@ window.executeP2PTransaction = async () => {
     document.getElementById('p2p-loading-overlay').style.display = 'flex';
 
     try {
+       let transferRef;
         await runTransaction(db, async (transaction) => {
             // 1. የላኪውን መረጃ አንብብ
             const senderRef = doc(db, "users", senderId);
@@ -11134,7 +11233,7 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
     sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
 }
 
-            const transferRef = doc(collection(db, "transfers"));
+            transferRef = doc(collection(db, "transfers"));
             transaction.set(transferRef, {
                 sender_id: senderId,
                 sender_name: currentUserDocData.first_name || "User",
@@ -11171,6 +11270,10 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
         
         currentScore -= totalDeduct;
         renderPageContent();
+        // 'transferRef.id' የFirebase የዝውውሩ ልዩ መለያ ቁጥር ነው
+showReceipt(transferRef.id, currentUserDocData.first_name, verifiedRecipientDoc.first_name, amount, fee);
+
+        
 
     } catch (e) {
         WebApp.MainButton.hideProgress();
@@ -11309,6 +11412,7 @@ async function fetchP2PHistory() {
         // Note: If you get "Index required" error in console, click the link provided in console to create it in Firebase.
     }
 }
+
 
 
 
@@ -11508,6 +11612,29 @@ window.handleAdClick = () => {
 
         }
         window.renderPageContent = renderPageContent;
+        
+        
+        
+        
+        
+        function showReceipt(refNo, senderName, receiverName, amount, fee) {
+    const total = amount + fee;
+    const dateStr = new Date().toLocaleString();
+    
+    // ልዩ መለያ ቁጥሩን እንዲያሳይ (ረጅም ከሆነ የመጀመሪያ 10 ፊደላት ብቻ)
+    const shortRef = refNo ? refNo.slice(0, 10).toUpperCase() : "TXN-" + Math.floor(Math.random() * 1000000);
+
+    document.getElementById('rec-ref').innerText = shortRef; // አዲሱ መስመር
+    document.getElementById('rec-date').innerText = dateStr;
+    document.getElementById('rec-sender').innerText = senderName;
+    document.getElementById('rec-receiver').innerText = receiverName;
+    document.getElementById('rec-amount').innerText = amount.toLocaleString();
+    document.getElementById('rec-fee').innerText = fee.toLocaleString();
+    document.getElementById('rec-total').innerText = total.toLocaleString() + " Coins";
+
+    document.getElementById('receipt-modal').style.display = 'flex';
+}
+
 // ======================================================================
 //                              INITIALIZATION (የተስተካከለ)
 // ======================================================================
