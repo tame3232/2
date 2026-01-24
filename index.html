@@ -11156,11 +11156,16 @@ window.executeP2PTransaction = async () => {
     const modal = document.getElementById('p2p-confirm-modal');
     modal.style.display = 'none';
     
+    // መረጃዎችን መሰብሰብ
     const amount = parseInt(document.getElementById('p2p-amount-input').value);
     const fee = Math.ceil(amount * P2P_FEE_PERCENT);
     const totalDeduct = amount + fee;
     const recipientId = verifiedRecipientDoc.id;
     const senderId = currentFirebaseUserId;
+    
+    // 🛑 መረጃውን ለደረሰኝ እናስቀምጥ (ከ Cleanup በፊት!)
+    const recipientNameForReceipt = verifiedRecipientDoc.first_name || "Unknown";
+    const senderNameForReceipt = currentUserDocData.first_name || "User";
 
     // Loading...
     WebApp.MainButton.showProgress();
@@ -11168,6 +11173,7 @@ window.executeP2PTransaction = async () => {
 
     try {
        const transferRef = doc(collection(db, "transfers")); 
+       
         await runTransaction(db, async (transaction) => {
             // 1. የላኪውን መረጃ አንብብ
             const senderRef = doc(db, "users", senderId);
@@ -11179,7 +11185,7 @@ window.executeP2PTransaction = async () => {
 
             // 🔥 ህግ 1: ባላንስ ከ 1 ሚሊዮን በታች ከሆነ አግድ
             if (currentSenderBalance < MIN_REQUIRED_BALANCE) {
-                throw "Low balance for feature"; // ከታች Error handling ላይ መልእክቱን እናስተካክላለን
+                throw "Low balance for feature"; 
             }
 
             if (currentSenderBalance < totalDeduct) {
@@ -11191,12 +11197,10 @@ window.executeP2PTransaction = async () => {
             const lastDate = senderData.last_transfer_date ? senderData.last_transfer_date.toDate() : null;
             let currentDailyTotal = senderData.daily_sent_amount || 0;
 
-            // ቀኑ ከተቀየረ (ከ24 ሰዓት በኋላ ወይም ሌላ ቀን ከሆነ) ቆጣሪውን ወደ 0 መልስ
             if (!lastDate || lastDate.getDate() !== now.getDate() || lastDate.getMonth() !== now.getMonth()) {
                 currentDailyTotal = 0;
             }
 
-            // ገደቡን ማረጋገጥ
             if ((currentDailyTotal + amount) > DAILY_TRANSFER_LIMIT) {
                 throw `Daily limit exceeded. You sent ${currentDailyTotal} today. Limit is ${DAILY_TRANSFER_LIMIT}`;
             }
@@ -11210,13 +11214,13 @@ window.executeP2PTransaction = async () => {
             const adminRef = doc(db, "users", ADMIN_WALLET_ID);
             const adminDoc = await transaction.get(adminRef);
 
-            // --- WRITES ---
+            // --- WRITES (ወደ ዳታቤዝ መፃፍ) ---
             
-            // A. ከላኪው ላይ መቀነስ + የቀን ገደብ መረጃን ማደስ
+            // A. ከላኪው ላይ መቀነስ
             transaction.update(senderRef, {
                 total_score: increment(-totalDeduct),
-                daily_sent_amount: currentDailyTotal + amount, // የላከውን መደመር
-                last_transfer_date: serverTimestamp() // የላከበትን ቀን መመዝገብ
+                daily_sent_amount: currentDailyTotal + amount,
+                last_transfer_date: serverTimestamp()
             });
 
             // B. ለተቀባዩ መጨመር
@@ -11235,20 +11239,20 @@ window.executeP2PTransaction = async () => {
 
             // D. ታሪክ መመዝገብ
             // ተቀባዩ በምን እንደተፈለገ ለመለየት
-let sentViaValue = verifiedRecipientDoc.id; 
-if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
-    sentViaValue = "@" + verifiedRecipientDoc.username;
-} else if (verifiedRecipientDoc.telegram_id) {
-    sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
-}
-
+            let sentViaValue = recipientId; 
+            if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
+                sentViaValue = "@" + verifiedRecipientDoc.username;
+            } else if (verifiedRecipientDoc.telegram_id) {
+                sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
+            }
             
+            // Transaction ውስጥ ሁሌም local variables መጠቀም ይመረጣል (safe side)
             transaction.set(transferRef, {
                 sender_id: senderId,
-                sender_name: currentUserDocData.first_name || "User",
+                sender_name: senderNameForReceipt,
                 sender_username: currentUserDocData.username ? "@" + currentUserDocData.username : "ID: " + (currentUserDocData.telegram_id || senderId),
                 recipient_id: recipientId,
-                recipient_name: verifiedRecipientDoc.first_name || "Unknown",
+                recipient_name: recipientNameForReceipt,
                 recipient_identifier: sentViaValue,
                 amount: amount,
                 fee: fee,
@@ -11261,29 +11265,32 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
         WebApp.MainButton.hideProgress();
         document.getElementById('p2p-loading-overlay').style.display = 'none';
         
-        
         if(window.playSound) window.playSound('win');
         
         // Notifications...
         const recipientTgId = verifiedRecipientDoc.telegram_id;
-        if (recipientTgId) sendP2PNotification(recipientTgId, amount, currentUserDocData.first_name);
-        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') sendAdminP2PReport(ADMIN_TELEGRAM_ID, currentUserDocData.first_name, verifiedRecipientDoc.first_name, amount, fee);
+        if (recipientTgId) sendP2PNotification(recipientTgId, amount, senderNameForReceipt);
+        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') sendAdminP2PReport(ADMIN_TELEGRAM_ID, senderNameForReceipt, recipientNameForReceipt, amount, fee);
 
-        // Cleanup
+        // UI Updates
         document.getElementById('p2p-amount-input').value = '';
         const feePreview = document.querySelector('.fee-preview-text');
         if(feePreview) feePreview.innerText = '';
         
-        window.resetP2PVerification();
-        
-        
+        // Local Balance Update
         currentScore -= totalDeduct;
         renderPageContent();
-        // 'transferRef.id' የFirebase የዝውውሩ ልዩ መለያ ቁጥር ነው
-showReceipt(transferRef.id, currentUserDocData.first_name, verifiedRecipientDoc.first_name, amount, fee);
 
+        // 🛑 CRITICAL FIX: ደረሰኙን መጀመሪያ እናሳያለን፣ ከዚያ reset እናደርጋለን
+        // verifiedRecipientDoc ስለሚጠፋ ቀድመን የያዝነውን variable (recipientNameForReceipt) እንጠቀማለን
+        showReceipt(transferRef.id, senderNameForReceipt, recipientNameForReceipt, amount, fee);
         
+        // ታሪኩን ማደስ
+        window.switchP2PTab('history'); 
 
+        // መጨረሻ ላይ Reset (ይሄ verifiedRecipientDoc ን null ያደርገዋል)
+        window.resetP2PVerification();
+        
     } catch (e) {
         WebApp.MainButton.hideProgress();
         document.getElementById('p2p-loading-overlay').style.display = 'none';
@@ -11295,7 +11302,6 @@ showReceipt(transferRef.id, currentUserDocData.first_name, verifiedRecipientDoc.
         if (e === "Low balance for feature") {
             msg = `ይቅርታ! ይህንን አገልግሎት ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`;
         } else if (typeof e === 'string' && e.includes("Daily limit exceeded")) {
-             // ከላይ Daily Limit throw ያደረግነውን መልእክት እዚህ እናሳያለን
              msg = `የቀን ገደብ አልፏል! በቀን እስከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} ብቻ መላክ ይቻላል።`;
         } else if (e === "Insufficient funds") {
             msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
