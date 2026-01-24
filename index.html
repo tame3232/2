@@ -4156,6 +4156,38 @@
 .card-orange { background: linear-gradient(135deg, #f6d365, #fda085); }
 .card-dark { background: linear-gradient(135deg, #434343, #000000); }
 
+
+/* ለስሙ እና ለባጁ መያዣ */
+.name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* በስሙ እና በባጁ መካከል ክፍተት */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ኦፊሴላዊው የቬሪፋይድ ምልክት */
+.verified-badge-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px; /* እንዳይጨመቅ */
+    vertical-align: middle;
+}
+/* የVerified ምልክት አኒሜሽን */
+@keyframes badge-pulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(41, 182, 246, 0)); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 4px rgba(41, 182, 246, 0.6)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(41, 182, 246, 0)); }
+}
+
+.verified-animated {
+    animation: badge-pulse 2s infinite ease-in-out;
+    transform-origin: center; /* አኒሜሽኑ ከመሃል እንዲነሳ */
+    display: inline-block;
+}
+
+
 </style>
 <body>
 <div id="loading-container">
@@ -7045,7 +7077,17 @@ function renderLeaderboard(data) {
 
             // 1. መጀመሪያ Logic (ስሌቱን) ከ HTML ውጭ ይስሩ (Move Logic Here)
 const isVerified = player.is_verified === true;
-const badgeHtml = isVerified ? '<span style="background: #00bcd4; color: white; border-radius: 50%; padding: 1px 5px; font-size: 9px; margin-left: 5px; vertical-align: middle; display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; font-weight: bold;">✓</span>' : '';
+
+const verifiedIconSVG = `
+<div class="verified-animated">
+    <svg style="width: 14px; height: 14px; margin-left: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.9664 2.8095C11.5164 2.14666 12.4836 2.14666 13.0336 2.8095L13.886 3.83709C14.1561 4.1627 14.5969 4.31295 15.0116 4.22097L16.3204 3.9306C17.1648 3.74326 17.9622 4.37989 17.9254 5.21129L17.8683 6.5001C17.8502 6.9085 18.0694 7.29176 18.4281 7.47953L19.5601 8.07223C20.2905 8.45465 20.5232 9.39055 20.0287 10.0515L19.2623 11.0759C19.0194 11.4005 19.0194 11.8415 19.2623 12.1661L20.0287 13.1904C20.5232 13.8514 20.2905 14.7873 19.5601 15.1697L18.4281 15.7624C18.0694 15.9502 17.8502 16.3335 17.8683 16.7419L17.9254 18.0307C17.9622 18.8621 17.1648 19.4987 16.3204 19.3114L15.0116 19.021C14.5969 18.929 14.1561 19.0793 13.886 19.4049L13.0336 20.4325C12.4836 21.0953 11.5164 21.0953 10.9664 20.4325L10.114 19.4049C9.84392 19.0793 9.4031 18.929 8.98842 19.021L7.67959 19.3114C6.83517 19.4987 6.03781 18.8621 6.07461 18.0307L6.13167 16.7419C6.14975 16.3335 5.93059 15.9502 5.57187 15.7624L4.43993 15.1697C3.70953 14.7873 3.47679 13.8514 3.97131 13.1904L4.73771 12.1661C4.98061 11.8415 4.98061 11.4005 4.73771 11.0759L3.97131 10.0515C3.47679 9.39055 3.70953 8.45465 4.43993 8.07223L5.57187 7.47953C5.93059 7.29176 6.14975 6.9085 6.13167 6.5001L6.07461 5.21129C6.03781 4.37989 6.83517 3.74326 7.67959 3.9306L8.98842 4.22097C9.4031 4.31295 9.84392 4.1627 10.114 3.83709L10.9664 2.8095Z" fill="#29B6F6"/>
+        <path d="M15.2071 9.29289C15.5976 9.68342 15.5976 10.3166 15.2071 10.7071L11.2071 14.7071C10.8166 15.0976 10.1834 15.0976 9.79289 14.7071L7.79289 12.7071C7.40237 12.3166 7.40237 11.6834 7.79289 11.2929C8.18342 10.9024 8.81658 10.9024 9.20711 11.2929L10.5 12.5858L13.7929 9.29289C14.1834 8.90237 14.8166 8.90237 15.2071 9.29289Z" fill="white"/>
+    </svg>
+</div>`;
+
+const badgeHtml = isVerified ? verifiedIconSVG : '';
+
 
 
 // 2. ከዚያ በኋላ HTML ይገንቡ
@@ -7058,9 +7100,10 @@ leaderboardHTML += `
             ${avatarHtml}
         </div>
 
-        <span class="leaderboard-item-name">
-            ${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}
-        </span>
+    <span class="leaderboard-item-name" style="display: flex; align-items: center;gap: 5px;">
+    ${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}
+</span>
+
 
         <span class="leaderboard-item-score">
             ${(player.total_score || 0).toLocaleString()} 💰
