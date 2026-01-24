@@ -7043,22 +7043,31 @@ function renderLeaderboard(data) {
              const rankHtmlClass = (rankNumber === 1) ? 'gold' : (rankNumber === 2) ? 'silver' : (rankNumber === 3) ? 'bronze' : '';
 
 
-            leaderboardHTML += `
-                <div class="leaderboard-item ${itemClasses}">
-                    <span class="leaderboard-item-rank ${rankHtmlClass}">
-                        ${rankDisplay} 
-                    </span> 
-                    <div class="leaderboard-item-photo" style="border: 2px solid ${borderColor}; border-radius: 50%; padding: 1px; display: inline-flex;">${avatarHtml}</div>
-                    const isVerified = player.is_verified === true;
-                     const badgeHtml = isVerified ? '<span style="color: #00bcd4; margin-left: 4px; font-size: 12px;">☑️</span>' : '';
-
-                   <span class="leaderboard-item-name">${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}</span>
+            // 1. መጀመሪያ Logic (ስሌቱን) ከ HTML ውጭ ይስሩ (Move Logic Here)
+const isVerified = player.is_verified === true;
+const badgeHtml = isVerified ? '<span style="background: #00bcd4; color: white; border-radius: 50%; padding: 1px 5px; font-size: 9px; margin-left: 5px; vertical-align: middle; display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; font-weight: bold;">✓</span>' : '';
 
 
+// 2. ከዚያ በኋላ HTML ይገንቡ
+leaderboardHTML += `
+    <div class="leaderboard-item ${itemClasses}">
+        <span class="leaderboard-item-rank ${rankHtmlClass}">
+            ${rankDisplay}
+        </span>
+        <div class="leaderboard-item-photo" style="border: 2px solid ${borderColor}; border-radius: 50%; padding: 1px; display: inline-flex;">
+            ${avatarHtml}
+        </div>
 
-                    <span class="leaderboard-item-score">${(player.total_score || 0).toLocaleString()} 💰</span>
-                </div>
-            `;
+        <span class="leaderboard-item-name">
+            ${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}
+        </span>
+
+        <span class="leaderboard-item-score">
+            ${(player.total_score || 0).toLocaleString()} 💰
+        </span>
+    </div>
+`;
+
          });
     }
       
@@ -11251,7 +11260,7 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
         // ✅ SUCCESS!
         WebApp.MainButton.hideProgress();
         document.getElementById('p2p-loading-overlay').style.display = 'none';
-        WebApp.showAlert(`✅ ${amount} Coin ተላልፏል!`);
+        
         
         if(window.playSound) window.playSound('win');
         
@@ -11266,7 +11275,7 @@ if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
         if(feePreview) feePreview.innerText = '';
         
         window.resetP2PVerification();
-        window.switchP2PTab('history'); 
+        
         
         currentScore -= totalDeduct;
         renderPageContent();
