@@ -6859,7 +6859,7 @@ function removeMiniAppMaintenanceScreen() {
                 
                 // ለጋባዡ መልዕክት መላክ (ለዚህኛው rawReferrerId መጠቀም አለብን - ምክንያቱም የTelegram ID ስለሆነ)
                 if (rawReferrerId) {
-                    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+                    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
                     
                     fetch(botUrl, {
                         method: 'POST',
@@ -7164,9 +7164,10 @@ leaderboardHTML += `
         <span class="leaderboard-item-rank ${rankHtmlClass}">
             ${rankDisplay}
         </span>
-        <div class="leaderboard-item-photo" style="border: 2px solid ${borderColor}; border-radius: 50%; padding: 1px; display: inline-flex;">
-            ${avatarHtml}
-        </div>
+     <div class="leaderboard-item-photo" style="border: 3px solid ${borderColor}; border-radius: 50%; padding: 2px; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; overflow: hidden; flex-shrink: 0;">
+    ${avatarHtml}
+</div>
+   
 
     <span class="leaderboard-item-name" style="display: flex; align-items: center;gap: 5px;">
     ${player.first_name || player.username || 'ያልታወቀ ተጫዋች'} ${badgeHtml}
@@ -10693,7 +10694,7 @@ window.generateWeeklyReport = async () => {
 
 // 3. ወደ Netlify Function የሚልክ (ለአድሚን ሪፖርት)
 async function sendToTelegram(text) {
-    const functionUrl = 'https://newsmartgames.netlify.app/.netlify/functions/send_alert'; 
+    const functionUrl = 'https://newsmartgame.netlify.app/.netlify/functions/send_alert'; 
     const response = await fetch(functionUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -11428,7 +11429,7 @@ window.executeP2PTransaction = async () => {
 
 // ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
 function sendP2PNotification(targetTgId, amount, senderName) {
-    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
     
     fetch(botUrl, {
         method: 'POST',
@@ -11445,7 +11446,7 @@ function sendP2PNotification(targetTgId, amount, senderName) {
 }
 // ✅ ለአድሚን ሪፖርት የሚልክ አዲስ ፈንክሽን
 function sendAdminP2PReport(adminTgId, senderName, recipientName, amount, fee) {
-    const botUrl = "https://newsmartgames.netlify.app/.netlify/functions/send_alert";
+    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
     
     fetch(botUrl, {
         method: 'POST',
