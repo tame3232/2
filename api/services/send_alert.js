@@ -599,3 +599,4 @@ async function sendToAdmin(text) {
         console.error("Failed to send to admin:", e);
     }
    
+}
