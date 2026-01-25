@@ -4050,45 +4050,52 @@
     margin-top: 5px;
 }
 
-/* 3D Grid Layout Container */
-.games-grid-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 እኩል ክፍሎች */
-    gap: 15px; /* ክፍተቱን ትንሽ ቀነስ አድርገነዋል ስክሪኑ እንዲበቃው */
-    padding: 10px;
-    width: 100%; /* ሙሉ ስፋት እንዲወስድ */
-    box-sizing: border-box; /* padding ስፋቱን እንዳያበላሸው */
+/* 1. የከለር ተለዋዋጮች (Variables) */
+:root {
+    --bg-dark: #0f0f0f;
+    --card-bg: #1e1e1e;
+    --et-yellow: #ffca28;
+    --et-green: #00e676;
+    --et-blue: #2196F3;
+    --et-purple: #9c27b0;
+    --et-orange: #ff9800;
+    --et-red: #f44336;
 }
 
-/* 3D Game Card Style */
+/* 2. የካርዶቹ መያዣ (Grid Container) */
+.games-grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 3. የካርዱ ስታይል (3D Card Effect) */
 .game-card-3d {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(145deg, #2b2b2b, #1a1a1a); /* 3D Gradient */
+    background: linear-gradient(145deg, #2b2b2b, #1a1a1a);
     border-radius: 18px;
-    padding: 12px 5px;
-    min-height: 140px;
-    box-shadow: 
-        5px 5px 10px #0f0f0f, 
-        -2px -2px 6px #3d3d3d; /* ጥላ ለ 3D እይታ */
+    padding: 15px 5px;
+    min-height: 120px;
+    box-shadow: 5px 5px 10px #080808, -2px -2px 6px #3d3d3d;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.2s ease;
     cursor: pointer;
-    overflow: hidden;
     text-align: center;
 }
 
-/* ክሊክ ሲደረግ የሚፈጠር አኒሜሽን */
 .game-card-3d:active {
     transform: scale(0.95);
-    filter: brightness(1.2);
-    box-shadow: inset 3px 3px 5px #0f0f0f, inset -3px -3px 5px #3d3d3d;
+    box-shadow: inset 3px 3px 5px #0f0f0f;
 }
 
-/* Icon Container */
+/* 4. የአይኮን ዳራ ቀለሞች (አንተ HTML ላይ የጠቀስካቸው) */
 .game-card-icon {
     width: 45px;
     height: 45px;
@@ -4098,43 +4105,42 @@
     justify-content: center;
     font-size: 22px;
     margin-bottom: 8px;
-    
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1);
-    backdrop-filter: blur(5px);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
 }
 
-/* Text Styles */
+.icon-bg-blue { background-color: rgba(33, 150, 243, 0.2); border: 1px solid var(--et-blue); }
+.icon-bg-purple { background-color: rgba(156, 39, 176, 0.2); border: 1px solid var(--et-purple); }
+.icon-bg-orange { background-color: rgba(255, 152, 0, 0.2); border: 1px solid var(--et-orange); }
+.icon-bg-red { background-color: rgba(244, 67, 54, 0.2); border: 1px solid var(--et-red); }
+.icon-bg-green { background-color: rgba(0, 230, 118, 0.2); border: 1px solid var(--et-green); }
+.icon-bg-dark { background-color: rgba(0, 0, 0, 0.4); border: 1px solid #444; }
+
+/* 5. የጽሁፍ ስታይሎች */
 .game-card-title {
     font-size: 11px;
     font-weight: bold;
     color: #e0e0e0;
-    line-height: 1.2;
     margin-bottom: 4px;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .game-card-reward {
     font-size: 10px;
-    color: var(--et-yellow); /* ወይም የመረጡት ቀለም */
-    font-weight: normal;
-    background: rgba(255, 215, 0, 0.1);
-    padding: 2px 6px;
+    color: var(--et-yellow);
+    background: rgba(255, 202, 40, 0.1);
+    padding: 2px 8px;
     border-radius: 10px;
+    font-weight: bold;
 }
 
-/* Status Badge (Ready/Timer) - Top Right */
+/* 6. የሚበራው አረንጓዴ ነጥብ (Status Dot) */
 .card-badge-dot {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
+    top: 10px;
+    right: 10px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background-color: #555; /* Default inactive */
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    background-color: #444; /* ዝግ ሲሆን */
 }
 
 .card-badge-dot.ready {
@@ -4145,16 +4151,56 @@
 
 @keyframes blink {
     0% { opacity: 1; }
-    50% { opacity: 0.5; }
+    50% { opacity: 0.4; }
     100% { opacity: 1; }
 }
+/* የካርዶቹ የጋራ ገጽታ */
+.game-card-3d {
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    transition: transform 0.2s ease;
+}
 
-.card-red { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
-.card-blue { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-.card-green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-.card-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
-.card-orange { background: linear-gradient(135deg, #f6d365, #fda085); }
-.card-dark { background: linear-gradient(135deg, #434343, #000000); }
+/* 1. ሰማያዊ */
+.card-blue { background: linear-gradient(180deg, #1e88e5, #0d47a1) !important; }
+/* 2. ወይንጠጅ */
+.card-purple { background: linear-gradient(180deg, #8e24aa, #4a148c) !important; }
+/* 3. ወርቃማ/ቢጫ */
+.card-gold { background: linear-gradient(180deg, #fbc02d, #f57f17) !important; }
+/* 4. ቀይ */
+.card-red { background: linear-gradient(180deg, #e53935, #b71c1c) !important; }
+/* 5. ለስላሳ ሰማያዊ */
+.card-cyan { background: linear-gradient(180deg, #00acc1, #006064) !important; }
+/* 6. ጥቁር */
+.card-dark { background: linear-gradient(180deg, #424242, #212121) !important; }
+/* 7. አረንጓዴ */
+.card-green { background: linear-gradient(180deg, #43a047, #1b5e20) !important; }
+/* 8. ደማቅ ወይንጠጅ */
+.card-magenta { background: linear-gradient(180deg, #d81b60, #880e4f) !important; }
+/* 9. ብርቱካናማ */
+.card-orange { background: linear-gradient(180deg, #fb8c00, #e65100) !important; }
+
+/* ጽሁፎቹ ነጭ ሆነው እንዲጎሉ */
+.game-card-title {
+    color: white !important;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+/* የሽልማት ሳጥኑ (Badge) በካርዱ ውስጥ */
+.game-card-reward {
+    background: rgba(0, 0, 0, 0.25) !important;
+    color: #fff !important;
+    font-weight: bold;
+    border: none !important;
+}
+
+/* አይኮን ክብ ዳራ */
+.game-card-icon {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+}
 
 
 /* ለስሙ እና ለባጁ መያዣ */
@@ -4186,6 +4232,34 @@
     transform-origin: center; /* አኒሜሽኑ ከመሃል እንዲነሳ */
     display: inline-block;
 }
+
+<div id="global-p2p-ticker" style="
+    background: #111; 
+    border-top: 1px solid #333; 
+    border-bottom: 1px solid #333; 
+    height: 30px; 
+    overflow: hidden; 
+    margin-bottom: 15px; 
+    font-size: 12px; 
+    white-space: nowrap; 
+    position: relative;">
+    </div>
+
+    /* ቲከሩ እንዲንቀሳቀስ (Marquee Effect) */
+    .ticker-scroll {
+        display: inline-block;
+        padding-left: 100%;
+        animation: ticker-move 15s linear infinite;
+    }
+    .ticker-item {
+        display: inline-block;
+        margin-right: 40px;
+        color: #ccc;
+    }
+    @keyframes ticker-move {
+        0% { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(-100%, 0, 0); }
+    }
 
 
 </style>
@@ -4257,91 +4331,76 @@
             </button>
             
             <div id="tasks-ad-container"></div>
-             <div class="games-grid-container">
-         <div class="game-card-3d" onclick="window.showAdsgramAd()">
+            
+            <div class="games-grid-container">
+    <div class="game-card-3d card-blue" onclick="window.showAdsgramAd()">
         <div class="card-badge-dot ready"></div>
-        <div class="game-card-icon icon-bg-blue">
-            <span class="emoji-animate">📺</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate">📺</span></div>
         <div class="game-card-title">Watch Ad</div>
         <div class="game-card-reward">+1000</div>
     </div>
 
-    <div class="game-card-3d" id="daily-cipher-card" onclick="window.showGameWithLoading('daily-cipher-page')">
+    <div class="game-card-3d card-purple" id="daily-cipher-card" onclick="window.showGameWithLoading('daily-cipher-page')">
         <div class="card-badge-dot" id="daily-cipher-badge-dot"></div>
-        <div class="game-card-icon icon-bg-purple">
-            <span class="emoji-animate anim-glow">🕵️</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-glow">🕵️</span></div>
         <div class="game-card-title" data-lang="card_cipher_title">Cipher</div>
         <div class="game-card-reward">+50K</div>
     </div>
 
-    <div class="game-card-3d" id="memory-game-card" onclick="window.showGameWithLoading('memory-game-page')">
+    <div class="game-card-3d card-gold" id="memory-game-card" onclick="window.showGameWithLoading('memory-game-page')">
         <div class="card-badge-dot" id="memory-game-badge-dot"></div>
-        <div class="game-card-icon icon-bg-orange">
-            <span class="emoji-animate anim-flip">🃏</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-flip">🃏</span></div>
         <div class="game-card-title" data-lang="card_memory_title">Memory</div>
         <div class="game-card-reward">Play</div>
     </div>
 
-    <div class="game-card-3d" id="mystery-box-card" onclick="window.showGameWithLoading('mystery-box-page')">
+    <div class="game-card-3d card-red" id="mystery-box-card" onclick="window.showGameWithLoading('mystery-box-page')">
         <div class="card-badge-dot" id="mystery-box-badge-dot"></div>
-        <div class="game-card-icon icon-bg-red">
-            <span class="emoji-animate anim-shake">🎁</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-shake">🎁</span></div>
         <div class="game-card-title" data-lang="card_mystery_title">Mystery</div>
         <div class="game-card-reward">Random</div>
     </div>
 
-    <div class="game-card-3d" id="daily-spin-card" onclick="window.showGameWithLoading('daily-spin-page')">
+    <div class="game-card-3d card-cyan" id="daily-spin-card" onclick="window.showGameWithLoading('daily-spin-page')">
         <div class="card-badge-dot" id="daily-spin-badge-dot"></div>
-        <div class="game-card-icon icon-bg-blue">
-            <span class="emoji-animate anim-spin">🎡</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-spin">🎡</span></div>
         <div class="game-card-title" data-lang="card_spin_title">Spin</div>
         <div class="game-card-reward">Win Big</div>
     </div>
 
-    <div class="game-card-3d" onclick="window.showGameWithLoading('mines-game-page')">
-    <div class="card-badge-dot ready"></div> 
-    <div class="game-card-icon icon-bg-dark">
-        <span class="icon-mine-tremble">💣</span>
+    <div class="game-card-3d card-dark" onclick="window.showGameWithLoading('mines-game-page')">
+        <div class="card-badge-dot ready"></div> 
+        <div class="game-card-icon"><span class="icon-mine-tremble">💣</span></div>
+        <div class="game-card-title">Mines</div>
+        <div class="game-card-reward">Bet</div>
     </div>
-    <div class="game-card-title">Mines</div>
-    <div class="game-card-reward">Bet</div>
-</div>
 
-    <div class="game-card-3d" id="reflex-game-card" onclick="window.showGameWithLoading('reflex-game-page')">
+    <div class="game-card-3d card-green" id="reflex-game-card" onclick="window.showGameWithLoading('reflex-game-page')">
         <div class="card-badge-dot" id="reflex-game-badge-dot"></div>
-        <div class="game-card-icon icon-bg-green">
-            <span class="emoji-animate anim-pulse">⚡</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-pulse">⚡</span></div>
         <div class="game-card-title" data-lang="card_reflex_title">Reflex</div>
         <div class="game-card-reward">Speed</div>
     </div>
 
-    <div class="game-card-3d" id="social-tasks-card" onclick="handleCardClick('social-tasks-page')">
+    <div class="game-card-3d card-magenta" id="social-tasks-card" onclick="handleCardClick('social-tasks-page')">
         <div class="card-badge-dot ready"></div>
-        <div class="game-card-icon icon-bg-purple">
-            <span class="emoji-animate anim-bounce">🌐</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-bounce">🌐</span></div>
         <div class="game-card-title" data-lang="card_social_title">Social</div>
         <div class="game-card-reward">Tasks</div>
     </div>
 
-    <div class="game-card-3d" id="slots-game-card" onclick="window.showGameWithLoading('slots-game-page')">
+    <div class="game-card-3d card-orange" id="slots-game-card" onclick="window.showGameWithLoading('slots-game-page')">
         <div class="card-badge-dot" id="slots-game-badge-dot"></div>
-        <div class="game-card-icon icon-bg-red">
-            <span class="emoji-animate anim-slot">🎰</span>
-        </div>
+        <div class="game-card-icon"><span class="emoji-animate anim-slot">🎰</span></div>
         <div class="game-card-title" data-lang="card_slots_title">Slot</div>
         <div class="game-card-reward">Jackpot</div>
     </div>
 </div>
 </div>
 </div>
-    <div id="slots-game-page" class="game-page-container" style="display: none; text-align: center;">
+
+            
+         <div id="slots-game-page" class="game-page-container" style="display: none; text-align: center;">
         <h2 class="page-title" data-lang="title_slots">Lucky Slot Machine</h2>
 
         <div class="daily-game-card">
@@ -6638,7 +6697,7 @@ function removeMiniAppMaintenanceScreen() {
     }
 }
 
-async function firebaseLogin() {
+   async function firebaseLogin() {
     try {
         window.Telegram.WebApp.ready(); 
         setupMiniAppMaintenance();
@@ -7070,6 +7129,15 @@ function renderLeaderboard(data) {
                  rankDisplay = rankNumber.toString() + '.'; 
                  rankClass = ''; 
              }
+             // በደረጃ (Rank) ላይ ተመስርቶ የክፈፍ ከለር መቀየር
+if (rankNumber === 1) {
+    borderColor = '#ffd700'; // ወርቅ
+} else if (rankNumber === 2) {
+    borderColor = '#c0c0c0'; // ብር
+} else if (rankNumber === 3) {
+    borderColor = '#cd7f32'; // ነሃስ
+}
+
               
              const itemClasses = `${isCurrentUser ? 'current-user-highlight' : ''} ${rankClass}`;
              const rankHtmlClass = (rankNumber === 1) ? 'gold' : (rankNumber === 2) ? 'silver' : (rankNumber === 3) ? 'bronze' : '';
@@ -7196,6 +7264,7 @@ window.showStreakWithLoading = () => {
         }, 2000); // 🛑 አሁን 2000ms (2 ሰከንድ) ይቆያል
     }, 100);
 }
+     
         
 // ======================================================================
 //                          PAGE NAVIGATION FUNCTIONS
@@ -11388,7 +11457,7 @@ function sendAdminP2PReport(adminTgId, senderName, recipientName, amount, fee) {
                      `📥 <b>ተቀባይ:</b> ${recipientName}\n` +
                      `💰 <b>የተላከው:</b> ${amount.toLocaleString()} Coins\n` +
                      `💵 <b>ኮሚሽን (Income):</b> +${fee.toLocaleString()} Coins\n` +
-                     `📅 <b>ቀን:</b> ${new Date().toLocaleString()}\n\n` +
+                     `?? <b>ቀን:</b> ${new Date().toLocaleString()}\n\n` +
                      `System Log.`
         })
     }).catch(e => console.log("Admin notification failed", e));
