@@ -4261,6 +4261,395 @@
         100% { transform: translate3d(-100%, 0, 0); }
     }
 
+/* === P2P MARKET STYLES === */
+.market-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.market-filter-btn {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #888;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.market-filter-btn.active {
+    background: white;
+    color: black;
+    font-weight: bold;
+}
+
+.create-ad-btn {
+    background: transparent;
+    color: var(--et-yellow);
+    border: 1px solid var(--et-yellow);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Offer Card */
+.offer-card {
+    background: linear-gradient(145deg, #1e1e1e, #252525);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-left: 4px solid #4CAF50; /* Green for Buy */
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.offer-card.sell-type {
+    border-left-color: #F44336; /* Red for Sell */
+}
+
+.offer-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.trader-name {
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.price-tag {
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+}
+.price-currency { font-size: 12px; color: #888; }
+
+.offer-limits {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.offer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 5px;
+}
+.pm-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #333;
+    color: #ddd;
+}
+.pm-telebirr { border-left: 2px solid #00A3FF; }
+.pm-cbe { border-left: 2px solid #800080; }
+
+.trade-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.sell-type .trade-btn { background: #F44336; }
+
+/* Floating Fab for Create Ad (Optional) */
+.fab-create {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--et-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    z-index: 100;
+    color: black;
+}
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.status-badge.pending { background: #FFA500; color: black; }
+.status-badge.paid { background: #00A3FF; color: white; }
+.status-badge.completed { background: #4CAF50; color: white; }
+.status-badge.cancelled { background: #555; color: #aaa; }
+.status-badge.dispute { background: #F44336; color: white; }
+
+#p2p-trade-room {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100vh;
+    background: #000;
+    z-index: 200;
+    padding: 20px;
+    overflow-y: auto;
+    padding-bottom: 120px; /* Space for bottom buttons */
+}
+
+.star-rating span:hover {
+    transform: scale(1.2);
+    color: #FFD700;
+}
+/* === CHAT STYLES === */
+.chat-container {
+    background: #1a1a1a;
+    border-radius: 12px;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 350px;
+    border: 1px solid #333;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.chat-bubble.mine {
+    background: #0088cc; /* Telegram Blue */
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-bubble.theirs {
+    background: #333;
+    color: #ddd;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-time {
+    font-size: 9px;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+    display: block;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #333;
+    background: #222;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.chat-input {
+    flex: 1;
+    background: #111;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 20px;
+    outline: none;
+    font-size: 13px;
+}
+
+.chat-send-btn {
+    background: var(--et-yellow);
+    color: black;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.chat-container {
+    background: #111;
+    border-radius: 10px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+    border: 1px solid #333;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.chat-bubble.mine {
+    align-self: flex-end;
+    background: #00A3FF;
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-bubble.theirs {
+    align-self: flex-start;
+    background: #333;
+    color: #eee;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-time {
+    font-size: 9px;
+    display: block;
+    margin-top: 4px;
+    opacity: 0.7;
+    text-align: right;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+    gap: 8px;
+}
+
+.chat-input {
+    flex: 1;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.chat-send-btn {
+    background: #00A3FF;
+    border: none;
+    color: white;
+    padding: 0 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+
+
+/* የውጪው ጥቁር መጋረጃ (Overlay) */
+#create-ad-modal.custom-modal {
+    display: none; /* በ JS ነው የሚከፈተው */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    align-items: center; /* መሃል ላይ እንዲሆን */
+    justify-content: center;
+}
+
+/* የውስጠኛው ነጭ/ጥቁር ሳጥን (Content) */
+#create-ad-modal .modal-content {
+    background: #1a1a1a;
+    width: 90%;
+    max-width: 360px;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px solid #333;
+    
+    /* ዝርጥጥ እንዳይል ወሳኙ ክፍል */
+    display: block !important; /* Flex ካለ ያጠፋዋል */
+    height: auto !important; /* ቁመቱ እንደ ይዘቱ ብቻ */
+    overflow: hidden; /* መንሸራተት ይከለክላል */
+}
+
+/* በውስጡ ያሉ ነገሮች እንዳይራራቁ */
+#create-ad-modal h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+}
+
+#create-ad-modal .input-label {
+    display: block;
+    margin: 8px 0 4px 0;
+    font-size: 13px;
+    color: #aaa;
+}
+
+#create-ad-modal .modern-input {
+    width: 100%;
+    padding: 10px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    box-sizing: border-box; /* padding ወጪ እንዳይሆን */
+}
+
+/* አዝራሮቹ ከታች ተጣብቀው እንዲቀመጡ */
+#create-ad-modal .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#create-ad-modal .confirm-btn, 
+#create-ad-modal .cancel-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+
+
 
 </style>
 <body>
@@ -4587,7 +4976,7 @@
         </div>
         <div class="social-task-card" id="task-group">
             <div class="social-task-icon-container" style="background-color: var(--et-blue);">
-                <span style="color: white;">👥</span>
+                <span style="color: white;">??</span>
             </div>
             <div class="social-task-text-container">
                 <div class="social-task-title">Telegram Group</div>
@@ -4944,13 +5333,103 @@
 <div id="p2p-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">P2P Transfer 💸</h2>
 
-    <div class="p2p-tabs">
-        <div class="p2p-tab active" onclick="window.switchP2PTab('send')">Send</div>
-        <div class="p2p-tab" onclick="window.switchP2PTab('history')">History</div>
-        <div class="p2p-tab" onclick="window.switchP2PTab('rules')">Rules</div>
+<div class="p2p-tabs">
+    <div class="p2p-tab active" onclick="window.switchP2PTab('market')">Market 🛒</div>
+    <div class="p2p-tab" onclick="window.switchP2PTab('my-orders')">My Ads 📋</div> <div class="p2p-tab" onclick="window.switchP2PTab('send')">Send</div>
+    <div class="p2p-tab" onclick="window.switchP2PTab('history')">History</div>
+    <div class="p2p-tab" onclick="window.switchP2PTab('rules')">Rules</div>
+</div>
+
+<div id="p2p-section-my-orders" class="p2p-content-section" style="display: none;">
+    <h3 style="color: var(--et-yellow); padding: 10px;">የእኔ ማስታወቂያዎች</h3>
+    <div id="p2p-my-ads-list">
+        <p style="text-align: center; color: #666;">Loading...</p>
+    </div>
+</div>
+
+<div id="p2p-trade-room" class="p2p-content-section" style="display: none;">
+    <div class="trade-header-status">
+        <button onclick="closeTradeRoom()" style="background:none; border:none; color:white; font-size:20px;">← Back</button>
+        <div style="text-align:right;">
+            <span id="trade-status-badge" class="status-badge pending">PENDING</span>
+            <div id="trade-timer" style="color: var(--et-red); font-weight:bold; font-size:14px;">15:00</div>
+        </div>
     </div>
 
-    <div id="p2p-section-send" class="p2p-content-section">
+    <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #222;">
+        <h2 id="trade-amount-display" style="color: var(--et-green); margin:0;">0 Coins</h2>
+        <p style="color: #aaa; font-size: 12px;">Price: <span id="trade-price-display">0</span> ETB</p>
+        <hr style="border-color: #444;">
+        <div style="display:flex; justify-content:space-between;">
+            <span style="color:white;">የሚከፍሉት:</span>
+            <strong style="color:var(--et-yellow); font-size:18px;"><span id="trade-total-fiat">0</span> ETB</strong>
+        </div>
+    </div>
+
+    <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #1a1a1a; border-left: 4px solid #00A3FF;">
+        <h4 style="margin-top:0; color:#ddd;">🏦 የመክፈያ መረጃ (Seller Info)</h4>
+        <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ባንክ/ዘዴ: <strong id="trade-bank-name" style="color:white;">---</strong></p>
+        <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ስም: <strong id="trade-seller-name" style="color:white;">---</strong></p>
+        <div style="background: #333; padding: 8px; border-radius: 5px; display:flex; justify-content:space-between; align-items:center;">
+            <span id="trade-account-num" style="color:white; font-family:monospace; font-size:16px;">---</span>
+            <button onclick="copyTradeAccount()" style="background:black; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px;">COPY</button>
+        </div>
+        <p style="font-size:10px; color:orange; margin-top:5px;">⚠️ ማሳሰቢያ፡ ክፍያ ሲፈጽሙ በ Reference ቦታ ላይ ይህን ኮድ ያስገቡ: <b id="trade-ref-code">---</b></p>
+    </div>
+<div id="p2p-chat-section" class="chat-container">
+    <div class="chat-header" style="padding: 10px; border-bottom: 1px solid #333; font-size: 12px; color: #888; text-align: center;">
+        🔒 ደህንነቱ የተጠበቀ የውስጥ መወያያ
+    </div>
+    
+    <div id="chat-messages-list" class="chat-messages">
+        <p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">
+            እዚህ መነጋገር ትችላላችሁ።<br>ደረሰኝ ወይም መረጃ ለመለዋወጥ ይጠቅማል።
+        </p>
+    </div>
+
+    <div class="chat-input-area">
+        <input type="text" id="chat-input-field" class="chat-input" placeholder="መልእክት ይጻፉ..." onkeypress="handleChatEnter(event)">
+        <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+    </div>
+</div>
+
+    <div id="trade-actions-area" style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:#111; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); display:flex; flex-direction:column; gap:10px;">
+        
+        <div id="buyer-controls" style="display:none;">
+            <button onclick="markTradePaid()" class="confirm-btn" style="width:100%; background: #00A3FF;">✅ ከፍያለሁ (I have Paid)</button>
+            <button onclick="cancelActiveTrade()" class="cancel-btn" style="width:100%; margin-top:10px; background:#333;">❌ ሰርዝ (Cancel)</button>
+        </div>
+
+        <div id="seller-controls" style="display:none;">
+            <div style="background:rgba(255,255,0,0.1); color:yellow; padding:10px; font-size:12px; border-radius:5px; margin-bottom:10px; text-align:center;">
+                ገዢው "ከፍያለሁ" እስኪል ይጠብቁ። ብር ሳይገባልዎት Confirm እንዳይሉ!
+            </div>
+            <button id="btn-release-coins" onclick="releaseTradeCoins()" class="confirm-btn" style="width:100%; background: #4CAF50;" disabled>🔒 Release Coins</button>
+            <button id="btn-dispute" onclick="disputeTrade()" class="cancel-btn" style="width:100%; margin-top:10px; background:var(--et-red); display:none;">⚠️ Dispute (ችግር አለ)</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+    <div id="p2p-section-market" class="p2p-content-section">
+    <div class="market-header">
+        <div style="display:flex; gap:10px;">
+            <button class="market-filter-btn active" onclick="filterMarket('buy')">Buy</button>
+            <button class="market-filter-btn" onclick="filterMarket('sell')">Sell</button>
+        </div>
+        <button class="create-ad-btn" onclick="openCreateAdModal()">+ Create Ad</button>
+    </div>
+
+    <div id="p2p-market-list">
+        <p style="text-align: center; color: #666; padding: 20px;">Loading offers...</p>
+    </div>
+</div>
+
+    <div id="p2p-section-send" class="p2p-content-section" style="display: none;">
+
         
         <div class="p2p-balance-card">
             <p>የእርስዎ ቀሪ ሂሳብ</p>
@@ -5013,7 +5492,43 @@
 
     <button class="game-back-button" onclick="window.switchPage('profile-page')">← Back to Profile</button>
 </div>
-    
+    <div id="create-ad-modal" class="custom-modal" style="display: none;">
+    <div class="modal-content" style="text-align: left;">
+        <h3 style="color: var(--et-yellow); text-align: center;">📢 ማስታወቂያ ይለጥፉ</h3>
+        
+        <label class="input-label">ዓይነት</label>
+        <div class="toggle-search-type">
+            <button id="btn-type-sell" class="toggle-btn active" onclick="setAdType('sell')">እሸጣለሁ (Sell)</button>
+            <button id="btn-type-buy" class="toggle-btn" onclick="setAdType('buy')">እገዛለሁ (Buy)</button>
+        </div>
+
+        <label class="input-label">መጠን (Amount)</label>
+        <input type="number" id="ad-amount" class="modern-input" placeholder="Ex: 5000 Coins">
+
+        
+<label class="input-label">ዋጋ በአንድ ኮይን (Price per Coin)</label>
+<input type="number" id="ad-price" class="modern-input" placeholder="ምሳሌ: 0.05 ETB" step="0.01">
+       <label class="input-label">መክፈያ መንገድ</label>
+<select id="ad-payment" class="modern-input" style="background:#2a2a2a; color:white;" onchange="toggleAccountInput()">
+    <option value="Telebirr">Telebirr</option>
+    <option value="CBE">CBE (Commercial Bank)</option>
+    <option value="Abyssinia">Abyssinia</option>
+</select>
+
+<div id="account-input-area" style="margin-top: 10px;">
+    <label class="input-label" id="account-label">የ Telebirr ስልክ ቁጥር</label>
+    <input type="text" id="ad-account-number" class="modern-input" placeholder="09xxxxxxxx">
+</div>
+
+
+
+        <div class="modal-actions">
+            <button onclick="document.getElementById('create-ad-modal').style.display='none'" class="cancel-btn">ሰርዝ</button>
+            <button onclick="postMarketAd()" class="confirm-btn">ለጥፍ ✅</button>
+        </div>
+    </div>
+</div>
+
 <div id="p2p-confirm-modal" class="custom-modal" style="display: none;">
         <div class="modal-content">
             <h2>⚠️ ዝውውር ማረጋገጫ</h2>
@@ -5081,6 +5596,24 @@
     </div>
 </div>
 
+<div id="rating-modal" class="custom-modal" style="display: none; align-items: center; justify-content: center; z-index: 10001;">
+    <div class="modal-content" style="text-align: center; background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; width: 85%; max-width: 300px;">
+        <h3 style="color: var(--et-yellow); margin-top: 0;">ግብይቱ ተጠናቅቋል! ✅</h3>
+        <p style="color: #ccc; font-size: 13px;">ለሻጩ ያለዎትን እርካታ በኮከብ ይግለጹ፡</p>
+        
+        <div class="star-rating" style="font-size: 32px; margin: 15px 0; color: #444;">
+            <span onclick="setRating(1)" style="cursor:pointer; transition: 0.2s;">⭐</span>
+            <span onclick="setRating(2)" style="cursor:pointer; transition: 0.2s;">⭐</span>
+            <span onclick="setRating(3)" style="cursor:pointer; transition: 0.2s;">⭐</span>
+            <span onclick="setRating(4)" style="cursor:pointer; transition: 0.2s;">⭐</span>
+            <span onclick="setRating(5)" style="cursor:pointer; transition: 0.2s;">⭐</span>
+        </div>
+        
+        <p id="rating-value-text" style="color: var(--et-yellow); font-weight: bold; font-size: 14px;">ደረጃ ይምረጡ</p>
+        
+        <button onclick="submitUserRating()" class="confirm-btn" style="width: 100%; margin-top: 15px; background: var(--et-yellow); color: black;">ደረጃውን መዝግብ</button>
+    </div>
+</div>
 
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
@@ -5317,7 +5850,7 @@ window.playSound = (type) => {
 </script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnapshot, orderBy, limit, increment, serverTimestamp, getDoc, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, updateDoc, doc, setDoc, collection, query, where, onSnapshot, orderBy, limit, increment, serverTimestamp, getDoc, getDocs, runTransaction,addDoc, deleteDoc} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 
@@ -5360,6 +5893,23 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
         let isReflexGameRunning = false; 
         let timerIntervals = {}; // ለሁሉም Cooldown Timers የሚውል
         let hasLaunchAdShown = false;
+        onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentFirebaseUserId = user.uid;
+        console.log("ተጠቃሚው ገብቷል:", currentFirebaseUserId);
+        setupCurrentUserListener(currentFirebaseUserId);
+        setupLeaderboardListener();
+        setupMiniAppMaintenance();
+        fetchMarketOffers();
+
+        
+        switchPage('tasks-page');
+    } else {
+        console.log("ተጠቃሚ አልገባም ወይም ወጥቷል።");
+    }
+});
+
+
 // ======================================================================
     // ✅ 🛑 TRANSLATIONS (ሙሉ በሙሉ የተስተካከለ)
     // ======================================================================
@@ -6696,8 +7246,7 @@ function removeMiniAppMaintenanceScreen() {
         window.location.reload();
     }
 }
-
-   async function firebaseLogin() {
+async function firebaseLogin() {
     try {
         window.Telegram.WebApp.ready(); 
         setupMiniAppMaintenance();
@@ -7266,7 +7815,8 @@ window.showStreakWithLoading = () => {
     }, 100);
 }
      
-        
+
+ 
 // ======================================================================
 //                          PAGE NAVIGATION FUNCTIONS
 // ======================================================================
@@ -7364,8 +7914,7 @@ window.showStreakWithLoading = () => {
                     clearInterval(timerIntervals['card_status_update']);
                     delete timerIntervals['card_status_update'];
                 }
-
-                // ----------------------------------------------------
+// ----------------------------------------------------
                 // --- ✅ አዲሱ ትክክለኛ የ 'else' ብሎክ ይሄ ነው ---
                 // ----------------------------------------------------
                 if (pageIdToShow === 'top-page') { 
@@ -7375,11 +7924,10 @@ window.showStreakWithLoading = () => {
                 } else if (pageIdToShow === 'staking-page') {
                     window.initStakingPage();
                  } else if (pageIdToShow === 'p2p-page') { 
-        // ✅ P2P ገጽ ሲከፈት ይህ ይሠራል
-        window.switchP2PTab('send'); // መጀመሪያ Send tab ይክፈት
-        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
-        window.resetP2PVerification();
-                } else if (pageIdToShow === 'mystery-box-page') { 
+    window.switchP2PTab('market'); // መጀመሪያ የገበያ ዝርዝር እንዲመጣ
+    document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
+
+                                } else if (pageIdToShow === 'mystery-box-page') { 
                     startCooldownTimer('last_mystery_time', 'mystery-box-timer', 'mystery-box-action');
                     window.resetMysteryBox(false);
                 } else if (pageIdToShow === 'daily-spin-page') {
@@ -7537,15 +8085,7 @@ window.handleSocialTaskClick = async (button, actionType) => {
         WebApp.showAlert(t('alert_wait_15')); // 🟢 Translated
     }
 };
-
-
-                
-
-
-
-
-
-        // ======================================================================
+      // ======================================================================
         // 🛑 UPDATED: የተሻሻለው የጓደኛ ጋብዝ ተግባር (Telegram Share Integration)
         // ======================================================================
     // ... (ሌሎች ተግባራት እንደ formatTime, checkDailyLimit, updateScore, startCooldownTimer, renderPageContent እዚህ መገለጽ አለባቸው)
@@ -11092,456 +11632,6 @@ window.cashoutMines = async () => {
 
  
 
-// =========================================================
-// ✅ P2P TRANSFER SYSTEM LOGIC
-// =========================================================
-
-const ADMIN_WALLET_ID = "MPrYYot9ldV9qbfxJA1uXC0wUzi2"; // 🛑 እዚህ የአድሚኑን ID አስገባ
-if (typeof ADMIN_TELEGRAM_ID === 'undefined') {
-    window.ADMIN_TELEGRAM_ID = 403001547;
-}
-const MIN_REQUIRED_BALANCE = 1000000;
-const DAILY_TRANSFER_LIMIT = 100000;
-const P2P_FEE_PERCENT = 0.05; // 5% ክፍያ
-let p2pSearchType = 'id'; // 'id' or 'username'
-let verifiedRecipientDoc = null; // የተረጋገጠ ተቀባይ ዳታ
-
-window.switchP2PTab = (tab) => {
-    // UI Tabs Update
-    document.querySelectorAll('.p2p-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.p2p-tab')[tab === 'send' ? 0 : tab === 'history' ? 1 : 2].classList.add('active');
-
-    // Section Update
-    document.querySelectorAll('.p2p-content-section').forEach(s => s.style.display = 'none');
-    document.getElementById(`p2p-section-${tab}`).style.display = 'block';
-
-    if (tab === 'send') {
-        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
-    } else if (tab === 'history') {
-        fetchP2PHistory();
-    }
-};
-
-window.setP2PSearchType = (type) => {
-    p2pSearchType = type;
-    document.getElementById('btn-search-id').classList.toggle('active', type === 'id');
-    document.getElementById('btn-search-user').classList.toggle('active', type === 'username');
-    
-    const input = document.getElementById('p2p-recipient-input');
-    input.placeholder = type === 'id' ? "የተቀባዩን User ID ያስገቡ" : "የተቀባዩን Telegram @Username ያስገቡ";
-    input.value = '';
-    window.resetP2PVerification();
-};
-
-window.resetP2PVerification = () => {
-    verifiedRecipientDoc = null;
-    document.getElementById('p2p-recipient-preview').style.display = 'none';
-    document.getElementById('p2p-send-btn').disabled = true;
-    document.getElementById('p2p-send-btn').classList.add('disabled-btn');
-};
-
-// 🔥 HYBRID SEARCH LOGIC (እንደጠየቅከው)
-window.verifyP2PUser = async () => {
-    const inputVal = document.getElementById('p2p-recipient-input').value.trim();
-    const btn = document.querySelector('.verify-btn');
-    
-    if (!inputVal) return WebApp.showAlert("እባክዎ መረጃ ያስገቡ");
-    if (inputVal === currentFirebaseUserId || inputVal === telegramUserId) return WebApp.showAlert("ለራስዎ መላክ አይችሉም!");
-
-    btn.innerText = "Checking...";
-    btn.disabled = true;
-
-    try {
-        let foundDoc = null;
-
-        if (p2pSearchType === 'id') {
-            // 1. መጀመሪያ በቀጥታ በ Doc ID ፈልግ (Direct Search)
-            const directRef = doc(db, "users", inputVal);
-            const directSnap = await getDoc(directRef);
-            
-            if (directSnap.exists()) {
-                foundDoc = { id: directSnap.id, ...directSnap.data() };
-            } else {
-                // 2. ካልተገኘ በ telegram_id field ፈልግ (Query Search)
-                const q = query(collection(db, "users"), where("telegram_id", "in", [Number(inputVal), String(inputVal)]));
-                const qSnap = await getDocs(q);
-                if (!qSnap.empty) {
-                    foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
-                }
-            }
-        } else {
-            // Username Search (ያለ @ ምልክት)
-            const cleanUser = inputVal.replace('@', '');
-            const q = query(collection(db, "users"), where("username", "==", cleanUser));
-            const qSnap = await getDocs(q);
-            if (!qSnap.empty) {
-                foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
-            }
-        }
-
-        if (foundDoc) {
-            // ተጠቃሚው ተገኝቷል!
-            if (foundDoc.id === currentFirebaseUserId) {
-                 WebApp.showAlert("ይህ የእርስዎ አካውንት ነው። ለራስዎ መላክ አይችሉም።");
-            } else {
-                verifiedRecipientDoc = foundDoc;
-                
-                // UI ማሳያ
-                document.getElementById('p2p-preview-name').innerText = foundDoc.first_name || foundDoc.username || "Unknown";
-                document.getElementById('p2p-preview-avatar').innerHTML = getAvatarHtml(foundDoc.username, foundDoc.photo_url);
-                document.getElementById('p2p-recipient-preview').style.display = 'flex';
-                document.getElementById('p2p-send-btn').disabled = false;
-                document.getElementById('p2p-send-btn').classList.remove('disabled-btn');
-            }
-        } else {
-            WebApp.showAlert("❌ ተጠቃሚው አልተገኘም። እባክዎ ID ወይም Username በትክክል ያስገቡ።");
-            window.resetP2PVerification();
-        }
-
-    } catch (e) {
-        console.error(e);
-        WebApp.showAlert("Error verifying user.");
-    } finally {
-        btn.innerText = "ተቀባዩን አረጋግጥ (Verify) 🔍";
-        btn.disabled = false;
-    }
-};
-// HTML ላይ የ Fee ማሳያ ቦታ ከሌለ በ JS እንጨምር ወይም Input ስር <div id="fee-preview"></div> እንዳለ አረጋግጥ
-document.getElementById('p2p-amount-input').addEventListener('input', function(e) {
-    const val = parseInt(e.target.value) || 0;
-    const feeDisplay = document.querySelector('.fee-preview-text') || document.createElement('div');
-    
-    // ለ Fee ማሳያ የሚሆን ቦታ እንፍጠር (ካለ ዝለለው)
-    if (!document.querySelector('.fee-preview-text')) {
-        feeDisplay.className = 'fee-preview-text';
-        feeDisplay.style.fontSize = '12px';
-        feeDisplay.style.marginTop = '5px';
-        feeDisplay.style.color = '#FFA500'; // Orange color
-        e.target.parentNode.appendChild(feeDisplay);
-    }
-
-    if (val >= 500) {
-        const fee = Math.ceil(val * 0.05); // 5%
-        feeDisplay.innerText = `💡 Fee (5%): ${fee} Coin | Total: ${val + fee}`;
-    } else {
-        feeDisplay.innerText = '';
-    }
-});
-
-window.initiateP2PTransfer = () => {
-    const amount = parseInt(document.getElementById('p2p-amount-input').value);
-    
-    // 1. መጀመሪያ ሚኒመም ባላንስ (1 ሚሊዮን) እንዳለው ማረጋገጥ
-    if (currentScore < MIN_REQUIRED_BALANCE) {
-        return WebApp.showAlert(`ይቅርታ! የP2P ዝውውር ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`);
-    }
-
-    if (!amount || amount < 500) {
-        return WebApp.showAlert("ዝቅተኛው የመላኪያ መጠን 500 Coin ነው።");
-    }
-
-    // 2. ከ100,000 በላይ በአንድ ጊዜ መላክ እንደማይቻል (Simple UI check)
-    if (amount > DAILY_TRANSFER_LIMIT) {
-        return WebApp.showAlert(`በአንድ ጊዜ ከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} Coin በላይ መላክ አይቻልም።`);
-    }
-
-    if (!verifiedRecipientDoc) {
-        return WebApp.showAlert("እባክዎ መጀመሪያ ተቀባዩን ያረጋግጡ።");
-    }
-
-    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
-    const totalDeduct = amount + fee;
-
-    if (currentScore < totalDeduct) {
-        return WebApp.showAlert(`በቂ ቀሪ ሂሳብ የለዎትም። \nያስፈልጋል: ${totalDeduct} \nያለዎት: ${currentScore}`);
-    }
-
-    // Modal Update
-    document.getElementById('confirm-name').innerText = verifiedRecipientDoc.first_name;
-    document.getElementById('confirm-amount').innerText = amount.toLocaleString() + " Coin";
-    document.getElementById('confirm-fee').innerText = fee + " Coin";
-    document.getElementById('confirm-total').innerText = totalDeduct.toLocaleString() + " Coin";
-    
-    document.getElementById('p2p-confirm-modal').style.display = 'flex';
-};
-
-window.executeP2PTransaction = async () => {
-    const modal = document.getElementById('p2p-confirm-modal');
-    modal.style.display = 'none';
-    
-    // መረጃዎችን መሰብሰብ
-    const amount = parseInt(document.getElementById('p2p-amount-input').value);
-    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
-    const totalDeduct = amount + fee;
-    const recipientId = verifiedRecipientDoc.id;
-    const senderId = currentFirebaseUserId;
-    
-    // 🛑 መረጃውን ለደረሰኝ እናስቀምጥ (ከ Cleanup በፊት!)
-    const recipientNameForReceipt = verifiedRecipientDoc.first_name || "Unknown";
-    const senderNameForReceipt = currentUserDocData.first_name || "User";
-
-    // Loading...
-    WebApp.MainButton.showProgress();
-    document.getElementById('p2p-loading-overlay').style.display = 'flex';
-
-    try {
-       const transferRef = doc(collection(db, "transfers")); 
-       
-        await runTransaction(db, async (transaction) => {
-            // 1. የላኪውን መረጃ አንብብ
-            const senderRef = doc(db, "users", senderId);
-            const senderDoc = await transaction.get(senderRef);
-            if (!senderDoc.exists()) throw "Sender doc not found";
-            
-            const senderData = senderDoc.data();
-            const currentSenderBalance = senderData.total_score || 0;
-
-            // 🔥 ህግ 1: ባላንስ ከ 1 ሚሊዮን በታች ከሆነ አግድ
-            if (currentSenderBalance < MIN_REQUIRED_BALANCE) {
-                throw "Low balance for feature"; 
-            }
-
-            if (currentSenderBalance < totalDeduct) {
-                throw "Insufficient funds"; 
-            }
-
-            // 🔥 ህግ 2: የ24 ሰዓት ገደብ (Daily Limit Logic)
-            const now = new Date();
-            const lastDate = senderData.last_transfer_date ? senderData.last_transfer_date.toDate() : null;
-            let currentDailyTotal = senderData.daily_sent_amount || 0;
-
-            if (!lastDate || lastDate.getDate() !== now.getDate() || lastDate.getMonth() !== now.getMonth()) {
-                currentDailyTotal = 0;
-            }
-
-            if ((currentDailyTotal + amount) > DAILY_TRANSFER_LIMIT) {
-                throw `Daily limit exceeded. You sent ${currentDailyTotal} today. Limit is ${DAILY_TRANSFER_LIMIT}`;
-            }
-
-            // 2. የተቀባዩን መረጃ አንብብ
-            const recipientRef = doc(db, "users", recipientId);
-            const recipientDoc = await transaction.get(recipientRef);
-            if (!recipientDoc.exists()) throw "Recipient doc not found";
-
-            // 3. የአድሚን መረጃ
-            const adminRef = doc(db, "users", ADMIN_WALLET_ID);
-            const adminDoc = await transaction.get(adminRef);
-
-            // --- WRITES (ወደ ዳታቤዝ መፃፍ) ---
-            
-            // A. ከላኪው ላይ መቀነስ
-            transaction.update(senderRef, {
-                total_score: increment(-totalDeduct),
-                daily_sent_amount: currentDailyTotal + amount,
-                last_transfer_date: serverTimestamp()
-            });
-
-            // B. ለተቀባዩ መጨመር
-            transaction.update(recipientRef, {
-                total_score: increment(amount)
-            });
-
-            // C. ክፍያውን ለአድሚን
-            if (ADMIN_WALLET_ID && ADMIN_WALLET_ID.length > 5) {
-                if (adminDoc.exists()) {
-                    transaction.update(adminRef, { total_score: increment(fee) });
-                } else {
-                    transaction.set(adminRef, { total_score: fee, username: "AdminWallet", is_admin: true });
-                }
-            }
-
-            // D. ታሪክ መመዝገብ
-            // ተቀባዩ በምን እንደተፈለገ ለመለየት
-            let sentViaValue = recipientId; 
-            if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
-                sentViaValue = "@" + verifiedRecipientDoc.username;
-            } else if (verifiedRecipientDoc.telegram_id) {
-                sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
-            }
-            
-            // Transaction ውስጥ ሁሌም local variables መጠቀም ይመረጣል (safe side)
-            transaction.set(transferRef, {
-                sender_id: senderId,
-                sender_name: senderNameForReceipt,
-                sender_username: currentUserDocData.username ? "@" + currentUserDocData.username : "ID: " + (currentUserDocData.telegram_id || senderId),
-                recipient_id: recipientId,
-                recipient_name: recipientNameForReceipt,
-                recipient_identifier: sentViaValue,
-                amount: amount,
-                fee: fee,
-                timestamp: serverTimestamp(),
-                type: 'p2p_transfer'
-            });
-        });
-
-        // ✅ SUCCESS!
-        WebApp.MainButton.hideProgress();
-        document.getElementById('p2p-loading-overlay').style.display = 'none';
-        
-        if(window.playSound) window.playSound('win');
-        
-        // Notifications...
-        const recipientTgId = verifiedRecipientDoc.telegram_id;
-        if (recipientTgId) sendP2PNotification(recipientTgId, amount, senderNameForReceipt);
-        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') sendAdminP2PReport(ADMIN_TELEGRAM_ID, senderNameForReceipt, recipientNameForReceipt, amount, fee);
-
-        // UI Updates
-        document.getElementById('p2p-amount-input').value = '';
-        const feePreview = document.querySelector('.fee-preview-text');
-        if(feePreview) feePreview.innerText = '';
-        
-        // Local Balance Update
-        currentScore -= totalDeduct;
-        renderPageContent();
-
-        // 🛑 CRITICAL FIX: ደረሰኙን መጀመሪያ እናሳያለን፣ ከዚያ reset እናደርጋለን
-        // verifiedRecipientDoc ስለሚጠፋ ቀድመን የያዝነውን variable (recipientNameForReceipt) እንጠቀማለን
-        showReceipt(transferRef.id, senderNameForReceipt, recipientNameForReceipt, amount, fee);
-        
-        // ታሪኩን ማደስ
-        window.switchP2PTab('history'); 
-
-        // መጨረሻ ላይ Reset (ይሄ verifiedRecipientDoc ን null ያደርገዋል)
-        window.resetP2PVerification();
-        
-    } catch (e) {
-        WebApp.MainButton.hideProgress();
-        document.getElementById('p2p-loading-overlay').style.display = 'none';
-        console.error("Transfer Error:", e);
-        
-        // Error Messages Handling
-        let msg = "Transaction Failed.";
-        
-        if (e === "Low balance for feature") {
-            msg = `ይቅርታ! ይህንን አገልግሎት ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`;
-        } else if (typeof e === 'string' && e.includes("Daily limit exceeded")) {
-             msg = `የቀን ገደብ አልፏል! በቀን እስከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} ብቻ መላክ ይቻላል።`;
-        } else if (e === "Insufficient funds") {
-            msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
-        } else if (e === "Recipient doc not found") {
-            msg = "የተቀባዩ አድራሻ ላይ ችግር አለ።";
-        }
-        
-        WebApp.showAlert("❌ " + msg);
-    }
-};
-
-
-// ኖቲፊኬሽን የሚልክ ፈንክሽን (Webhook)
-function sendP2PNotification(targetTgId, amount, senderName) {
-    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
-    
-    fetch(botUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            custom_chat_id: String(targetTgId),
-            message: `💸 <b>የገንዘብ ዝውውር (Incoming Transfer)</b>\n\n` +
-                     `👤 <b>ከ:</b> ${senderName}\n` +
-                     `💰 <b>መጠን:</b> +${amount.toLocaleString()} Coins\n` +
-                     `📅 <b>ቀን:</b> ${new Date().toLocaleDateString()}\n\n` +
-                     `አሁን ወደ ጨዋታው ገብተው ቀሪ ሂሳብዎን ያረጋግጡ! 🚀`
-        })
-    }).catch(e => console.log("Notification trigger failed", e));
-}
-// ✅ ለአድሚን ሪፖርት የሚልክ አዲስ ፈንክሽን
-function sendAdminP2PReport(adminTgId, senderName, recipientName, amount, fee) {
-    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
-    
-    fetch(botUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            custom_chat_id: String(adminTgId), // የአድሚኑ ቴሌግራም ID
-            message: `👮‍♂️ <b>P2P Transaction Report</b>\n\n` +
-                     `📤 <b>ላኪ:</b> ${senderName}\n` +
-                     `📥 <b>ተቀባይ:</b> ${recipientName}\n` +
-                     `💰 <b>የተላከው:</b> ${amount.toLocaleString()} Coins\n` +
-                     `💵 <b>ኮሚሽን (Income):</b> +${fee.toLocaleString()} Coins\n` +
-                     `?? <b>ቀን:</b> ${new Date().toLocaleString()}\n\n` +
-                     `System Log.`
-        })
-    }).catch(e => console.log("Admin notification failed", e));
-}
-
-
-// ታሪክ ማምጣት
-async function fetchP2PHistory() {
-    const list = document.getElementById('p2p-history-list');
-    list.innerHTML = '<div class="game-spinner" style="margin: 20px auto;"></div>';
-
-    try {
-        const transfersRef = collection(db, "transfers");
-        // እኔ የላኩት ወይም ለእኔ የተላከ
-        const q = query(transfersRef, 
-            where("sender_id", "==", currentFirebaseUserId),
-            orderBy("timestamp", "desc"), 
-            limit(20)
-        );
-        // Note: Firestore OR query is tricky, so we might need two queries or just fetch sender side for now to keep it simple without composite index
-        // Let's implement a client-side merge for better UX or just show Sent items for now. 
-        // For simplicity and to avoid Index errors, let's show "Sent History" mostly.
-        
-        const snapshot = await getDocs(q);
-        
-        // Also fetch received
-        const q2 = query(transfersRef, 
-             where("recipient_id", "==", currentFirebaseUserId),
-             orderBy("timestamp", "desc"),
-             limit(20)
-        );
-        const snapshot2 = await getDocs(q2);
-
-        let allTransfers = [];
-        snapshot.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'out'}));
-        snapshot2.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'in'}));
-        
-        // Sort by time
-        allTransfers.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-
-        if (allTransfers.length === 0) {
-            list.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">ምንም የዝውውር ታሪክ የለም።</p>';
-            return;
-        }
-
-        let html = '';
-        allTransfers.forEach(t => {
-            const isIn = t.dir === 'in';
-            const color = isIn ? '#4CAF50' : '#F44336';
-            const sign = isIn ? '+' : '-';
-            const icon = isIn ? '📥' : '📤';
-            const name = isIn ? `From: ${t.sender_name}` : `To: ${t.recipient_name}`;
-            const date = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleDateString() : 'Just now';
-            let subDetail = isIn ? (t.sender_username || "ID: Hidden") : (t.recipient_identifier || "ID: " + t.recipient_id);
-
-            html += `
-            <div class="modern-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="font-size: 20px;">${icon}</div>
-                    <div>
-                        <div style="font-weight: bold; color: white; font-size: 14px;">${name}</div>
-                      <div style="font-size: 11px; color: #aaa; margin-top: 2px;">${subDetail}</div> 
-                      <div style="font-size: 10px; color: #777;">${date}</div>
-
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: bold; color: ${color};">${sign}${t.amount}</div>
-                    ${!isIn ? `<div style="font-size: 10px; color: #555;">Fee: ${t.fee}</div>` : ''}
-                </div>
-            </div>`;
-        });
-
-        list.innerHTML = html;
-
-    } catch (e) {
-        console.error(e);
-        list.innerHTML = `<p style="color: var(--et-red); text-align: center;">Error loading history: Create Index maybe required.</p>`;
-        // Note: If you get "Index required" error in console, click the link provided in console to create it in Firebase.
-    }
-}
-
-
 
 
 // ==========================================
@@ -11654,6 +11744,1072 @@ window.handleAdClick = () => {
     }
 };
 
+
+// =========================================================
+// ✅ MERGED P2P SYSTEM (MARKET + TRANSFER)
+// =========================================================
+
+// --- 1. Global Variables ---
+// ለ Market
+let marketType = 'buy'; // 'buy' or 'sell'
+let adType = 'sell';
+
+// ለ Transfer
+const ADMIN_WALLET_ID = "MPrYYot9ldV9qbfxJA1uXC0wUzi2"; // 🛑 የአድሚን ID
+if (typeof ADMIN_TELEGRAM_ID === 'undefined') {
+    window.ADMIN_TELEGRAM_ID = 403001547;
+}
+const MIN_REQUIRED_BALANCE = 1000000;
+const DAILY_TRANSFER_LIMIT = 100000;
+const P2P_FEE_PERCENT = 0.05; 
+let p2pSearchType = 'id'; 
+let verifiedRecipientDoc = null; 
+
+// --- 2. Switch Tab Logic (Unified) ---
+window.switchP2PTab = (tab) => {
+    // UI Active State
+    document.querySelectorAll('.p2p-tab').forEach(t => t.classList.remove('active'));
+    
+    // HTML ላይ ባለው ቅደም ተከተል መሰረት Index:
+    // 0 = Market, 1 = Send, 2 = History, 3 = Rules
+    let tabIndex = 0;
+        if (tab === 'market') tabIndex = 0;
+    else if (tab === 'my-orders') tabIndex = 1; // ይህ አዲስ ነው
+    else if (tab === 'send') tabIndex = 2;
+    else if (tab === 'history') tabIndex = 3;
+    else if (tab === 'rules') tabIndex = 4;
+
+
+    // ታቡን Active አድርግ (If exists)
+    const tabs = document.querySelectorAll('.p2p-tab');
+    if(tabs[tabIndex]) tabs[tabIndex].classList.add('active');
+
+    // Section Visibility
+    document.querySelectorAll('.p2p-content-section').forEach(s => s.style.display = 'none');
+    
+    const targetSection = document.getElementById(`p2p-section-${tab}`);
+    if (targetSection) targetSection.style.display = 'block';
+
+    // Logic for each tab
+    if (tab === 'market') {
+        fetchMarketOffers();
+        } else if (tab === 'my-orders') {
+        fetchMyAds();
+    } else if (tab === 'send') {
+        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
+    } else if (tab === 'history') {
+        fetchP2PHistory();
+    }
+};
+
+// =========================================================
+// 🛒 MARKET FUNCTIONS
+// =========================================================
+
+window.fetchMarketOffers = async () => {
+    const listContainer = document.getElementById('p2p-market-list');
+    if(!listContainer) return;
+    
+    listContainer.innerHTML = '<div class="spinner"></div>'; 
+
+    try {
+        const offersRef = collection(db, "p2p_market");
+        // እኔ መግዛት ከፈለግኩ (Buy Tab) -> የሚሸጡ ሰዎችን (Sell Ads) ማየት አለብኝ
+        const typeToShow = marketType === 'buy' ? 'sell' : 'buy';
+        
+        const q = query(offersRef, 
+            where("type", "==", typeToShow),
+            where("status", "==", "open"),
+            orderBy("price", "asc"), 
+            limit(20)
+        );
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            listContainer.innerHTML = `
+                <div style="text-align:center; padding:30px; color:#666;">
+                    <p style="font-size:40px;">📭</p>
+                    <p>ምንም ማስታወቂያ የለም።<br>የመጀመሪያውን ለጥፍ!</p>
+                </div>`;
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();     
+     
+const avgRating = data.rating_count > 0 
+    ? (data.total_rating_sum / data.rating_count).toFixed(1) 
+    : "0.0";
+
+            const badgeClass = data.payment_method === 'Telebirr' ? 'pm-telebirr' : 'pm-cbe';
+            
+            const isMyAd = data.creator_id === currentFirebaseUserId;
+            const btnText = isMyAd ? "Cancel" : (marketType === 'buy' ? "Buy" : "Sell");
+            const btnColor = isMyAd ? "#888" : (marketType === 'buy' ? "#4CAF50" : "#F44336");
+
+            html += `
+            <div class="offer-card ${data.type}-type">
+                <div class="offer-header">
+                    <div class="trader-name">
+    👤 ${data.creator_name} 
+    <span style="color: #FFD700; font-size: 11px; margin-left: 5px;">
+        ⭐ ${avgRating} (${data.rating_count || 0})
+    </span>
+    ${data.is_verified ? '<span class="verified-badge">✔</span>' : ''}
+</div>
+
+                    <div class="price-tag">
+                        ${data.price} <span class="price-currency">ETB/Coin</span>
+                    </div>
+                </div>
+                
+                <div class="offer-limits">
+                    Limit: ${data.min_limit} - ${data.amount} Coins
+                </div>
+
+                <div class="offer-actions">
+                    <div class="payment-methods">
+                        <span class="pm-badge ${badgeClass}">${data.payment_method}</span>
+                    </div>
+                    <button class="trade-btn" 
+                        style="background: ${btnColor}"
+                        onclick="initiateTrade('${doc.id}', '${data.creator_id}', ${isMyAd})">
+                        ${btnText}
+                    </button>
+                </div>
+            </div>`;
+        });
+
+        listContainer.innerHTML = html;
+
+    } catch (e) {
+        console.error("Market Error:", e);
+        listContainer.innerHTML = `<p style="color:red; text-align:center">Error loading market. Index required?</p>`;
+    }
+};
+
+window.openCreateAdModal = () => {
+    document.getElementById('create-ad-modal').style.display = 'flex';
+};
+
+window.setAdType = (type) => {
+    adType = type;
+    document.getElementById('btn-type-sell').classList.toggle('active', type === 'sell');
+    document.getElementById('btn-type-buy').classList.toggle('active', type === 'buy');
+};
+window.toggleAccountInput = () => {
+    const paymentType = document.getElementById('ad-payment').value;
+    const label = document.getElementById('account-label');
+    const input = document.getElementById('ad-account-number');
+
+    if (paymentType === "Telebirr") {
+        label.innerText = "የ Telebirr ስልክ ቁጥር";
+        input.placeholder = "09xxxxxxxx";
+    } else {
+        label.innerText = "የ " + paymentType + " ሂሳብ ቁጥር (Account)";
+        input.placeholder = "የባንክ ቁጥሩን እዚህ ያስገቡ...";
+    }
+};
+
+window.postMarketAd = async () => {
+    const amount = Number(document.getElementById('ad-amount').value);
+    const price = Number(document.getElementById('ad-price').value);
+    const payment = document.getElementById('ad-payment').value;
+    const accountNumber = document.getElementById('ad-account-number').value;
+
+    if(!amount || !price || !accountNumber) {
+        return WebApp.showAlert("እባክዎ ሁሉንም መረጃዎች በትክክል ይሙሉ");
+    }
+    
+    // ከ 500 በታች መለጠፍ አይቻልም
+    if(amount < 500) return WebApp.showAlert("ዝቅተኛው መጠን 500 Coin ነው");
+
+    WebApp.MainButton.showProgress();
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const userRef = doc(db, "users", currentFirebaseUserId);
+            const userSnap = await transaction.get(userRef);
+            const currentBalance = userSnap.data().total_score || 0;
+
+            // 1. መሸጥ ከሆነ ብቻ ነው ሳንቲም የምንቀንሰው
+            if (adType === 'sell') {
+                if (currentBalance < amount) {
+                    throw "በቂ ሳንቲም የለዎትም!";
+                }
+                // ሳንቲሙን ከተጠቃሚው ላይ መቀነስ (Lock ማድረግ)
+                transaction.update(userRef, { total_score: increment(-amount) });
+            }
+
+            // 2. ማስታወቂያውን መፍጠር
+            const adRef = doc(collection(db, "p2p_market"));
+            transaction.set(adRef, {
+                creator_id: currentFirebaseUserId,
+                creator_name: currentUserDocData.username || "User",
+                type: adType, 
+                amount: amount,
+                min_limit: 500, 
+                price: price,
+                payment_method: payment,
+                payment_account: accountNumber,
+                status: 'open',
+                created_at: serverTimestamp(),
+                // ሳንቲሙ መቀነሱን ለማወቅ ይረዳናል
+                is_locked: adType === 'sell' ? true : false 
+            });
+        });
+
+        document.getElementById('create-ad-modal').style.display = 'none';
+        WebApp.showAlert("✅ ማስታወቂያዎ በተሳካ ሁኔታ ተለጥፏል!");
+        fetchMarketOffers();
+
+    } catch (e) {
+        WebApp.showAlert("ስህተት: " + e);
+        console.error(e);
+    } finally {
+        WebApp.MainButton.hideProgress();
+    }
+};
+
+
+
+let currentTradeDocListener = null;
+let activeTradeId = null;
+
+// ገዢው "Buy" ሲል የሚጠራው Function
+window.initiateTrade = async (adId, sellerId, isMyAd) => {
+    if (isMyAd) return WebApp.showAlert("የራስዎ ማስታወቂያ ነው።");
+
+    WebApp.MainButton.showProgress();
+    
+    try {
+        await runTransaction(db, async (transaction) => {
+            // 1. Get Ad Info
+            const adRef = doc(db, "p2p_market", adId);
+            const adSnap = await transaction.get(adRef);
+            if (!adSnap.exists()) throw "Ad does not exist";
+            
+            const adData = adSnap.data();
+            if (adData.status !== 'open') throw "ይህ ማስታወቂያ ተሽጧል ወይም ተዘግቷል!";
+            
+            const totalCost = adData.amount * adData.price;
+
+            // 2. Lock the Ad so no one else buys it
+            transaction.update(adRef, { status: 'locked' });
+
+            // 3. Create Trade Document
+            const tradeRef = doc(collection(db, "p2p_trades"));
+            const tradeData = {
+                ad_id: adId,
+                seller_id: sellerId,
+                seller_name: adData.creator_name,
+                buyer_id: currentFirebaseUserId,
+                buyer_name: currentUserDocData.first_name || "Buyer",
+                amount: adData.amount,
+                price: adData.price,
+                total_fiat: totalCost,
+                payment_method: adData.payment_method,
+                seller_bank_info: adData.payment_account || "አልተገኘም",                
+                status: 'pending', // pending -> paid -> completed
+                created_at: serverTimestamp(),
+                expires_at: new Date(Date.now() + 15 * 60000) // 15 Minutes Timer
+            };
+            
+            transaction.set(tradeRef, tradeData);
+            activeTradeId = tradeRef.id;
+        });
+
+        WebApp.MainButton.hideProgress();
+        // ቀጥታ ወደ Trade Room መግባት
+        openTradeRoom(activeTradeId);
+
+    } catch (e) {
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert("Error: " + e);
+        console.error(e);
+    }
+};
+// === CHAT FUNCTIONS ===
+window.handleChatEnter = (e) => {
+    if(e.key === 'Enter') window.sendChatMessage();
+}
+
+window.sendChatMessage = async () => {
+    const input = document.getElementById('chat-input-field');
+    const text = input.value.trim();
+    if(!text || !window.activeTradeId) return; // window. የሚለውን ጨምሬበታለሁ
+
+    input.value = '';
+    
+    try {
+        await addDoc(collection(db, "p2p_trades", window.activeTradeId, "messages"), {
+            sender_id: currentFirebaseUserId,
+            text: text,
+            timestamp: serverTimestamp()
+        });
+    } catch(e) {
+        console.error("Chat Error", e);
+    }
+};
+
+// === AUTO EXPIRE FUNCTION ===
+async function autoExpireTrade(tradeId, adId) {
+    try {
+        await runTransaction(db, async (transaction) => {
+            const tradeRef = doc(db, "p2p_trades", tradeId);
+            const tradeSnap = await transaction.get(tradeRef);
+            if(!tradeSnap.exists()) return;
+            const tData = tradeSnap.data();
+
+            if (tData.status !== 'pending') return;
+
+            transaction.update(tradeRef, { 
+                status: 'cancelled',
+                cancel_reason: 'auto_expired'
+            });
+
+            const adRef = doc(db, "p2p_market", adId);
+            transaction.update(adRef, { status: 'open' });
+        });
+    } catch (e) {
+        console.error("Auto Expire Error:", e);
+    }
+}
+
+
+let currentChatListener = null;
+
+window.openTradeRoom = (tradeId) => {
+window.activeTradeId = tradeId;
+    document.getElementById('p2p-page').querySelectorAll('.p2p-content-section').forEach(d => d.style.display='none');
+    document.getElementById('p2p-trade-room').style.display = 'block';
+    
+    // Trade Data Listener
+    if (currentTradeDocListener) currentTradeDocListener(); 
+    currentTradeDocListener = onSnapshot(doc(db, "p2p_trades", tradeId), (docSnap) => {
+        if (!docSnap.exists()) return closeTradeRoom();
+        const data = docSnap.data();
+        updateTradeUI(data, docSnap.id);
+    });
+
+    // === አዲስ፡ CHAT LISTENER ===
+    const chatList = document.getElementById('chat-messages-list');
+    chatList.innerHTML = ''; // Clear old messages
+
+    if (currentChatListener) currentChatListener(); // Close old chat listener
+    
+    const messagesRef = collection(db, "p2p_trades", tradeId, "messages");
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+    currentChatListener = onSnapshot(q, (snapshot) => {
+        chatList.innerHTML = ''; 
+        if(snapshot.empty) {
+            chatList.innerHTML = `<p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">ንግግሩን ይጀምሩ...</p>`;
+        }
+        
+        snapshot.forEach(doc => {
+            const msg = doc.data();
+            const isMine = msg.sender_id === currentFirebaseUserId;
+            const time = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
+            
+            const bubble = `
+                <div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
+                    <div>${msg.text}</div>
+                    <span class="chat-time">${time}</span>
+                </div>
+            `;
+            chatList.insertAdjacentHTML('beforeend', bubble);
+        });
+        // Scroll to bottom
+        chatList.scrollTop = chatList.scrollHeight;
+    });
+};
+
+
+
+function updateTradeUI(data, tradeId) {
+    const isBuyer = data.buyer_id === currentFirebaseUserId;
+    // በ updateTradeUI ውስጥ
+
+
+    // Update Texts
+    document.getElementById('trade-amount-display').innerText = `${data.amount} Coins`;
+    document.getElementById('trade-price-display').innerText = data.price;
+    document.getElementById('trade-total-fiat').innerText = data.total_fiat.toLocaleString();
+    document.getElementById('trade-status-badge').innerText = data.status.toUpperCase();
+    document.getElementById('trade-status-badge').className = `status-badge ${data.status}`;
+    
+    // Bank Info
+    document.getElementById('trade-bank-name').innerText = data.payment_method;
+    document.getElementById('trade-seller-name').innerText = data.seller_name;
+    document.getElementById('trade-account-num').innerText = isBuyer ? (data.seller_bank_info || "Ask inside") : "የራስዎ መረጃ";
+    document.getElementById('trade-ref-code').innerText = tradeId.slice(0,6).toUpperCase();
+
+const now = new Date();
+const expires = (data.expires_at && typeof data.expires_at.toDate === 'function') 
+            ? data.expires_at.toDate() 
+            : (data.expires_at ? new Date(data.expires_at) : now);
+
+const diff = Math.floor((expires - now) / 1000);
+const timerEl = document.getElementById('trade-timer');
+
+if (data.status === 'pending') {
+    if (diff > 0) {
+        const m = Math.floor(diff / 60);
+        const s = diff % 60;
+        timerEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+        timerEl.style.color = "white";
+    } else {
+        timerEl.innerText = "EXPIRED";
+        timerEl.style.color = "red";
+        autoExpireTrade(tradeId, data.ad_id);
+    }
+} else {
+    timerEl.innerText = "";
+}
+
+    // Button Visibility Logic
+    const buyerControls = document.getElementById('buyer-controls');
+    const sellerControls = document.getElementById('seller-controls');
+    const releaseBtn = document.getElementById('btn-release-coins');
+    const disputeBtn = document.getElementById('btn-dispute');
+
+    if (isBuyer) {
+        buyerControls.style.display = 'block';
+        sellerControls.style.display = 'none';
+        if (data.status !== 'pending') buyerControls.style.display = 'none'; // Hide if paid
+        if (data.status === 'paid') {
+             // Show "Waiting for release" message
+             buyerControls.innerHTML = `<p style="color:var(--et-yellow); text-align:center;">ክፍያዎ ተረጋግጧል። ሻጩ ኮይኑን እስኪለቅ ይጠብቁ...</p>`;
+             buyerControls.style.display = 'block';
+        }
+    } else {
+        // Seller
+        buyerControls.style.display = 'none';
+        sellerControls.style.display = 'block';
+        
+        if (data.status === 'paid') {
+            releaseBtn.disabled = false;
+            releaseBtn.innerText = "🔓 Release Coins (Received)";
+            disputeBtn.style.display = 'block';
+        } else {
+            releaseBtn.disabled = true;
+            releaseBtn.innerText = "Waiting for Payment...";
+            disputeBtn.style.display = 'none';
+        }
+    }
+    
+    if (data.status === 'completed') {
+        WebApp.showAlert("Trade Completed! ✅");
+        closeTradeRoom();
+    }
+}
+
+window.closeTradeRoom = () => {
+    if (currentTradeDocListener) currentTradeDocListener();
+    if (currentChatListener) currentChatListener(); // <--- አዲሱ መስመር ይህ ነው
+    
+    document.getElementById('p2p-trade-room').style.display = 'none';
+    window.switchP2PTab('market');
+};
+
+// 1. ገዢው ከፍያለሁ ሲል
+window.markTradePaid = async () => {
+    if(!confirm("እርግጠኛ ነዎት ብሩን ልከዋል? ሀሰተኛ መረጃ ከሆነ ይቀጣሉ!")) return;
+    
+    await updateDoc(doc(db, "p2p_trades", activeTradeId), {
+        status: 'paid',
+        paid_at: serverTimestamp()
+    });
+    const tSnap = await getDoc(doc(db, "p2p_trades", activeTradeId));
+    const tData = tSnap.data();
+    const sSnap = await getDoc(doc(db, "users", tData.seller_id));
+    const sellerTgId = sSnap.data()?.telegram_id;
+
+    if (sellerTgId) {
+        fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                custom_chat_id: String(sellerTgId),
+                message: `🔔 <b>ክፍያ ተፈጽሟል!</b>\n📦 ID: #${activeTradeId.slice(0,6)}\n💰 መጠን: ${tData.amount} Coins\nእባክዎ ባንክዎን ያረጋግጡ።`
+            })
+        }).catch(e => console.log("Notif error"));
+    }
+
+
+
+};
+window.releaseTradeCoins = async () => {
+    if(!confirm("ብሩ መግባቱን አረጋግጠዋል? ኮይኑን ለገዢው ይለቀቃል!")) return;
+    
+    WebApp.MainButton.showProgress();
+    
+    try {
+        await runTransaction(db, async (transaction) => {
+            const tradeRef = doc(db, "p2p_trades", activeTradeId);
+            const tradeSnap = await transaction.get(tradeRef);
+            const tData = tradeSnap.data();
+            
+            // 1. የገዢውን ሂሳብ መጨመር
+            const buyerRef = doc(db, "users", tData.buyer_id);
+            transaction.update(buyerRef, { total_score: increment(tData.amount) });
+            
+            // 2. ግብይቱን መጨረስ
+            transaction.update(tradeRef, { status: 'completed' });
+
+            // 3. ማስታወቂያውን መዝጋት
+            const adRef = doc(db, "p2p_market", tData.ad_id);
+            transaction.update(adRef, { status: 'sold' });
+            
+            // የታለመለትን ሰው ID ለ Rating ማዘጋጀት
+            ratingTargetUserId = tData.seller_id;
+        });
+        
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert("ኮይን ወይም ሳንቲሙ በተሳካ ሁኔታ ተለቋል! ✅");
+        
+        // ደረሰኝ ማሳየት
+        showReceipt("P2P-"+activeTradeId, "Seller", "Buyer", tData.amount, 0);
+        
+        // Rating Modal ማሳየት (ከተፈለገ)
+        document.getElementById('rating-modal').style.display = 'flex';
+        
+    } catch (e) {
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert("መልቀቅ አልተቻለም: " + e);
+    }
+};
+
+// 3. ክርክር (Dispute)
+window.disputeTrade = async () => {
+    const reason = prompt("የክርክሩን ምክንያት ይፃፉ:");
+    if(!reason) return;
+    
+    await updateDoc(doc(db, "p2p_trades", activeTradeId), {
+        status: 'dispute',
+        dispute_reason: reason,
+        dispute_at: serverTimestamp()
+    });
+    WebApp.showAlert("አድሚን በቅርቡ ያነጋግርዎታል።");
+};
+
+// 4. Cancel
+window.cancelActiveTrade = async () => {
+    if(!confirm("ግብይቱን መሰረዝ ይፈልጋሉ?")) return;
+    
+    const tradeRef = doc(db, "p2p_trades", activeTradeId);
+    // Get ad ID to unlock it
+    const snap = await getDoc(tradeRef);
+    const adId = snap.data().ad_id;
+    
+    await updateDoc(tradeRef, { status: 'cancelled' });
+    await updateDoc(doc(db, "p2p_market", adId), { status: 'open' }); // Unlock Ad
+    
+    closeTradeRoom();
+};
+
+window.fetchMyAds = async () => {
+    const listContainer = document.getElementById('p2p-my-ads-list');
+    if(!listContainer) return;
+    
+    listContainer.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const q = query(
+            collection(db, "p2p_market"),
+            where("creator_id", "==", currentFirebaseUserId),
+            orderBy("created_at", "desc")
+        );
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">የለጠፉት ማስታወቂያ የለም።</p>';
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const statusColor = data.status === 'open' ? 'var(--et-green)' : 'orange';
+            
+            html += `
+            <div class="modern-card" style="margin-bottom:10px; border-left: 4px solid ${statusColor};">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:white;">${data.type.toUpperCase()} - ${data.amount} Coins</div>
+                        <div style="font-size:12px; color:#aaa;">Price: ${data.price} ETB | ${data.status}</div>
+                    </div>
+                    ${data.status === 'open' ? 
+                        `<button onclick="deleteMyAd('${doc.id}')" style="background:none; border:none; color:var(--et-red); font-size:18px;">🗑️</button>` 
+                        : ''}
+                </div>
+            </div>`;
+        });
+        listContainer.innerHTML = html;
+    } catch (e) {
+        console.error(e);
+        listContainer.innerHTML = '<p style="color:red;">Error loading ads.</p>';
+    }
+};
+
+window.deleteMyAd = async (adId) => {
+    if(!confirm("ይህንን ማስታወቂያ መሰረዝ ይፈልጋሉ? የተያዘ ኮይን ወይም ሳንቲም ካለ ይመለሳል።")) return;
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const adRef = doc(db, "p2p_market", adId);
+            const adSnap = await transaction.get(adRef);
+            
+            if (!adSnap.exists()) throw "ማስታወቂያው አልተገኘም";
+            const adData = adSnap.data();
+
+            // ሳንቲሙ ተቀንሶ ከነበረ (መሸጥ ከሆነ) ይመለስ
+            if (adData.type === 'sell' && adData.is_locked === true) {
+                const userRef = doc(db, "users", adData.creator_id);
+                transaction.update(userRef, { total_score: increment(adData.amount) });
+            }
+
+            // ማስታወቂያውን መሰረዝ
+            transaction.delete(adRef);
+        });
+
+        WebApp.showAlert("ተሰርዟል! ኮይኖዎ ተመልሷል።");
+        fetchMyAds();
+    } catch (e) {
+        WebApp.showAlert("መሰረዝ አልተቻለም: " + e);
+    }
+};
+
+
+
+window.filterMarket = (type) => {
+    marketType = type;
+    document.querySelectorAll('.market-filter-btn').forEach(b => b.classList.remove('active'));
+    // አዝራሩን Active ለማድረግ (ሎጂክ ያስፈልጋል)
+    fetchMarketOffers();
+};
+
+
+// =========================================================
+// 💸 TRANSFER FUNCTIONS (Old Logic)
+// =========================================================
+
+window.setP2PSearchType = (type) => {
+    p2pSearchType = type;
+    document.getElementById('btn-search-id').classList.toggle('active', type === 'id');
+    document.getElementById('btn-search-user').classList.toggle('active', type === 'username');
+    
+    const input = document.getElementById('p2p-recipient-input');
+    input.placeholder = type === 'id' ? "የተቀባዩን User ID ያስገቡ" : "የተቀባዩን Telegram @Username ያስገቡ";
+    input.value = '';
+    window.resetP2PVerification();
+};
+
+window.resetP2PVerification = () => {
+    verifiedRecipientDoc = null;
+    document.getElementById('p2p-recipient-preview').style.display = 'none';
+    const sendBtn = document.getElementById('p2p-send-btn');
+    if(sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.classList.add('disabled-btn');
+    }
+};
+
+window.verifyP2PUser = async () => {
+    const inputVal = document.getElementById('p2p-recipient-input').value.trim();
+    const btn = document.querySelector('.verify-btn');
+    
+    if (!inputVal) return WebApp.showAlert("እባክዎ መረጃ ያስገቡ");
+    if (inputVal === currentFirebaseUserId || inputVal === telegramUserId) return WebApp.showAlert("ለራስዎ መላክ አይችሉም!");
+
+    btn.innerText = "Checking...";
+    btn.disabled = true;
+
+    try {
+        let foundDoc = null;
+
+        if (p2pSearchType === 'id') {
+            const directRef = doc(db, "users", inputVal);
+            const directSnap = await getDoc(directRef);
+            
+            if (directSnap.exists()) {
+                foundDoc = { id: directSnap.id, ...directSnap.data() };
+            } else {
+                const q = query(collection(db, "users"), where("telegram_id", "in", [Number(inputVal), String(inputVal)]));
+                const qSnap = await getDocs(q);
+                if (!qSnap.empty) {
+                    foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+                }
+            }
+        } else {
+            const cleanUser = inputVal.replace('@', '');
+            const q = query(collection(db, "users"), where("username", "==", cleanUser));
+            const qSnap = await getDocs(q);
+            if (!qSnap.empty) {
+                foundDoc = { id: qSnap.docs[0].id, ...qSnap.docs[0].data() };
+            }
+        }
+
+        if (foundDoc) {
+            if (foundDoc.id === currentFirebaseUserId) {
+                 WebApp.showAlert("ይህ የእርስዎ አካውንት ነው። ለራስዎ መላክ አይችሉም።");
+            } else {
+                verifiedRecipientDoc = foundDoc;
+                document.getElementById('p2p-preview-name').innerText = foundDoc.first_name || foundDoc.username || "Unknown";
+                document.getElementById('p2p-preview-avatar').innerHTML = getAvatarHtml(foundDoc.username, foundDoc.photo_url);
+                document.getElementById('p2p-recipient-preview').style.display = 'flex';
+                const sendBtn = document.getElementById('p2p-send-btn');
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('disabled-btn');
+            }
+        } else {
+            WebApp.showAlert("❌ ተጠቃሚው አልተገኘም። እባክዎ ID ወይም Username በትክክል ያስገቡ።");
+            window.resetP2PVerification();
+        }
+
+    } catch (e) {
+        console.error(e);
+        WebApp.showAlert("Error verifying user.");
+    } finally {
+        btn.innerText = "ተቀባዩን አረጋግጥ (Verify) 🔍";
+        btn.disabled = false;
+    }
+};
+
+// Fee Calculator
+const p2pInput = document.getElementById('p2p-amount-input');
+if(p2pInput){
+    p2pInput.addEventListener('input', function(e) {
+        const val = parseInt(e.target.value) || 0;
+        let feeDisplay = document.querySelector('.fee-preview-text');
+        
+        if (!feeDisplay) {
+            feeDisplay = document.createElement('div');
+            feeDisplay.className = 'fee-preview-text';
+            feeDisplay.style.fontSize = '12px';
+            feeDisplay.style.marginTop = '5px';
+            feeDisplay.style.color = '#FFA500';
+            e.target.parentNode.appendChild(feeDisplay);
+        }
+
+        if (val >= 500) {
+            const fee = Math.ceil(val * 0.05);
+            feeDisplay.innerText = `💡 Fee (5%): ${fee} Coin | Total: ${val + fee}`;
+        } else {
+            feeDisplay.innerText = '';
+        }
+    });
+}
+
+window.initiateP2PTransfer = () => {
+    const amount = parseInt(document.getElementById('p2p-amount-input').value);
+    
+    if (currentScore < MIN_REQUIRED_BALANCE) {
+        return WebApp.showAlert(`ይቅርታ! የP2P ዝውውር ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`);
+    }
+
+    if (!amount || amount < 500) {
+        return WebApp.showAlert("ዝቅተኛው የመላኪያ መጠን 500 Coin ነው።");
+    }
+
+    if (amount > DAILY_TRANSFER_LIMIT) {
+        return WebApp.showAlert(`በአንድ ጊዜ ከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} Coin በላይ መላክ አይቻልም።`);
+    }
+
+    if (!verifiedRecipientDoc) {
+        return WebApp.showAlert("እባክዎ መጀመሪያ ተቀባዩን ያረጋግጡ።");
+    }
+
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
+    const totalDeduct = amount + fee;
+
+    if (currentScore < totalDeduct) {
+        return WebApp.showAlert(`በቂ ቀሪ ሂሳብ የለዎትም። \nያስፈልጋል: ${totalDeduct} \nያለዎት: ${currentScore}`);
+    }
+
+    document.getElementById('confirm-name').innerText = verifiedRecipientDoc.first_name;
+    document.getElementById('confirm-amount').innerText = amount.toLocaleString() + " Coin";
+    document.getElementById('confirm-fee').innerText = fee + " Coin";
+    document.getElementById('confirm-total').innerText = totalDeduct.toLocaleString() + " Coin";
+    
+    document.getElementById('p2p-confirm-modal').style.display = 'flex';
+};
+
+window.executeP2PTransaction = async () => {
+    const modal = document.getElementById('p2p-confirm-modal');
+    modal.style.display = 'none';
+    
+    const amount = parseInt(document.getElementById('p2p-amount-input').value);
+    const fee = Math.ceil(amount * P2P_FEE_PERCENT);
+    const totalDeduct = amount + fee;
+    const recipientId = verifiedRecipientDoc.id;
+    const senderId = currentFirebaseUserId;
+    
+    const recipientNameForReceipt = verifiedRecipientDoc.first_name || "Unknown";
+    const senderNameForReceipt = currentUserDocData.first_name || "User";
+
+    WebApp.MainButton.showProgress();
+    document.getElementById('p2p-loading-overlay').style.display = 'flex';
+
+    try {
+       const transferRef = doc(collection(db, "transfers")); 
+       
+        await runTransaction(db, async (transaction) => {
+            const senderRef = doc(db, "users", senderId);
+            const senderDoc = await transaction.get(senderRef);
+            if (!senderDoc.exists()) throw "Sender doc not found";
+            
+            const senderData = senderDoc.data();
+            const currentSenderBalance = senderData.total_score || 0;
+
+            if (currentSenderBalance < MIN_REQUIRED_BALANCE) throw "Low balance for feature"; 
+            if (currentSenderBalance < totalDeduct) throw "Insufficient funds"; 
+
+            const now = new Date();
+            const lastDate = senderData.last_transfer_date ? senderData.last_transfer_date.toDate() : null;
+            let currentDailyTotal = senderData.daily_sent_amount || 0;
+
+            if (!lastDate || lastDate.getDate() !== now.getDate() || lastDate.getMonth() !== now.getMonth()) {
+                currentDailyTotal = 0;
+            }
+
+            if ((currentDailyTotal + amount) > DAILY_TRANSFER_LIMIT) {
+                throw `Daily limit exceeded. You sent ${currentDailyTotal} today. Limit is ${DAILY_TRANSFER_LIMIT}`;
+            }
+
+            const recipientRef = doc(db, "users", recipientId);
+            const recipientDoc = await transaction.get(recipientRef);
+            if (!recipientDoc.exists()) throw "Recipient doc not found";
+
+            const adminRef = doc(db, "users", ADMIN_WALLET_ID);
+            const adminDoc = await transaction.get(adminRef);
+
+            transaction.update(senderRef, {
+                total_score: increment(-totalDeduct),
+                daily_sent_amount: currentDailyTotal + amount,
+                last_transfer_date: serverTimestamp()
+            });
+
+            transaction.update(recipientRef, {
+                total_score: increment(amount)
+            });
+
+            if (ADMIN_WALLET_ID && ADMIN_WALLET_ID.length > 5) {
+                if (adminDoc.exists()) {
+                    transaction.update(adminRef, { total_score: increment(fee) });
+                } else {
+                    transaction.set(adminRef, { total_score: fee, username: "AdminWallet", is_admin: true });
+                }
+            }
+
+            let sentViaValue = recipientId; 
+            if (p2pSearchType === 'username' && verifiedRecipientDoc.username) {
+                sentViaValue = "@" + verifiedRecipientDoc.username;
+            } else if (verifiedRecipientDoc.telegram_id) {
+                sentViaValue = "ID: " + verifiedRecipientDoc.telegram_id;
+            }
+            
+            transaction.set(transferRef, {
+                sender_id: senderId,
+                sender_name: senderNameForReceipt,
+                sender_username: currentUserDocData.username ? "@" + currentUserDocData.username : "ID: " + (currentUserDocData.telegram_id || senderId),
+                recipient_id: recipientId,
+                recipient_name: recipientNameForReceipt,
+                recipient_identifier: sentViaValue,
+                amount: amount,
+                fee: fee,
+                timestamp: serverTimestamp(),
+                type: 'p2p_transfer'
+            });
+        });
+
+        WebApp.MainButton.hideProgress();
+        document.getElementById('p2p-loading-overlay').style.display = 'none';
+        
+        if(window.playSound) window.playSound('win');
+        
+        const recipientTgId = verifiedRecipientDoc.telegram_id;
+        if (recipientTgId) sendP2PNotification(recipientTgId, amount, senderNameForReceipt);
+        if (typeof ADMIN_TELEGRAM_ID !== 'undefined') sendAdminP2PReport(ADMIN_TELEGRAM_ID, senderNameForReceipt, recipientNameForReceipt, amount, fee);
+
+        document.getElementById('p2p-amount-input').value = '';
+        const feePreview = document.querySelector('.fee-preview-text');
+        if(feePreview) feePreview.innerText = '';
+        
+        currentScore -= totalDeduct;
+        renderPageContent();
+
+        showReceipt(transferRef.id, senderNameForReceipt, recipientNameForReceipt, amount, fee);
+        window.switchP2PTab('history'); 
+        window.resetP2PVerification();
+        
+    } catch (e) {
+        WebApp.MainButton.hideProgress();
+        document.getElementById('p2p-loading-overlay').style.display = 'none';
+        console.error("Transfer Error:", e);
+        
+        let msg = "Transaction Failed.";
+        
+        if (e === "Low balance for feature") {
+            msg = `ይቅርታ! ይህንን አገልግሎት ለመጠቀም ቢያንስ ${MIN_REQUIRED_BALANCE.toLocaleString()} Coin ሊኖርዎት ይገባል።`;
+        } else if (typeof e === 'string' && e.includes("Daily limit exceeded")) {
+             msg = `የቀን ገደብ አልፏል! በቀን እስከ ${DAILY_TRANSFER_LIMIT.toLocaleString()} ብቻ መላክ ይቻላል።`;
+        } else if (e === "Insufficient funds") {
+            msg = "በቂ ቀሪ ሂሳብ የለዎትም።";
+        } else if (e === "Recipient doc not found") {
+            msg = "የተቀባዩ አድራሻ ላይ ችግር አለ።";
+        }
+        
+        WebApp.showAlert("❌ " + msg);
+    }
+};
+
+// --- Notifications & History ---
+
+function sendP2PNotification(targetTgId, amount, senderName) {
+    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
+    fetch(botUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            custom_chat_id: String(targetTgId),
+            message: `💸 <b>የገንዘብ ዝውውር (Incoming Transfer)</b>\n\n` +
+                     `👤 <b>ከ:</b> ${senderName}\n` +
+                     `💰 <b>መጠን:</b> +${amount.toLocaleString()} Coins\n` +
+                     `📅 <b>ቀን:</b> ${new Date().toLocaleDateString()}\n\n` +
+                     `አሁን ወደ ጨዋታው ገብተው ቀሪ ሂሳብዎን ያረጋግጡ! 🚀`
+        })
+    }).catch(e => console.log("Notification trigger failed", e));
+}
+
+function sendAdminP2PReport(adminTgId, senderName, recipientName, amount, fee) {
+    const botUrl = "https://newsmartgame.netlify.app/.netlify/functions/send_alert";
+    fetch(botUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            custom_chat_id: String(adminTgId),
+            message: `👮‍♂️ <b>P2P Transaction Report</b>\n\n` +
+                     `📤 <b>ላኪ:</b> ${senderName}\n` +
+                     `📥 <b>ተቀባይ:</b> ${recipientName}\n` +
+                     `💰 <b>የተላከው:</b> ${amount.toLocaleString()} Coins\n` +
+                     `💵 <b>ኮሚሽን (Income):</b> +${fee.toLocaleString()} Coins\n` +
+                     `📅 <b>ቀን:</b> ${new Date().toLocaleString()}\n\n` +
+                     `System Log.`
+        })
+    }).catch(e => console.log("Admin notification failed", e));
+}
+
+async function fetchP2PHistory() {
+    const list = document.getElementById('p2p-history-list');
+    list.innerHTML = '<div class="game-spinner" style="margin: 20px auto;"></div>';
+
+    try {
+        const transfersRef = collection(db, "transfers");
+        
+        const q = query(transfersRef, 
+            where("sender_id", "==", currentFirebaseUserId),
+            orderBy("timestamp", "desc"), 
+            limit(20)
+        );
+        const snapshot = await getDocs(q);
+        
+        const q2 = query(transfersRef, 
+             where("recipient_id", "==", currentFirebaseUserId),
+             orderBy("timestamp", "desc"),
+             limit(20)
+        );
+        const snapshot2 = await getDocs(q2);
+
+        let allTransfers = [];
+        snapshot.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'out'}));
+        snapshot2.forEach(doc => allTransfers.push({id: doc.id, ...doc.data(), dir: 'in'}));
+        
+        allTransfers.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+        if (allTransfers.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">ምንም የዝውውር ታሪክ የለም።</p>';
+            return;
+        }
+
+        let html = '';
+        allTransfers.forEach(t => {
+            const isIn = t.dir === 'in';
+            const color = isIn ? '#4CAF50' : '#F44336';
+            const sign = isIn ? '+' : '-';
+            const icon = isIn ? '📥' : '📤';
+            const name = isIn ? `From: ${t.sender_name}` : `To: ${t.recipient_name}`;
+            const date = t.timestamp ? new Date(t.timestamp.toDate()).toLocaleDateString() : 'Just now';
+            let subDetail = isIn ? (t.sender_username || "ID: Hidden") : (t.recipient_identifier || "ID: " + t.recipient_id);
+
+            html += `
+            <div class="modern-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 20px;">${icon}</div>
+                    <div>
+                        <div style="font-weight: bold; color: white; font-size: 14px;">${name}</div>
+                      <div style="font-size: 11px; color: #aaa; margin-top: 2px;">${subDetail}</div> 
+                      <div style="font-size: 10px; color: #777;">${date}</div>
+
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; color: ${color};">${sign}${t.amount}</div>
+                    ${!isIn ? `<div style="font-size: 10px; color: #555;">Fee: ${t.fee}</div>` : ''}
+                </div>
+            </div>`;
+        });
+
+        list.innerHTML = html;
+
+    } catch (e) {
+        console.error(e);
+        list.innerHTML = `<p style="color: var(--et-red); text-align: center;">Error loading history.</p>`;
+    }
+}
+let selectedRating = 0;
+let ratingTargetUserId = null; // የሻጩ ID
+
+window.setRating = (stars) => {
+    selectedRating = stars;
+    const starElements = document.querySelectorAll('.star-rating span');
+    starElements.forEach((s, index) => {
+        s.style.opacity = index < stars ? "1" : "0.3";
+    });
+    document.getElementById('rating-value-text').innerText = stars + " ኮከብ";
+};
+
+window.submitUserRating = async () => {
+    if (selectedRating === 0) return WebApp.showAlert("እባክዎ መጀመሪያ ኮከብ ይምረጡ!");
+
+    try {
+        const userRef = doc(db, "users", ratingTargetUserId);
+        
+        await runTransaction(db, async (transaction) => {
+            const userSnap = await transaction.get(userRef);
+            if (!userSnap.exists()) return;
+
+            const userData = userSnap.data();
+            const currentTotalRating = userData.total_rating_sum || 0;
+            const currentRatingCount = userData.rating_count || 0;
+
+            transaction.update(userRef, {
+                total_rating_sum: currentTotalRating + selectedRating,
+                rating_count: currentRatingCount + 1
+            });
+        });
+
+        document.getElementById('rating-modal').style.display = 'none';
+        WebApp.showAlert("ለሰጡት አስተያየት እናመሰግናለን! ⭐");
+    } catch (e) {
+        console.error("Rating Error:", e);
+        WebApp.showAlert("ደረጃውን ለመመዝገብ አልተቻለም።");
+    }
+};
 
 
         // ======================================================================
