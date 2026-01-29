@@ -4298,14 +4298,19 @@
 
 /* Offer Card */
 .offer-card {
+    display: flex;
+    flex-direction: column;
     background: linear-gradient(145deg, #1e1e1e, #252525);
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 12px;
-    border-left: 4px solid #4CAF50; /* Green for Buy */
+    width: 100%;
+    box-sizing: border-box;
+    border-left: 4px solid #4CAF50;
     position: relative;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
+
 
 .offer-card.sell-type {
     border-left-color: #F44336; /* Red for Sell */
@@ -4314,7 +4319,9 @@
 .offer-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .trader-name {
@@ -4323,6 +4330,21 @@
     display: flex;
     align-items: center;
     gap: 5px;
+}
+.chat-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 3px;
+    opacity: 0.8;
+}
+
+.chat-bubble.mine .chat-meta {
+    color: #e0f7fa; /* የላኪው ስም ቀለም (ለኔ) */
+}
+
+.chat-bubble.theirs .chat-meta {
+    color: #ffd700; /* የሌላኛው ሰው ስም ቀለም */
 }
 
 .price-tag {
@@ -12039,18 +12061,24 @@ window.handleChatEnter = (e) => {
 window.sendChatMessage = async () => {
     const input = document.getElementById('chat-input-field');
     const text = input.value.trim();
-    if(!text || !window.activeTradeId) return; // window. የሚለውን ጨምሬበታለሁ
+    
+    // activeTradeId እና ተጠቃሚው መኖራቸውን ማረጋገጥ
+    if(!text || !window.activeTradeId || !currentFirebaseUserId) return; 
 
     input.value = '';
     
     try {
         await addDoc(collection(db, "p2p_trades", window.activeTradeId, "messages"), {
             sender_id: currentFirebaseUserId,
+            // ማሳሰቢያ፡ currentUserName የሚለው variable ስሙን የያዘ መሆኑን አረጋግጥ
+            sender_name: typeof currentUserName !== 'undefined' ? currentUserName : "User", 
             text: text,
             timestamp: serverTimestamp()
         });
+        console.log("መልዕክቱ ተልኳል!");
     } catch(e) {
         console.error("Chat Error", e);
+        alert("መልዕክቱ አልተላከም!");
     }
 };
 
@@ -12311,50 +12339,100 @@ window.cancelActiveTrade = async () => {
     closeTradeRoom();
 };
 
+// በነባሩ window.fetchMyAds ምትክ ይህንን ተጠቀም
+
 window.fetchMyAds = async () => {
     const listContainer = document.getElementById('p2p-my-ads-list');
     if(!listContainer) return;
     
-    listContainer.innerHTML = '<div class="spinner"></div>';
+    listContainer.innerHTML = '<div class="spinner"></div><p style="text-align:center">Loading orders...</p>';
 
     try {
-        const q = query(
+        let html = '';
+
+        // 1. ACTIVE TRADES (እየተካሄዱ ያሉ ግብይቶች)
+        // እኔ ገዢ ወይም ሻጭ የሆንኩበትን እና ያልተጠናቀቁትን (completed ያልሆኑትን) እፈልጋለሁ
+        
+        // ሀ. እኔ ገዢ የሆንኩባቸው
+        const qBuyer = query(
+            collection(db, "p2p_trades"), 
+            where("buyer_id", "==", currentFirebaseUserId),
+            where("status", "in", ["pending", "paid", "dispute"])
+        );
+        
+        // ለ. እኔ ሻጭ የሆንኩባቸው
+        const qSeller = query(
+            collection(db, "p2p_trades"), 
+            where("seller_id", "==", currentFirebaseUserId),
+            where("status", "in", ["pending", "paid", "dispute"])
+        );
+
+        const [snapBuyer, snapSeller] = await Promise.all([getDocs(qBuyer), getDocs(qSeller)]);
+        
+        // Active Trades HTML ማዘጋጀት
+        if (!snapBuyer.empty || !snapSeller.empty) {
+            html += `<h4 style="color:var(--et-yellow); margin:10px 0;">⏳ በሂደት ላይ ያሉ (Active Orders)</h4>`;
+            
+            const processTrade = (doc, role) => {
+                const data = doc.data();
+                const isActionNeeded = (role === 'Seller' && data.status === 'paid') || (role === 'Buyer' && data.status === 'pending');
+                const badgeColor = isActionNeeded ? "red" : "#555";
+                
+                return `
+                <div class="modern-card" onclick="openTradeRoom('${doc.id}')" style="cursor:pointer; border-left: 4px solid #00A3FF; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; color:white;">${role === 'Buyer' ? 'Buying' : 'Selling'} - ${data.amount} Coins</div>
+                            <div style="font-size:12px; color:#aaa;">Status: <span style="color:white; background:${badgeColor}; padding:2px 6px; border-radius:4px;">${data.status.toUpperCase()}</span></div>
+                        </div>
+                        <div style="font-size:20px;">➡️</div>
+                    </div>
+                </div>`;
+            };
+
+            snapBuyer.forEach(doc => html += processTrade(doc, 'Buyer'));
+            snapSeller.forEach(doc => html += processTrade(doc, 'Seller'));
+        }
+
+        // 2. MY ADS (እኔ የለጠፍኩት ማስታወቂያ ግን ማንም ያልገዛው)
+        const qAds = query(
             collection(db, "p2p_market"),
             where("creator_id", "==", currentFirebaseUserId),
+            where("status", "==", "open"), // open የሆኑትን ብቻ
             orderBy("created_at", "desc")
         );
 
-        const snapshot = await getDocs(q);
+        const snapAds = await getDocs(qAds);
         
-        if (snapshot.empty) {
-            listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">የለጠፉት ማስታወቂያ የለም።</p>';
-            return;
+        if (!snapAds.empty) {
+            html += `<h4 style="color:var(--et-green); margin:20px 0 10px 0;">📢 የለጠፍኳቸው ማስታወቂያዎች</h4>`;
+            snapAds.forEach(doc => {
+                const data = doc.data();
+                html += `
+                <div class="modern-card" style="margin-bottom:10px; border-left: 4px solid var(--et-green);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; color:white;">${data.type.toUpperCase()} - ${data.amount} Coins</div>
+                            <div style="font-size:12px; color:#aaa;">${data.price} ETB | Open</div>
+                        </div>
+                        <button onclick="deleteMyAd('${doc.id}')" style="background:none; border:none; color:var(--et-red); font-size:18px; padding:10px;">🗑️</button>
+                    </div>
+                </div>`;
+            });
         }
 
-        let html = '';
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const statusColor = data.status === 'open' ? 'var(--et-green)' : 'orange';
-            
-            html += `
-            <div class="modern-card" style="margin-bottom:10px; border-left: 4px solid ${statusColor};">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:bold; color:white;">${data.type.toUpperCase()} - ${data.amount} Coins</div>
-                        <div style="font-size:12px; color:#aaa;">Price: ${data.price} ETB | ${data.status}</div>
-                    </div>
-                    ${data.status === 'open' ? 
-                        `<button onclick="deleteMyAd('${doc.id}')" style="background:none; border:none; color:var(--et-red); font-size:18px;">🗑️</button>` 
-                        : ''}
-                </div>
-            </div>`;
-        });
+        if (html === '') {
+            html = '<div style="text-align:center; padding:30px; color:#666;">ምንም የተጀመረ ግብይት የለም።</div>';
+        }
+
         listContainer.innerHTML = html;
+
     } catch (e) {
-        console.error(e);
-        listContainer.innerHTML = '<p style="color:red;">Error loading ads.</p>';
+        console.error("Orders Error:", e);
+        listContainer.innerHTML = `<p style="color:red; text-align:center">Error: ${e.message}</p>`;
     }
 };
+
 
 window.deleteMyAd = async (adId) => {
     if(!confirm("ይህንን ማስታወቂያ መሰረዝ ይፈልጋሉ? የተያዘ ኮይን ወይም ሳንቲም ካለ ይመለሳል።")) return;
