@@ -4422,19 +4422,28 @@
 .status-badge.completed { background: #4CAF50; color: white; }
 .status-badge.cancelled { background: #555; color: #aaa; }
 .status-badge.dispute { background: #F44336; color: white; }
-
+/* የተስተካከለ የ Trade Room CSS */
 #p2p-trade-room {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100vh !important;
-    background-color: #000 !important;
-    z-index: 9999 !important;
-    overflow-y: auto !important;
-    padding: 20px;
-    padding-bottom: 150px !important;
+    position: absolute; /* fixed የነበረው ተቀይሯል */
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    min-height: 100vh;
+    background: #000;
+    z-index: 200;
+    padding: 15px;
+    box-sizing: border-box;
+    padding-bottom: 150px; /* ለታችኛው buttons ቦታ */
 }
+
+.trade-header-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
+}
+
 
 
 .star-rating span:hover {
