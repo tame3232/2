@@ -4423,42 +4423,64 @@
 .status-badge.cancelled { background: #555; color: #aaa; }
 .status-badge.dispute { background: #F44336; color: white; }
 /* የተስተካከለ የ Trade Room CSS */
+/* === P2P TRADE ROOM FIXED LAYOUT === */
 #p2p-trade-room {
-    position: absolute; /* fixed የነበረው ተቀይሯል */
+    position: fixed;
     top: 0; 
     left: 0; 
     width: 100%; 
-    min-height: 100vh;
+    height: 100vh; /* ሙሉ ስክሪን */
     background: #000;
     z-index: 200;
-    padding: 15px;
-    box-sizing: border-box;
-    padding-bottom: 150px; /* ለታችኛው buttons ቦታ */
+    display: flex;       /* Flexbox እንጠቀማለን */
+    flex-direction: column; 
+    padding: 0;          /* Padding እናጠፋለን */
+    overflow: hidden;    /* ሙሉ ገጹ እንዳይንሸራተት */
 }
 
-.trade-header-status {
+/* የሚንሸራተተው የውስጥ ክፍል ብቻ እንዲሆን */
+.trade-scroll-area {
+    flex: 1;             /* የቀረውን ቦታ ሁሉ ይውሰድ */
+    overflow-y: auto;    /* ወደ ታች እንዲንሸራተት */
+    padding: 20px;
+    padding-bottom: 100px; /* አዝራሮቹ እንዳይጋርዱት ቦታ እንሰጣለን */
+}
+
+/* የቻት ሳጥን */
+.chat-container {
+    background: #111;
+    border-radius: 10px;
+    height: 200px;       /* ቋሚ ቁመት */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #333;
+    flex-direction: column;
+    margin-top: 15px;
+    border: 1px solid #333;
+    flex-shrink: 0;      /* እንዳይጨፈላለቅ */
 }
 
+/* አዝራሮች ከታች እንዲጣበቁ (Fixed Bottom) */
+#trade-actions-area {
+    position: absolute;  /* ከ Trade Room አንፃር */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 20px;
+    background: #111;    /* ከኋላ እንዳያሳይ */
+    border-top: 1px solid #333;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+    z-index: 210;
+    box-sizing: border-box;
+}
+
+/* Modals - ከሁሉም በላይ (Receipt & Rating) */
+.custom-modal {
+    z-index: 99999 !important; /* ከሁሉም በላይ */
+}
 
 
 .star-rating span:hover {
     transform: scale(1.2);
     color: #FFD700;
-}
-/* === CHAT STYLES === */
-.chat-container {
-    background: #1a1a1a;
-    border-radius: 12px;
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    height: 350px;
-    border: 1px solid #333;
 }
 
 .chat-messages {
@@ -4534,15 +4556,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.chat-container {
-    background: #111;
-    border-radius: 10px;
-    height: 300px;
-    display: flex;
-    flex-direction: column;
-    margin-top: 15px;
-    border: 1px solid #333;
 }
 
 .chat-messages {
@@ -5381,55 +5394,54 @@
         <p style="text-align: center; color: #666;">Loading...</p>
     </div>
 </div>
-
 <div id="p2p-trade-room" class="p2p-content-section" style="display: none;">
-    <div class="trade-header-status">
-        <button onclick="closeTradeRoom()" style="background:none; border:none; color:white; font-size:20px;">← Back</button>
-        <div style="text-align:right;">
-            <span id="trade-status-badge" class="status-badge pending">PENDING</span>
-            <div id="trade-timer" style="color: var(--et-red); font-weight:bold; font-size:14px;">15:00</div>
+    <div class="trade-scroll-area">
+        <div class="trade-header-status">
+            <button onclick="closeTradeRoom()" style="background:none; border:none; color:white; font-size:20px;">← Back</button>
+            <div style="text-align:right;">
+                <span id="trade-status-badge" class="status-badge pending">PENDING</span>
+                <div id="trade-timer" style="color: var(--et-red); font-weight:bold; font-size:14px;">15:00</div>
+            </div>
         </div>
-    </div>
 
-    <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #222;">
-        <h2 id="trade-amount-display" style="color: var(--et-green); margin:0;">0 Coins</h2>
-        <p style="color: #aaa; font-size: 12px;">Price: <span id="trade-price-display">0</span> ETB</p>
-        <hr style="border-color: #444;">
-        <div style="display:flex; justify-content:space-between;">
-            <span style="color:white;">የሚከፍሉት:</span>
-            <strong style="color:var(--et-yellow); font-size:18px;"><span id="trade-total-fiat">0</span> ETB</strong>
+        <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #222;">
+            <h2 id="trade-amount-display" style="color: var(--et-green); margin:0;">0 Coins</h2>
+            <p style="color: #aaa; font-size: 12px;">Price: <span id="trade-price-display">0</span> ETB</p>
+            <hr style="border-color: #444;">
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:white;">የሚከፍሉት:</span>
+                <strong style="color:var(--et-yellow); font-size:18px;"><span id="trade-total-fiat">0</span> ETB</strong>
+            </div>
         </div>
-    </div>
 
-    <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #1a1a1a; border-left: 4px solid #00A3FF;">
-        <h4 style="margin-top:0; color:#ddd;">🏦 የመክፈያ መረጃ (Seller Info)</h4>
-        <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ባንክ/ዘዴ: <strong id="trade-bank-name" style="color:white;">---</strong></p>
-        <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ስም: <strong id="trade-seller-name" style="color:white;">---</strong></p>
-        <div style="background: #333; padding: 8px; border-radius: 5px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="trade-account-num" style="color:white; font-family:monospace; font-size:16px;">---</span>
-            <button onclick="copyTradeAccount()" style="background:black; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px;">COPY</button>
+        <div class="modern-card" style="margin-top: 10px; padding: 15px; background: #1a1a1a; border-left: 4px solid #00A3FF;">
+            <h4 style="margin-top:0; color:#ddd;">🏦 የመክፈያ መረጃ (Seller Info)</h4>
+            <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ባንክ/ዘዴ: <strong id="trade-bank-name" style="color:white;">---</strong></p>
+            <p style="color: #aaa; font-size:13px; margin-bottom: 5px;">ስም: <strong id="trade-seller-name" style="color:white;">---</strong></p>
+            <div style="background: #333; padding: 8px; border-radius: 5px; display:flex; justify-content:space-between; align-items:center;">
+                <span id="trade-account-num" style="color:white; font-family:monospace; font-size:16px;">---</span>
+                <button onclick="copyTradeAccount()" style="background:black; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px;">COPY</button>
+            </div>
+            <p style="font-size:10px; color:orange; margin-top:5px;">⚠️ ማሳሰቢያ፡ ክፍያ ሲፈጽሙ በ Reference ቦታ ላይ ይህን ኮድ ያስገቡ: <b id="trade-ref-code">---</b></p>
         </div>
-        <p style="font-size:10px; color:orange; margin-top:5px;">⚠️ ማሳሰቢያ፡ ክፍያ ሲፈጽሙ በ Reference ቦታ ላይ ይህን ኮድ ያስገቡ: <b id="trade-ref-code">---</b></p>
-    </div>
-<div id="p2p-chat-section" class="chat-container">
-    <div class="chat-header" style="padding: 10px; border-bottom: 1px solid #333; font-size: 12px; color: #888; text-align: center;">
-        🔒 ደህንነቱ የተጠበቀ የውስጥ መወያያ
-    </div>
-    
-    <div id="chat-messages-list" class="chat-messages">
-        <p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">
-            እዚህ መነጋገር ትችላላችሁ።<br>ደረሰኝ ወይም መረጃ ለመለዋወጥ ይጠቅማል።
-        </p>
-    </div>
 
-    <div class="chat-input-area">
-        <input type="text" id="chat-input-field" class="chat-input" placeholder="መልእክት ይጻፉ..." onkeypress="handleChatEnter(event)">
-        <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
-    </div>
-</div>
+        <div id="p2p-chat-section" class="chat-container">
+            <div class="chat-header" style="padding: 10px; border-bottom: 1px solid #333; font-size: 12px; color: #888; text-align: center;">
+                🔒 ደህንነቱ የተጠበቀ የውስጥ መወያያ
+            </div>
+            
+            <div id="chat-messages-list" class="chat-messages">
+                <p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">
+                    እዚህ መነጋገር ትችላላችሁ።
+                </p>
+            </div>
 
-    <div id="trade-actions-area" style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:#111; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); display:flex; flex-direction:column; gap:10px;">
-        
+            <div class="chat-input-area">
+                <input type="text" id="chat-input-field" class="chat-input" placeholder="መልእክት ይጻፉ..." onkeypress="handleChatEnter(event)">
+                <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+            </div>
+        </div>
+    </div> <div id="trade-actions-area">
         <div id="buyer-controls" style="display:none;">
             <button onclick="markTradePaid()" class="confirm-btn" style="width:100%; background: #00A3FF;">✅ ከፍያለሁ (I have Paid)</button>
             <button onclick="cancelActiveTrade()" class="cancel-btn" style="width:100%; margin-top:10px; background:#333;">❌ ሰርዝ (Cancel)</button>
@@ -5444,9 +5456,6 @@
         </div>
     </div>
 </div>
-
-
-
 
 
     <div id="p2p-section-market" class="p2p-content-section">
@@ -12256,73 +12265,147 @@ window.closeTradeRoom = () => {
     window.switchP2PTab('market');
 };
 
-// 1. ገዢው ከፍያለሁ ሲል
 window.markTradePaid = async () => {
     if(!confirm("እርግጠኛ ነዎት ብሩን ልከዋል? ሀሰተኛ መረጃ ከሆነ ይቀጣሉ!")) return;
     
-    await updateDoc(doc(db, "p2p_trades", activeTradeId), {
-        status: 'paid',
-        paid_at: serverTimestamp()
-    });
-    const tSnap = await getDoc(doc(db, "p2p_trades", activeTradeId));
-    const tData = tSnap.data();
-    const sSnap = await getDoc(doc(db, "users", tData.seller_id));
-    const sellerTgId = sSnap.data()?.telegram_id;
+    WebApp.MainButton.showProgress();
 
-    if (sellerTgId) {
-        fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                custom_chat_id: String(sellerTgId),
-                message: `🔔 <b>ክፍያ ተፈጽሟል!</b>\n📦 ID: #${activeTradeId.slice(0,6)}\n💰 መጠን: ${tData.amount} Coins\nእባክዎ ባንክዎን ያረጋግጡ።`
-            })
-        }).catch(e => console.log("Notif error"));
+    try {
+        const timestamp = serverTimestamp();
+        
+        // 1. Status Update
+        await updateDoc(doc(db, "p2p_trades", activeTradeId), {
+            status: 'paid',
+            paid_at: timestamp
+        });
+
+        // 2. ለሻጩ Notification መላክ (ዝርዝር መረጃ የያዘ)
+        const tSnap = await getDoc(doc(db, "p2p_trades", activeTradeId));
+        const tData = tSnap.data();
+        
+        // ሻጩን ከ Database እንፈልጋለን (ID String ይሁን Number ችግር እንዳይፈጥር)
+        const sSnap = await getDoc(doc(db, "users", tData.seller_id));
+        
+        if (sSnap.exists()) {
+            const sellerData = sSnap.data();
+            const sellerTgId = sellerData.telegram_id; // ይህ ቁጥር ወይም ፊደል ሊሆን ይችላል
+            
+            // የገዢው ስም
+            const buyerName = currentUserDocData.first_name || "ተጠቃሚ";
+            const dateStr = new Date().toLocaleString();
+
+            if (sellerTgId) {
+                // String(...) በመጠቀም ወደ ቴክስት እንቀይረዋለን - ለቦቱ እንዲመች
+                fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        custom_chat_id: String(sellerTgId), // 🔥 Critical Fix: String conversion
+                        message: `🔔 <b>ክፍያ ተፈጽሟል! (Payment Made)</b>\n\n` +
+                                 `👤 <b>ገዢ:</b> ${buyerName}\n` +
+                                 `📦 <b>ID:</b> #${activeTradeId.slice(0,6).toUpperCase()}\n` +
+                                 `💰 <b>መጠን:</b> ${tData.amount} Coins\n` +
+                                 `💵 <b>ብር:</b> ${tData.total_fiat} ETB\n` +
+                                 `📅 <b>ቀን:</b> ${dateStr}\n\n` +
+                                 `⚠️ እባክዎ ባንክዎን ያረጋግጡና ኮይኑን ይልቀቁ!`
+                    })
+                }).catch(e => console.log("Notif error", e));
+            }
+        }
+        
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert("ለሻጩ መልዕክት ተልኳል! እባክዎ እስኪረጋገጥ ይጠብቁ።");
+
+    } catch(e) {
+        WebApp.MainButton.hideProgress();
+        console.error(e);
+        WebApp.showAlert("Error: " + e.message);
     }
-
-
-
 };
+
 window.releaseTradeCoins = async () => {
-    if(!confirm("ብሩ መግባቱን አረጋግጠዋል? ኮይኑን ለገዢው ይለቀቃል!")) return;
+    if(!confirm("ብሩ ወደ ባንክዎ መግባቱን አረጋግጠዋል? ኮይኑን ለገዢው ይለቀቃል!")) return;
     
     WebApp.MainButton.showProgress();
     
     try {
+        let buyerTgId = null;
+        let buyerName = "Buyer";
+        let amount = 0;
+        let sellerName = currentUserDocData.first_name || "Seller";
+
         await runTransaction(db, async (transaction) => {
             const tradeRef = doc(db, "p2p_trades", activeTradeId);
             const tradeSnap = await transaction.get(tradeRef);
+            
+            if (!tradeSnap.exists()) throw "Trade not found!";
             const tData = tradeSnap.data();
             
-            // 1. የገዢውን ሂሳብ መጨመር
+            if (tData.status === 'completed') throw "ይህ ግብይት ከዚህ በፊት ተጠናቅቋል!";
+            
+            amount = tData.amount;
+
+            // 1. የገዢውን ሂሳብ መጨመር 
+            // 🔥 ማስታወሻ: እዚህ ጋር tData.buyer_id እንጠቀማለን። ይሄ የ Document ID ስለሆነ
+            // ውስጥ ያለው telegram_id string ሆነ number ችግር የለውም።
             const buyerRef = doc(db, "users", tData.buyer_id);
+            const buyerSnap = await transaction.get(buyerRef);
+            
+            if(buyerSnap.exists()) {
+                 const bData = buyerSnap.data();
+                 buyerTgId = bData.telegram_id; // ለ Notification እንይዘዋለን
+                 buyerName = bData.first_name || "Buyer";
+            }
+
             transaction.update(buyerRef, { total_score: increment(tData.amount) });
             
             // 2. ግብይቱን መጨረስ
-            transaction.update(tradeRef, { status: 'completed' });
+            transaction.update(tradeRef, { status: 'completed', completed_at: serverTimestamp() });
 
-            // 3. ማስታወቂያውን መዝጋት
+            // 3. ማስታወቂያውን መዝጋት (Sold)
             const adRef = doc(db, "p2p_market", tData.ad_id);
             transaction.update(adRef, { status: 'sold' });
             
-            // የታለመለትን ሰው ID ለ Rating ማዘጋጀት
-            ratingTargetUserId = tData.seller_id;
+            // ለ Rating እንይዘዋለን
+            ratingTargetUserId = tData.buyer_id; // እዚህ ጋር እንደፈለጉ መቀየር ይችላሉ (ሻጩ ለገዢው rate እንዲሰጥ ከፈለጉ)
         });
         
         WebApp.MainButton.hideProgress();
-        WebApp.showAlert("ኮይን ወይም ሳንቲሙ በተሳካ ሁኔታ ተለቋል! ✅");
+        WebApp.showAlert("ኮይን በተሳካ ሁኔታ ተለቋል! ✅");
+
+        // 🔥 Notification ለገዢው መላክ
+        if (buyerTgId) {
+            fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    custom_chat_id: String(buyerTgId), // String conversion is SAFE
+                    message: `🎉 <b>ግብይቱ ተጠናቀቀ! (Trade Completed)</b>\n\n` +
+                             `✅ ሻጩ ክፍያውን አረጋግጦ ኮይኑን ለቀዋል!\n` +
+                             `💰 <b>የገባላችሁ:</b> +${amount} Coins\n` +
+                             `👤 <b>ሻጭ:</b> ${sellerName}\n\n` +
+                             `አሁን Balance ገብተው ማረጋገጥ ይችላሉ።`
+                })
+            }).catch(e => console.log("Buyer Notif failed", e));
+        }
+
+        // 🔥 ደረሰኝ እና Rating ማሳየት
+        // Trade Room ሳንዘጋ በላዩ ላይ እናሳያለን
+        showReceipt("P2P-"+activeTradeId.slice(0,6).toUpperCase(), sellerName, buyerName, amount, 0);
         
-        // ደረሰኝ ማሳየት
-        showReceipt("P2P-"+activeTradeId, "Seller", "Buyer", tData.amount, 0);
-        
-        // Rating Modal ማሳየት (ከተፈለገ)
-        document.getElementById('rating-modal').style.display = 'flex';
+        // ደረሰኙ ሲዘጋ Rating እንዲመጣ ከፈለጉ showReceipt ላይ Logic መጨመር ያስፈልጋል
+        // ወይም ደግሞ ቀጥታ Rating Modal ማሳየት:
+        setTimeout(() => {
+             document.getElementById('rating-modal').style.display = 'flex';
+        }, 1000);
         
     } catch (e) {
         WebApp.MainButton.hideProgress();
         WebApp.showAlert("መልቀቅ አልተቻለም: " + e);
+        console.error(e);
     }
 };
+
 
 // 3. ክርክር (Dispute)
 window.disputeTrade = async () => {
@@ -12877,6 +12960,10 @@ window.setRating = (stars) => {
 window.submitUserRating = async () => {
     if (selectedRating === 0) return WebApp.showAlert("እባክዎ መጀመሪያ ኮከብ ይምረጡ!");
 
+    // Button Loading state (Optional)
+    const btn = document.querySelector('#rating-modal .action-btn');
+    if(btn) btn.innerText = "በመመዝገብ ላይ...";
+
     try {
         const userRef = doc(db, "users", ratingTargetUserId);
         
@@ -12888,20 +12975,35 @@ window.submitUserRating = async () => {
             const currentTotalRating = userData.total_rating_sum || 0;
             const currentRatingCount = userData.rating_count || 0;
 
+            const newTotal = currentTotalRating + selectedRating;
+            const newCount = currentRatingCount + 1;
+            // አማካዩን ማስላት (ለምሳሌ 4.5)
+            const newAverage = (newTotal / newCount).toFixed(1);
+
             transaction.update(userRef, {
-                total_rating_sum: currentTotalRating + selectedRating,
-                rating_count: currentRatingCount + 1
+                total_rating_sum: newTotal,
+                rating_count: newCount,
+                average_rating: parseFloat(newAverage) 
             });
         });
 
+        // 1. ሞዳሉን መዝጋት
         document.getElementById('rating-modal').style.display = 'none';
+        
+        // 2. ምስጋና ማሳየት
         WebApp.showAlert("ለሰጡት አስተያየት እናመሰግናለን! ⭐");
+
+        // 3. 🔥 ትሬድ ሩሙን አሁን መዝጋት ይቻላል (ምክንያቱም ስራው ተጠናቋል)
+        if (typeof closeTradeRoom === "function") {
+            closeTradeRoom();
+        }
+
     } catch (e) {
         console.error("Rating Error:", e);
         WebApp.showAlert("ደረጃውን ለመመዝገብ አልተቻለም።");
+        if(btn) btn.innerText = "Submit Rating";
     }
 };
-
 
         // ======================================================================
         //                         MAIN RENDER FUNCTION
