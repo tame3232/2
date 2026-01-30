@@ -4431,7 +4431,7 @@
     width: 100%; 
     height: 100vh; /* ሙሉ ስክሪን */
     background: #000;
-    z-index: 200;
+     z-index: 20000 !important;
     display: flex;       /* Flexbox እንጠቀማለን */
     flex-direction: column; 
     padding: 0;          /* Padding እናጠፋለን */
@@ -4443,7 +4443,7 @@
     flex: 1;             /* የቀረውን ቦታ ሁሉ ይውሰድ */
     overflow-y: auto;    /* ወደ ታች እንዲንሸራተት */
     padding: 20px;
-    padding-bottom: 100px; /* አዝራሮቹ እንዳይጋርዱት ቦታ እንሰጣለን */
+    padding-bottom: 120px; /* አዝራሮቹ እንዳይጋርዱት ቦታ እንሰጣለን */
 }
 
 /* የቻት ሳጥን */
@@ -4464,7 +4464,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 15px 20px;
+    padding: 15px 20px 25px 20px;
     background: #111;    /* ከኋላ እንዳያሳይ */
     border-top: 1px solid #333;
     box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
@@ -4697,7 +4697,79 @@
 }
 
 
+/* === MODERN MY ORDERS STYLING === */
+.order-card {
+    background: linear-gradient(145deg, #1a1a1a, #111);
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+}
 
+.order-card:active {
+    transform: scale(0.98);
+}
+
+.order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-type-badge {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+.type-buying { background: rgba(0, 200, 83, 0.2); color: #00c853; }
+.type-selling { background: rgba(255, 61, 0, 0.2); color: #ff3d00; }
+
+.order-coins {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.order-status-pill {
+    font-size: 11px;
+    background: #333;
+    color: #bbb;
+    padding: 4px 10px;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.status-paid { background: #007bff; color: white; animation: pulse 2s infinite; }
+
+.view-order-btn {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+ይህ ዝም ብዬ ccs style ውስጥ ለስገባው ወይስ የሚቀየር አለ??
 
 </style>
 <body>
@@ -5934,7 +6006,8 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
         let currentTickets = 0; 
         let currentUserDocData = null; 
         let currentRank = 'N/A'; 
-        let isReflexGameRunning = false; 
+        let isReflexGameRunning = false;
+         let ratingTargetUserId = null; 
         let timerIntervals = {}; // ለሁሉም Cooldown Timers የሚውል
         let hasLaunchAdShown = false;
         onAuthStateChanged(auth, (user) => {
@@ -12324,6 +12397,7 @@ window.markTradePaid = async () => {
 };
 
 window.releaseTradeCoins = async () => {
+    // 1. ማረጋገጫ
     if(!confirm("ብሩ ወደ ባንክዎ መግባቱን አረጋግጠዋል? ኮይኑን ለገዢው ይለቀቃል!")) return;
     
     WebApp.MainButton.showProgress();
@@ -12334,6 +12408,7 @@ window.releaseTradeCoins = async () => {
         let amount = 0;
         let sellerName = currentUserDocData.first_name || "Seller";
 
+        // 2. Transaction ማስጀመር
         await runTransaction(db, async (transaction) => {
             const tradeRef = doc(db, "p2p_trades", activeTradeId);
             const tradeSnap = await transaction.get(tradeRef);
@@ -12345,66 +12420,66 @@ window.releaseTradeCoins = async () => {
             
             amount = tData.amount;
 
-            // 1. የገዢውን ሂሳብ መጨመር 
-            // 🔥 ማስታወሻ: እዚህ ጋር tData.buyer_id እንጠቀማለን። ይሄ የ Document ID ስለሆነ
-            // ውስጥ ያለው telegram_id string ሆነ number ችግር የለውም።
+            // 🔥 የገዢውን ID ማግኘት (buyer_id Document ID ስለሆነ ሁሌም String ነው - ችግር የለውም)
             const buyerRef = doc(db, "users", tData.buyer_id);
             const buyerSnap = await transaction.get(buyerRef);
             
             if(buyerSnap.exists()) {
                  const bData = buyerSnap.data();
-                 buyerTgId = bData.telegram_id; // ለ Notification እንይዘዋለን
+                 buyerTgId = bData.telegram_id; // ይህ Number ወይም String ሊሆን ይችላል
                  buyerName = bData.first_name || "Buyer";
             }
 
+            // 3. ኮይኑን መጨመር
             transaction.update(buyerRef, { total_score: increment(tData.amount) });
             
-            // 2. ግብይቱን መጨረስ
+            // 4. ሁኔታውን ወደ Completed መቀየር
             transaction.update(tradeRef, { status: 'completed', completed_at: serverTimestamp() });
 
-            // 3. ማስታወቂያውን መዝጋት (Sold)
+            // 5. ማስታወቂያውን መዝጋት
             const adRef = doc(db, "p2p_market", tData.ad_id);
             transaction.update(adRef, { status: 'sold' });
             
-            // ለ Rating እንይዘዋለን
-            ratingTargetUserId = tData.buyer_id; // እዚህ ጋር እንደፈለጉ መቀየር ይችላሉ (ሻጩ ለገዢው rate እንዲሰጥ ከፈለጉ)
+            // ለ Rating ማዘጋጀት
+            ratingTargetUserId = tData.buyer_id;
         });
         
         WebApp.MainButton.hideProgress();
         WebApp.showAlert("ኮይን በተሳካ ሁኔታ ተለቋል! ✅");
 
-        // 🔥 Notification ለገዢው መላክ
+        // 🔥 CRITICAL FIX: Notification በሚላክበት ጊዜ IDውን ወደ String መቀየር
+        // ይህ ካልተደረገ የድሮ/አዲስ User ልዩነት ኮዱን ይሰብረዋል
         if (buyerTgId) {
             fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    custom_chat_id: String(buyerTgId), // String conversion is SAFE
+                    custom_chat_id: String(buyerTgId), // 🔥 String() ወሳኝ ነው!
                     message: `🎉 <b>ግብይቱ ተጠናቀቀ! (Trade Completed)</b>\n\n` +
                              `✅ ሻጩ ክፍያውን አረጋግጦ ኮይኑን ለቀዋል!\n` +
                              `💰 <b>የገባላችሁ:</b> +${amount} Coins\n` +
                              `👤 <b>ሻጭ:</b> ${sellerName}\n\n` +
                              `አሁን Balance ገብተው ማረጋገጥ ይችላሉ።`
                 })
-            }).catch(e => console.log("Buyer Notif failed", e));
+            }).catch(e => console.log("Notification Failed but Trade Success:", e));
         }
 
-        // 🔥 ደረሰኝ እና Rating ማሳየት
-        // Trade Room ሳንዘጋ በላዩ ላይ እናሳያለን
+        // ደረሰኝ ማሳየት
         showReceipt("P2P-"+activeTradeId.slice(0,6).toUpperCase(), sellerName, buyerName, amount, 0);
         
-        // ደረሰኙ ሲዘጋ Rating እንዲመጣ ከፈለጉ showReceipt ላይ Logic መጨመር ያስፈልጋል
-        // ወይም ደግሞ ቀጥታ Rating Modal ማሳየት:
+        // Rating ማሳየት
         setTimeout(() => {
+             document.getElementById('receipt-modal').style.display = 'none';
              document.getElementById('rating-modal').style.display = 'flex';
-        }, 1000);
+        }, 2000);
         
     } catch (e) {
         WebApp.MainButton.hideProgress();
-        WebApp.showAlert("መልቀቅ አልተቻለም: " + e);
-        console.error(e);
+        WebApp.showAlert("Error: " + e);
+        console.error("Release Error:", e);
     }
 };
+
 
 
 // 3. ክርክር (Dispute)
@@ -12469,23 +12544,39 @@ window.fetchMyAds = async () => {
         if (!snapBuyer.empty || !snapSeller.empty) {
             html += `<h4 style="color:var(--et-yellow); margin:10px 0;">⏳ በሂደት ላይ ያሉ (Active Orders)</h4>`;
             
-            const processTrade = (doc, role) => {
-                const data = doc.data();
-                const isActionNeeded = (role === 'Seller' && data.status === 'paid') || (role === 'Buyer' && data.status === 'pending');
-                const badgeColor = isActionNeeded ? "red" : "#555";
-                
-                return `
-                <div class="modern-card" onclick="openTradeRoom('${doc.id}')" style="cursor:pointer; border-left: 4px solid #00A3FF; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:bold; color:white;">${role === 'Buyer' ? 'Buying' : 'Selling'} - ${data.amount} Coins</div>
-                            <div style="font-size:12px; color:#aaa;">Status: <span style="color:white; background:${badgeColor}; padding:2px 6px; border-radius:4px;">${data.status.toUpperCase()}</span></div>
-                        </div>
-                        <div style="font-size:20px;">➡️</div>
-                    </div>
-                </div>`;
-            };
+     const processTrade = (doc, role) => {
+    const data = doc.data();
+    
+    // 1. ዳታው መኖሩን ማረጋገጥ (TypeError እንዳይመጣ ይከላከላል)
+    if (!data || !data.status) return ''; 
 
+    const isBuying = role === 'Buyer';
+    
+    // 2. Status color logic (ከ CSS ክፍሎች ጋር ማገናኘት)
+    let statusClass = 'pill-pending';
+    if(data.status === 'paid') statusClass = 'pill-paid';
+    if(data.status === 'dispute') statusClass = 'pill-dispute';
+    
+    // 3. ቁጥሩን በኮማ መለየት (ለምሳሌ 1,000,000)
+    const formattedAmount = Number(data.amount || 0).toLocaleString();
+
+    return `
+    <div class="modern-order-card" onclick="openTradeRoom('${doc.id}')">
+        <div class="order-main-info">
+            <span class="order-badge ${isBuying ? 'badge-buying' : 'badge-selling'}">
+                ${isBuying ? '🛒 Buying' : '💰 Selling'}
+            </span>
+            <div class="order-amount-text">${formattedAmount} Coins</div>
+            <div class="order-status-pill ${statusClass}">
+                ● ${data.status.toUpperCase()}
+            </div>
+        </div>
+        <div class="order-arrow-icon">
+            ›
+        </div>
+    </div>`;
+};
+       
             snapBuyer.forEach(doc => html += processTrade(doc, 'Buyer'));
             snapSeller.forEach(doc => html += processTrade(doc, 'Seller'));
         }
@@ -12946,7 +13037,7 @@ async function fetchP2PHistory() {
     }
 }
 let selectedRating = 0;
-let ratingTargetUserId = null; // የሻጩ ID
+
 
 window.setRating = (stars) => {
     selectedRating = stars;
