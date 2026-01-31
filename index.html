@@ -12007,9 +12007,11 @@ window.fetchMarketOffers = async () => {
             const data = doc.data();     
      const timeDisplay = timeAgo(data.created_at);
 
-const avgRating = data.rating_count > 0 
-    ? (data.total_rating_sum / data.rating_count).toFixed(1) 
+const avgRating = (data.average_rating !== undefined && data.average_rating !== null) 
+    ? Number(data.average_rating).toFixed(1) 
     : "0.0";
+const ratingCount = data.rating_count || 0;
+
 
             const badgeClass = data.payment_method === 'Telebirr' ? 'pm-telebirr' : 'pm-cbe';
             
@@ -12103,7 +12105,7 @@ window.postMarketAd = async () => {
             const userRef = doc(db, "users", currentFirebaseUserId);
             const userSnap = await transaction.get(userRef);
             const currentBalance = userSnap.data().total_score || 0;
-            const userData = usersSnap.data();
+            const userData = userSnap.data();
             const sellerAvg = userData.average_rating || 0;
             const sellerCount = userData.rating_count || 0;
             const sellerSum = userData.total_rating_sum || 0;
