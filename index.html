@@ -12464,8 +12464,19 @@ window.releaseTradeCoins = async () => {
             }).catch(e => console.log("Notification Failed but Trade Success:", e));
         }
 
-        // ደረሰኝ ማሳየት
-        showReceipt("P2P-"+activeTradeId.slice(0,6).toUpperCase(), sellerName, buyerName, amount, 0);
+if (!activeTradeId) {
+  console.error("Trade ID missing");
+  return;
+}
+
+showReceipt(
+  "P2P-" + activeTradeId.slice(0,6).toUpperCase(),
+  sellerName,
+  buyerName,
+  amount,
+  0
+);
+
         
         // Rating ማሳየት
         setTimeout(() => {
