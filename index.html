@@ -4696,67 +4696,126 @@
     cursor: pointer;
 }
 
-
-/* የትዕዛዝ ዝርዝር መቀመጫ (Container) */
-#active-orders-list {
-    padding: 10px;
+/* === MODERN P2P ORDER CARD === */
+.order-card {
+    background: #1a1a1a; /* ጠቆር ያለ ዳራ */
+    border: 1px solid #333;
+    border-radius: 16px; /* ድቡልቡል ጠርዝ */
+    padding: 16px;
+    margin-bottom: 12px;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+/* ሲነካ የሚኖረው effect */
+.order-card:active {
+    transform: scale(0.98);
+    background: #222;
+}
+
+/* በግራ በኩል ያለው አይኮን እና ጽሁፍ መያዣ */
+.order-left-section {
+    display: flex;
+    align-items: center;
     gap: 12px;
 }
 
-/* እያንዳንዱ የትዕዛዝ መስመር (Card) */
-#active-orders-list > div {
-    background: linear-gradient(145deg, #1e2124, #141619) !important;
-    border: 1px solid #333 !important;
-    border-radius: 16px !important;
-    padding: 15px !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+/* የ Buy/Sell አይኮን መያዣ */
+.order-icon-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
 }
 
-/* የጽሁፎች አሰላለፍ */
-#active-orders-list div {
-    text-align: left !important;
+/* ለአይኮኑ የሚሰጡ ቀለማት */
+.icon-buy {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00e676;
+    border: 1px solid rgba(0, 200, 83, 0.3);
 }
 
-/* የ "PAID" ባጅ (Badge) አቀማመጥ እና Pulse Animation */
-#active-orders-list span[style*="background: grey"], 
-#active-orders-list span {
-    background: #28a745 !important;
-    color: white !important;
-    padding: 4px 12px !important;
-    border-radius: 20px !important;
-    font-size: 10px !important;
-    font-weight: bold !important;
+.icon-sell {
+    background: rgba(255, 61, 0, 0.15);
+    color: #ff5722;
+    border: 1px solid rgba(255, 61, 0, 0.3);
+}
+
+/* የመሀለኛው መረጃ (Type & Amount) */
+.order-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.order-type-text {
+    font-size: 12px;
+    font-weight: bold;
     text-transform: uppercase;
-    /* 🔥 አኒሜሽኑ እዚህ ጋር ተጨምሯል */
-    animation: pulse-green 2s infinite; 
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
 }
 
-/* የሳንቲም መጠን (Coins) ጎልቶ እንዲታይ */
-#active-orders-list b {
-    display: block;
-    font-size: 16px;
+.text-buy { color: #00e676; }
+.text-sell { color: #ff5722; }
+
+.order-amount-text {
+    font-size: 17px;
+    font-weight: 800;
     color: #fff;
-    margin-top: 4px;
+    font-family: monospace, sans-serif;
 }
 
-/* 🔥 የብልጭታው ህግ (Keyframes) */
-@keyframes pulse-green {
-    0% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-    }
+/* በቀኝ በኩል ያለው Status እና ቀስት */
+.order-right-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
 }
+
+/* Paid የሚለው ባጅ */
+.status-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #333;
+    color: #aaa;
+}
+
+.status-badge.paid {
+    background: #007bff;
+    color: white;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+    animation: pulse 2s infinite;
+}
+
+/* ቀስት (Arrow) */
+.arrow-icon {
+    color: #555;
+    font-size: 18px;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+
 
 
 </style>
@@ -5654,51 +5713,50 @@
     <p class="loading-text">processing... ⏳</p>
 </div>
 <div id="receipt-modal" class="custom-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
-    <div class="receipt-paper" style="background: #fff; color: #000; padding: 20px; border-radius: 10px; width: 90%; max-width: 320px; font-family: 'Courier New', monospace; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div class="receipt-paper" style="background: #fff; color: #000; padding: 20px; border-radius: 10px; width: 90%; max-width: 320px; font-family: 'Courier New', monospace; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column;">
+        
         <div class="receipt-header" style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px;">
             <h2 style="margin: 0; font-weight: 800;">SMART PAY</h2>
             <p style="margin: 5px 0 0;">Transaction Receipt</p>
         </div>
         
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-            <span>DATE:</span> <span id="rec-date">...</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-    <span>REF NO:</span> <span id="rec-ref" style="color: #555;">...</span>
-</div>
+        <div style="flex-grow: 1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>DATE:</span> <span id="rec-date">...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>REF NO:</span> <span id="rec-ref" style="color: #555;">...</span>
+            </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-            <span>SENDER:</span> <span id="rec-sender">...</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-            <span>RECEIVER:</span> <span id="rec-receiver">...</span>
-        </div>
-        
-        <hr style="border-top: 2px dashed #000; margin: 10px 0;">
-        
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-            <span>AMOUNT:</span> <span id="rec-amount">...</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
-            <span>FEE:</span> <span id="rec-fee">...</span>
-        </div>
-        
-        <div style="border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between;">
-            <span>TOTAL:</span> <span id="rec-total">...</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>SENDER:</span> <span id="rec-sender">...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>RECEIVER:</span> <span id="rec-receiver">...</span>
+            </div>
+            
+            <hr style="border-top: 2px dashed #000; margin: 10px 0;">
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>AMOUNT:</span> <span id="rec-amount">...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                <span>FEE:</span> <span id="rec-fee">...</span>
+            </div>
+            
+            <div style="border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between;">
+                <span>TOTAL:</span> <span id="rec-total">...</span>
+            </div>
         </div>
 
-        <div style="position: absolute; right: 20px; bottom: 80px; border: 3px solid #28a745; color: #28a745; padding: 5px 10px; font-weight: bold; transform: rotate(-15deg); font-size: 18px; opacity: 0.8;">
+        <div style="position: absolute; right: 20px; bottom: 80px; border: 3px solid #28a745; color: #28a745; padding: 5px 10px; font-weight: bold; transform: rotate(-15deg); font-size: 18px; opacity: 0.8; pointer-events: none;">
             PAID ✅
         </div>
 
         <div style="margin-top: 25px;">
-    <button onclick="finishReceipt()" 
-        style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">
-    Done (ቀጥል)
-</button>
-
-                style="width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                Close
+            <button onclick="finishReceipt()" 
+                style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                Done (ቀጥል)
             </button>
         </div>
     </div>
@@ -12045,6 +12103,10 @@ window.postMarketAd = async () => {
             const userRef = doc(db, "users", currentFirebaseUserId);
             const userSnap = await transaction.get(userRef);
             const currentBalance = userSnap.data().total_score || 0;
+            const userData = usersSnap.data();
+            const sellerAvg = userData.average_rating || 0;
+            const sellerCount = userData.rating_count || 0;
+            const sellerSum = userData.total_rating_sum || 0;
 
             // 1. መሸጥ ከሆነ ብቻ ነው ሳንቲም የምንቀንሰው
             if (adType === 'sell') {
@@ -12067,10 +12129,10 @@ window.postMarketAd = async () => {
                 payment_method: payment,
                 payment_account: accountNumber,
                 status: 'open',
-                created_at: serverTimestamp(),
-                average_rating: currentAvg,
-                rating_count: currentCount,
-                total_rating_sum: currentSum,
+                created_at: serverTimestamp(),          
+                average_rating: sellerAvg, 
+                rating_count: sellerCount, 
+                total_rating_sum: sellerSum,
                 is_locked: adType === 'sell' ? true : false 
             });
         });
@@ -12563,33 +12625,33 @@ window.fetchMyAds = async () => {
             
      const processTrade = (doc, role) => {
     const data = doc.data();
-    
-    // 1. ዳታው መኖሩን ማረጋገጥ (TypeError እንዳይመጣ ይከላከላል)
     if (!data || !data.status) return ''; 
 
     const isBuying = role === 'Buyer';
     
-    // 2. Status color logic (ከ CSS ክፍሎች ጋር ማገናኘት)
-    let statusClass = 'pill-pending';
-    if(data.status === 'paid') statusClass = 'pill-paid';
-    if(data.status === 'dispute') statusClass = 'pill-dispute';
+    // Status color logic
+    let statusClass = 'pending';
+    if(data.status === 'paid') statusClass = 'paid';
     
-    // 3. ቁጥሩን በኮማ መለየት (ለምሳሌ 1,000,000)
     const formattedAmount = Number(data.amount || 0).toLocaleString();
 
+    // አዲሱ ዲዛይን እዚህ ጋር ይገባል
     return `
-    <div class="modern-order-card" onclick="openTradeRoom('${doc.id}')">
-        <div class="order-main-info">
-            <span class="order-badge ${isBuying ? 'badge-buying' : 'badge-selling'}">
-                ${isBuying ? '🛒 Buying' : '💰 Selling'}
-            </span>
-            <div class="order-amount-text">${formattedAmount} Coins</div>
-            <div class="order-status-pill ${statusClass}">
-                ● ${data.status.toUpperCase()}
+    <div class="order-card" onclick="openTradeRoom('${doc.id}')">
+        <div class="order-left-section">
+            <div class="order-icon-box ${isBuying ? 'icon-buy' : 'icon-sell'}">
+                ${isBuying ? '🛒' : '💰'}
+            </div>
+            <div class="order-info">
+                <span class="order-type-text ${isBuying ? 'text-buy' : 'text-sell'}">
+                    ${isBuying ? 'Buying' : 'Selling'}
+                </span>
+                <span class="order-amount-text">${formattedAmount} Coins</span>
             </div>
         </div>
-        <div class="order-arrow-icon">
-            ›
+        <div class="order-right-section">
+            <span class="status-badge ${statusClass}">${data.status.toUpperCase()}</span>
+            <div class="arrow-icon">›</div>
         </div>
     </div>`;
 };
