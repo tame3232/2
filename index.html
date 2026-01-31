@@ -12400,17 +12400,23 @@ window.releaseTradeCoins = async () => {
     // 1. ማረጋገጫ
     if(!confirm("ብሩ ወደ ባንክዎ መግባቱን አረጋግጠዋል? ኮይኑን ለገዢው ይለቀቃል!")) return;
     
+    // activeTradeId መኖሩን ማረጋገጥ (ይህ ካልተደረገ null error ሊያመጣ ይችላል)
+    if (!window.activeTradeId) {
+        return WebApp.showAlert("Error: Trade ID አልተገኘም (Missing Trade ID)!");
+    }
+
     WebApp.MainButton.showProgress();
     
     try {
         let buyerTgId = null;
         let buyerName = "Buyer";
         let amount = 0;
-        let sellerName = currentUserDocData.first_name || "Seller";
+        let sellerName = currentUserDocData ? (currentUserDocData.first_name || "Seller") : "Seller";
 
         // 2. Transaction ማስጀመር
         await runTransaction(db, async (transaction) => {
-            const tradeRef = doc(db, "p2p_trades", activeTradeId);
+            // 🔥 FIX 1: activeTradeIdን ወደ String መቀየር
+            const tradeRef = doc(db, "p2p_trades", String(window.activeTradeId));
             const tradeSnap = await transaction.get(tradeRef);
             
             if (!tradeSnap.exists()) throw "Trade not found!";
@@ -12418,15 +12424,21 @@ window.releaseTradeCoins = async () => {
             
             if (tData.status === 'completed') throw "ይህ ግብይት ከዚህ በፊት ተጠናቅቋል!";
             
+            // የገዢው ID በዳታቤዝ ውስጥ እንደ Number ተቀምጦ ሊሆን ይችላል።
+            // ነገር ግን doc() String ብቻ ነው የሚቀበለው።
+            if (!tData.buyer_id) throw "Buyer ID is missing inside the trade document!";
+
             amount = tData.amount;
 
-            // 🔥 የገዢውን ID ማግኘት (buyer_id Document ID ስለሆነ ሁሌም String ነው - ችግር የለውም)
-            const buyerRef = doc(db, "users", tData.buyer_id);
+            // 🔥🔥🔥 ዋናው መፍትሄ (CRITICAL FIX) 🔥🔥🔥
+            // tData.buyer_id ቁጥርም ቢሆን፣ String(...) ወደ ቴክስት ይቀይረዋል፣ ስለዚህ Error አይፈጠርም።
+            const buyerRef = doc(db, "users", String(tData.buyer_id)); 
+            
             const buyerSnap = await transaction.get(buyerRef);
             
             if(buyerSnap.exists()) {
                  const bData = buyerSnap.data();
-                 buyerTgId = bData.telegram_id; // ይህ Number ወይም String ሊሆን ይችላል
+                 buyerTgId = bData.telegram_id; 
                  buyerName = bData.first_name || "Buyer";
             }
 
@@ -12437,8 +12449,11 @@ window.releaseTradeCoins = async () => {
             transaction.update(tradeRef, { status: 'completed', completed_at: serverTimestamp() });
 
             // 5. ማስታወቂያውን መዝጋት
-            const adRef = doc(db, "p2p_market", tData.ad_id);
-            transaction.update(adRef, { status: 'sold' });
+            // 🔥 FIX 2: ad_id ላይም ተመሳሳይ ችግር እንዳይፈጠር String() እንጠቀማለን
+            if (tData.ad_id) {
+                const adRef = doc(db, "p2p_market", String(tData.ad_id));
+                transaction.update(adRef, { status: 'sold' });
+            }
             
             // ለ Rating ማዘጋጀት
             ratingTargetUserId = tData.buyer_id;
@@ -12447,14 +12462,13 @@ window.releaseTradeCoins = async () => {
         WebApp.MainButton.hideProgress();
         WebApp.showAlert("ኮይን በተሳካ ሁኔታ ተለቋል! ✅");
 
-        // 🔥 CRITICAL FIX: Notification በሚላክበት ጊዜ IDውን ወደ String መቀየር
-        // ይህ ካልተደረገ የድሮ/አዲስ User ልዩነት ኮዱን ይሰብረዋል
+        // Notification logic...
         if (buyerTgId) {
             fetch("https://newsmartgame.netlify.app/.netlify/functions/send_alert", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    custom_chat_id: String(buyerTgId), // 🔥 String() ወሳኝ ነው!
+                    custom_chat_id: String(buyerTgId), // እዚህም String() ማድረጉ ጥሩ ነው
                     message: `🎉 <b>ግብይቱ ተጠናቀቀ! (Trade Completed)</b>\n\n` +
                              `✅ ሻጩ ክፍያውን አረጋግጦ ኮይኑን ለቀዋል!\n` +
                              `💰 <b>የገባላችሁ:</b> +${amount} Coins\n` +
@@ -12464,19 +12478,13 @@ window.releaseTradeCoins = async () => {
             }).catch(e => console.log("Notification Failed but Trade Success:", e));
         }
 
-if (!activeTradeId) {
-  console.error("Trade ID missing");
-  return;
-}
-
-showReceipt(
-  "P2P-" + activeTradeId.slice(0,6).toUpperCase(),
-  sellerName,
-  buyerName,
-  amount,
-  0
-);
-
+        showReceipt(
+          "P2P-" + window.activeTradeId.slice(0,6).toUpperCase(),
+          sellerName,
+          buyerName,
+          amount,
+          0
+        );
         
         // Rating ማሳየት
         setTimeout(() => {
@@ -12486,11 +12494,11 @@ showReceipt(
         
     } catch (e) {
         WebApp.MainButton.hideProgress();
-        WebApp.showAlert("Error: " + e);
+        // ለDebug እንዲያመች Errorውን በግልፅ እናሳይ
+        WebApp.showAlert("Error: " + e.message || e);
         console.error("Release Error:", e);
     }
 };
-
 
 
 // 3. ክርክር (Dispute)
