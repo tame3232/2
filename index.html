@@ -4697,79 +4697,67 @@
 }
 
 
-/* === MODERN MY ORDERS STYLING === */
-.order-card {
-    background: linear-gradient(145deg, #1a1a1a, #111);
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 15px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: transform 0.2s ease;
-}
-
-.order-card:active {
-    transform: scale(0.98);
-}
-
-.order-info {
+/* የትዕዛዝ ዝርዝር መቀመጫ (Container) */
+#active-orders-list {
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
 }
 
-.order-type-badge {
-    font-size: 10px;
-    font-weight: bold;
+/* እያንዳንዱ የትዕዛዝ መስመር (Card) */
+#active-orders-list > div {
+    background: linear-gradient(145deg, #1e2124, #141619) !important;
+    border: 1px solid #333 !important;
+    border-radius: 16px !important;
+    padding: 15px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* የጽሁፎች አሰላለፍ */
+#active-orders-list div {
+    text-align: left !important;
+}
+
+/* የ "PAID" ባጅ (Badge) አቀማመጥ እና Pulse Animation */
+#active-orders-list span[style*="background: grey"], 
+#active-orders-list span {
+    background: #28a745 !important;
+    color: white !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 20px;
-    width: fit-content;
+    /* 🔥 አኒሜሽኑ እዚህ ጋር ተጨምሯል */
+    animation: pulse-green 2s infinite; 
 }
 
-.type-buying { background: rgba(0, 200, 83, 0.2); color: #00c853; }
-.type-selling { background: rgba(255, 61, 0, 0.2); color: #ff3d00; }
-
-.order-coins {
+/* የሳንቲም መጠን (Coins) ጎልቶ እንዲታይ */
+#active-orders-list b {
+    display: block;
     font-size: 16px;
-    font-weight: 800;
     color: #fff;
+    margin-top: 4px;
 }
 
-.order-status-pill {
-    font-size: 11px;
-    background: #333;
-    color: #bbb;
-    padding: 4px 10px;
-    border-radius: 8px;
-    width: fit-content;
+/* 🔥 የብልጭታው ህግ (Keyframes) */
+@keyframes pulse-green {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
 }
 
-.status-paid { background: #007bff; color: white; animation: pulse 2s infinite; }
-
-.view-order-btn {
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-ይህ ዝም ብዬ ccs style ውስጥ ለስገባው ወይስ የሚቀየር አለ??
 
 </style>
 <body>
@@ -5704,7 +5692,11 @@
         </div>
 
         <div style="margin-top: 25px;">
-            <button onclick="document.getElementById('receipt-modal').style.display='none'" 
+    <button onclick="finishReceipt()" 
+        style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">
+    Done (ቀጥል)
+</button>
+
                 style="width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                 Close
             </button>
@@ -11955,7 +11947,8 @@ window.fetchMarketOffers = async () => {
         let html = '';
         snapshot.forEach(doc => {
             const data = doc.data();     
-     
+     const timeDisplay = timeAgo(data.created_at);
+
 const avgRating = data.rating_count > 0 
     ? (data.total_rating_sum / data.rating_count).toFixed(1) 
     : "0.0";
@@ -11980,6 +11973,8 @@ const avgRating = data.rating_count > 0
                     <div class="price-tag">
                         ${data.price} <span class="price-currency">ETB/Coin</span>
                     </div>
+                    <div style="font-size: 10px; color: #999; text-align: right; margin-top: 2px;">${timeDisplay}</div>
+
                 </div>
                 
                 <div class="offer-limits">
@@ -12054,7 +12049,7 @@ window.postMarketAd = async () => {
             // 1. መሸጥ ከሆነ ብቻ ነው ሳንቲም የምንቀንሰው
             if (adType === 'sell') {
                 if (currentBalance < amount) {
-                    throw "በቂ ሳንቲም የለዎትም!";
+                    throw "በቂ coin የለዎትም!";
                 }
                 // ሳንቲሙን ከተጠቃሚው ላይ መቀነስ (Lock ማድረግ)
                 transaction.update(userRef, { total_score: increment(-amount) });
@@ -12073,7 +12068,9 @@ window.postMarketAd = async () => {
                 payment_account: accountNumber,
                 status: 'open',
                 created_at: serverTimestamp(),
-                // ሳንቲሙ መቀነሱን ለማወቅ ይረዳናል
+                average_rating: currentAvg,
+                rating_count: currentCount,
+                total_rating_sum: currentSum,
                 is_locked: adType === 'sell' ? true : false 
             });
         });
@@ -12486,12 +12483,13 @@ window.releaseTradeCoins = async () => {
           0
         );
         
-        // Rating ማሳየት
-        setTimeout(() => {
-             document.getElementById('receipt-modal').style.display = 'none';
-             document.getElementById('rating-modal').style.display = 'flex';
-        }, 2000);
-        
+// ከ showReceipt( ... ) በታች ያለውን setTimeout አጥፋና ይህንን ተካ፦
+
+window.finishReceipt = () => {
+    document.getElementById('receipt-modal').style.display = 'none';
+    document.getElementById('rating-modal').style.display = 'flex';
+};
+
     } catch (e) {
         WebApp.MainButton.hideProgress();
         // ለDebug እንዲያመች Errorውን በግልፅ እናሳይ
@@ -13114,6 +13112,19 @@ window.submitUserRating = async () => {
         if(btn) btn.innerText = "Submit Rating";
     }
 };
+function timeAgo(timestamp) {
+if (!timestamp || !timestamp.toDate) return "Just now";
+
+    const now = new Date();
+    const past = timestamp.toDate();
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
+    if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
+    if (diffInSeconds < 172800) return 'Yesterday';
+    return Math.floor(diffInSeconds / 86400) + ' days ago';
+}
 
         // ======================================================================
         //                         MAIN RENDER FUNCTION
