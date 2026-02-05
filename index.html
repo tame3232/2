@@ -4818,6 +4818,326 @@
 
 
 
+
+
+
+/* --- New Market Styles --- */
+.price-alert-banner {
+    background: rgba(255, 165, 0, 0.15);
+    color: var(--et-yellow);
+    font-size: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.market-header-container {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.market-top-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.search-box-wrapper {
+    flex: 1;
+    background: #333;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+}
+.search-box-wrapper input {
+    background: transparent; border: none; color: white; width: 100%; padding: 10px; outline: none;
+}
+.live-counter-badge {
+    background: #222; border: 1px solid #444; color: #aaa; font-size: 11px;
+    padding: 0 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px;
+}
+.pulsing-dot { width: 6px; height: 6px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
+
+.bank-filter-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 10px;
+    scrollbar-width: none;
+}
+.bank-chip {
+    background: #333; border: none; color: #ccc; padding: 6px 12px; border-radius: 20px; font-size: 12px; white-space: nowrap; transition: 0.2s;
+}
+.bank-chip.active { background: var(--et-yellow); color: black; font-weight: bold; }
+
+.market-controls-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.fast-filter-toggle { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--et-green); }
+#market-sort { background: #333; color: white; border: none; font-size: 11px; padding: 5px; border-radius: 5px; }
+
+/* --- CARD DESIGN (Updated) --- */
+.offer-card {
+    background: #222;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    position: relative;
+    /* #13 Visual Border Indicators (Default) */
+    border-left: 4px solid #444; 
+}
+.offer-card.buy-type { border-left-color: var(--et-green); } /* #13 */
+.offer-card.sell-type { border-left-color: var(--et-red); } /* #13 */
+
+/* #11 Best Price Badge */
+.best-price-badge {
+    position: absolute; top: -8px; right: 10px;
+    background: #FFD700; color: black; font-size: 10px; font-weight: bold;
+    padding: 2px 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 2;
+}
+
+.trader-info-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.trader-avatar-area { position: relative; width: 40px; height: 40px; border-radius: 50%; background: #444; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+
+/* #7 Trader Online Status */
+.online-dot {
+    position: absolute; bottom: 0; right: 0;
+    width: 10px; height: 10px; background: #00ff00;
+    border: 2px solid #222; border-radius: 50%;
+}
+
+.trader-details { margin-left: 10px; flex: 1; }
+.trader-name-row { display: flex; align-items: center; gap: 5px; color: white; font-weight: bold; font-size: 14px; }
+
+/* #10 Verified Badge */
+.verified-icon { color: #00A3FF; font-size: 14px; }
+
+/* #8 & #9 Stats */
+.trader-stats { font-size: 10px; color: #888; display: flex; gap: 10px; margin-top: 2px; }
+.stat-item { display: flex; align-items: center; gap: 3px; }
+
+.price-display-large { font-size: 20px; color: white; font-weight: bold; text-align: right; }
+.price-sub { font-size: 11px; color: #888; text-align: right; }
+
+/* #12 Detailed Payment Badges */
+.payment-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-right: 5px; background: #333; color: #ccc;
+}
+.payment-tag.telebirr { background: rgba(255,0,0,0.1); color: #ff6b6b; border: 1px solid rgba(255,0,0,0.2); }
+.payment-tag.cbe { background: rgba(128,0,128,0.1); color: #d67dff; border: 1px solid rgba(128,0,128,0.2); }
+
+.action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+
+
+
+
+
+
+
+
+/* Top Nav Styling */
+.market-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0d0d0d;
+    padding: 10px;
+    border-radius: 15px;
+    margin-bottom: 5px;
+    border: 1px solid #222;
+}
+
+.nav-item {
+    color: #666;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.nav-item.active-yellow {
+    background: #FFD700;
+    color: black;
+    border-radius: 10px;
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.live-glow-text {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 0 0 5px #4CAF50;
+}
+
+/* Search Bar */
+.custom-search-bar {
+    background: #1e1e2e;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+}
+.custom-search-bar input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 100%;
+    margin-left: 10px;
+    outline: none;
+    font-size: 14px;
+}
+
+/* Filters */
+.filter-header { font-weight: bold; color: white; margin-bottom: 8px; font-size: 16px; }
+.filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+
+.filter-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.filter-btn.outline { background: transparent; border: 1px solid #4CAF50; color: #ccc; }
+.filter-btn.yellow { background: #FFD700; border: none; color: black; }
+.filter-btn.dark { background: #2a2a2a; border: none; color: #888; }
+
+.price-alert-badge {
+    background: #2a2a3a;
+    color: #aaa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid #444;
+}
+
+/* === CARD DESIGN (Pixel Perfect) === */
+.p2p-card-container {
+    background: #111;
+    border-radius: 16px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    border: 1px solid #333;
+}
+
+/* Border variations */
+.border-green { border: 2px solid #4CAF50; }
+.border-blue { border: 2px solid #00A3FF; }
+
+.best-price-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #FFD700;
+    color: black;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 5px 12px;
+    border-bottom-left-radius: 10px;
+    border-top-right-radius: 14px;
+}
+
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.user-info-group { display: flex; align-items: center; gap: 8px; }
+.avatar-circle {
+    width: 35px; height: 35px; background: #333; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; font-size: 18px;
+}
+
+.username-text { color: white; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 4px; }
+.blue-check { color: #00A3FF; font-size: 14px; }
+
+.rating-stars { color: #FFD700; font-size: 12px; margin-left: 5px; }
+
+.price-box { text-align: right; }
+.price-main { color: white; font-weight: bold; font-size: 18px; }
+.price-sub { color: #777; font-size: 10px; }
+
+.status-row {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 12px;
+}
+.online-indicator { color: #4CAF50; display: flex; align-items: center; gap: 4px; }
+.offline-indicator { color: #666; display: flex; align-items: center; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.green { background: #4CAF50; box-shadow: 0 0 5px #4CAF50; }
+.dot.grey { background: #666; }
+
+.stats-bar {
+    background: #222;
+    margin-top: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.stats-text { color: #ccc; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+
+.buy-btn-small {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+#create-ad-modal .modal-content {
+    background: #1a1a1a;
+    width: 92%;
+    max-width: 380px;
+    padding: 15px; /* Padding ቀንሰናል */
+    border-radius: 12px;
+}
+
+/* የርዕስ ክፍተት ለመቀነስ */
+#create-ad-modal h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+}
+
+/* ሳጥኖችን ጎን ለጎን ለማድረግ */
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.input-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* የርዕስ ጽሁፎችን ማሳነስ */
+.input-label {
+    font-size: 11px !important;
+    margin-bottom: 3px !important;
+    color: #888;
+}
+
+/* የሳጥኖቹን ውፍረት መቀነስ */
+.modern-input {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+}
+
 </style>
 <body>
 <div id="loading-container">
@@ -5578,17 +5898,57 @@
 
 
     <div id="p2p-section-market" class="p2p-content-section">
-    <div class="market-header">
-        <div style="display:flex; gap:10px;">
-            <button class="market-filter-btn active" onclick="filterMarket('buy')">Buy</button>
-            <button class="market-filter-btn" onclick="filterMarket('sell')">Sell</button>
-        </div>
-        <button class="create-ad-btn" onclick="openCreateAdModal()">+ Create Ad</button>
+    
+    <div style="display: flex; background: #222; padding: 4px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333;">
+        <button id="market-btn-buy" onclick="window.filterMarket('buy')" style="flex: 1; padding: 10px; border: none; border-radius: 10px; background: var(--et-yellow); color: black; font-weight: bold; transition: 0.3s;">
+            Buy (እገዛለሁ)
+        </button>
+        <button id="market-btn-sell" onclick="window.filterMarket('sell')" style="flex: 1; padding: 10px; border: none; border-radius: 10px; background: transparent; color: #888; font-weight: bold; transition: 0.3s;">
+            Sell (እሸጣለሁ)
+        </button>
     </div>
 
-    <div id="p2p-market-list">
+    <div style="text-align: right; margin-bottom: 10px; padding-right: 10px;">
+        <span class="live-glow-text">🟢 Live: <span id="offer-count-display">0</span> Offers</span>
+    </div>
+
+    <div class="custom-search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="market-search" placeholder="Search by User or Bank..." onkeyup="filterMarketSearch()">
+    </div>
+
+    <div class="filter-header">Bank Filter</div>
+    <div class="filter-row">
+        <button class="filter-btn outline" onclick="filterByBank('all', this)">All Banks</button>
+        <button class="filter-btn yellow" onclick="filterByBank('Telebirr', this)">💰 Telebirr</button>
+        <button class="filter-btn outline" onclick="filterByBank('CBE', this)">🏦 CBE</button>
+        <button class="filter-btn dark" onclick="toggleFastSeller()">⚡ Fast Seller</button>
+    </div>
+
+    <div id="p2p-market-list" class="market-list-container" style="padding-bottom: 80px;">
         <p style="text-align: center; color: #666; padding: 20px;">Loading offers...</p>
     </div>
+
+    <button onclick="openCreateAdModal()" style="
+        position: fixed; 
+        bottom: 90px; 
+        right: 20px; 
+        width: 55px; 
+        height: 55px; 
+        border-radius: 50%; 
+        background: var(--et-green); 
+        color: black; 
+        font-size: 30px; 
+        font-weight: bold;
+        border: none; 
+        box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4); 
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;">
+        +
+    </button>
 </div>
 
     <div id="p2p-section-send" class="p2p-content-section" style="display: none;">
@@ -5655,42 +6015,55 @@
 
     <button class="game-back-button" onclick="window.switchPage('profile-page')">← Back to Profile</button>
 </div>
-    <div id="create-ad-modal" class="custom-modal" style="display: none;">
-    <div class="modal-content" style="text-align: left;">
+<div id="create-ad-modal" class="custom-modal">
+    <div class="modal-content">
         <h3 style="color: var(--et-yellow); text-align: center;">📢 ማስታወቂያ ይለጥፉ</h3>
         
-        <label class="input-label">ዓይነት</label>
-        <div class="toggle-search-type">
-            <button id="btn-type-sell" class="toggle-btn active" onclick="setAdType('sell')">እሸጣለሁ (Sell)</button>
-            <button id="btn-type-buy" class="toggle-btn" onclick="setAdType('buy')">እገዛለሁ (Buy)</button>
+        <div class="toggle-search-type" style="margin-bottom: 12px;">
+            <button id="btn-type-sell" class="toggle-btn active" onclick="setAdType('sell')">እሸጣለሁ</button>
+            <button id="btn-type-buy" class="toggle-btn" onclick="setAdType('buy')">እገዛለሁ</button>
         </div>
 
-        <label class="input-label">መጠን (Amount)</label>
-        <input type="number" id="ad-amount" class="modern-input" placeholder="Ex: 5000 Coins">
+        <div class="input-row">
+            <div class="input-group">
+                <label class="input-label">መጠን (Amount)</label>
+                <input type="number" id="ad-amount" class="modern-input" placeholder="5000">
+            </div>
+            <div class="input-group">
+                <label class="input-label">ዋጋ (Price)</label>
+                <input type="number" id="ad-price" class="modern-input" placeholder="0.05">
+            </div>
+        </div>
 
-        
-<label class="input-label">ዋጋ በአንድ ኮይን (Price per Coin)</label>
-<input type="number" id="ad-price" class="modern-input" placeholder="ምሳሌ: 0.05 ETB" step="0.01">
-       <label class="input-label">መክፈያ መንገድ</label>
-<select id="ad-payment" class="modern-input" style="background:#2a2a2a; color:white;" onchange="toggleAccountInput()">
-    <option value="Telebirr">Telebirr</option>
-    <option value="CBE">CBE (Commercial Bank)</option>
-    <option value="Abyssinia">Abyssinia</option>
-</select>
+        <label class="input-label">መክፈያ መንገድ</label>
+        <select id="ad-payment" class="modern-input" onchange="toggleAccountInput()">
+            <option value="Telebirr">Telebirr</option>
+            <option value="CBE">CBE (Bank)</option>
+            <option value="Abyssinia">Abyssinia (አቢሲኒያ ባንክ)</option>
+        </select>
 
-<div id="account-input-area" style="margin-top: 10px;">
-    <label class="input-label" id="account-label">የ Telebirr ስልክ ቁጥር</label>
-    <input type="text" id="ad-account-number" class="modern-input" placeholder="09xxxxxxxx">
-</div>
+        <label class="input-label">ሙሉ ስም</label>
+        <input type="text" id="ad-real-name" class="modern-input" placeholder="ትክክለኛ ስም">
 
+        <div class="input-row">
+            <div class="input-group">
+                <label class="input-label">ስልክ</label>
+                <input type="tel" id="ad-phone" class="modern-input" placeholder="09...">
+            </div>
+            <div class="input-group" id="account-input-area">
+                <label class="input-label" id="account-label">አካውንት/ስልክ</label>
+                <input type="text" id="ad-account-number" class="modern-input" placeholder="...">
+            </div>
+        </div>
 
-
-        <div class="modal-actions">
-            <button onclick="document.getElementById('create-ad-modal').style.display='none'" class="cancel-btn">ሰርዝ</button>
-            <button onclick="postMarketAd()" class="confirm-btn">ለጥፍ ✅</button>
+        <div class="modal-actions" style="margin-top: 10px;">
+            <button onclick="document.getElementById('create-ad-modal').style.display='none'" class="cancel-btn" style="padding: 8px;">ሰርዝ</button>
+            <button onclick="postMarketAd()" class="confirm-btn" style="padding: 8px; background: var(--et-yellow); color: black;">ለጥፍ ✅</button>
         </div>
     </div>
 </div>
+
+
 
 <div id="p2p-confirm-modal" class="custom-modal" style="display: none;">
         <div class="modal-content">
@@ -5908,20 +6281,18 @@
         <span class="nav-icon">👑</span>
         <span data-lang="nav_top">Top</span>
     </div>
+    <div class="nav-item" id="nav-p2p" onclick="switchPage('p2p-page')">
+        <span class="nav-icon">🔄</span>
+        <span data-lang="nav_p2p">P2P</span>
+    </div>
     <div class="nav-item" id="nav-profile" onclick="switchPage('profile-page')">
         <span class="nav-icon">👤</span>
         <span data-lang="nav_profile">Profile</span>
     </div>
 </div>
-
-
-
-
  <script>
         // 🛑 መፍትሔ 2: የ showMainPage() ተግባር ወደ ግሎባል ስኮፕ ተመለሰ
         window.showMainPage = () => switchPage('tasks-page'); 
-        
-        
         
         // ======================================================================
         // 🛑 NEW: የወረቀት ኮንፌቲ አኒሜሽን ተግባር (Paper Confetti)
@@ -6068,8 +6439,15 @@ const CACHE_LIFETIME = 3 * 60 * 1000; // 3 ደቂቃ በ ሚሊሰከንድ
         setupLeaderboardListener();
         setupMiniAppMaintenance();
         fetchMarketOffers();
+        setInterval(() => {
+    if (currentFirebaseUserId) {
+        const userRef = doc(db, "users", currentFirebaseUserId);
+        updateDoc(userRef, {
+            last_seen: serverTimestamp()
+        }).catch(err => console.log("Status update error (ignore)", err));
+    }
+}, 120000); 
 
-        
         switchPage('tasks-page');
     } else {
         console.log("ተጠቃሚ አልገባም ወይም ወጥቷል።");
@@ -7990,8 +8368,7 @@ window.showStreakWithLoading = () => {
 
         window.switchPage = (pageIdToShow) => {
         window.removeSelfAd();
-            // 🛑 ማስተካከያ: 'staking-page' እዚህ በዋና ገጾች ላይ ተጨምሯል
-            const mainPages = ['tasks-page', 'top-page', 'profile-page', 'staking-page'];
+            const mainPages = ['tasks-page', 'top-page', 'profile-page', 'staking-page','p2p-page'];
             const gamePages = [
                 'mystery-box-page',
                 'daily-spin-page',
@@ -8046,7 +8423,10 @@ window.showStreakWithLoading = () => {
                  // በዋና ገጾች ላይ የኋላ ቁልፍ አፕሊኬሽኑን እንዲዘጋ ያደርጋል
                  WebApp.BackButton.hide();
                  WebApp.BackButton.onClick(() => WebApp.close()); 
-
+if (pageIdToShow === 'p2p-page') {
+        window.switchP2PTab('market');
+        document.getElementById('p2p-user-balance').innerText = currentScore.toLocaleString() + ' 💰';
+    }
             } else {
                 // በንኡስ ገጾች ላይ የኋላ ቁልፍ ወደ ዋና ገፅ ይመልሳል
                 WebApp.BackButton.show();
@@ -11107,7 +11487,7 @@ window.submitDailyCipher = async () => {
         submitBtn.innerText = t('btn_check_code'); // 🟢 Translated: Revert button text
         
         if (error.message === "WRONG_CODE") {
-             messageEl.innerText = t('msg_wrong_code'); // 🟢 Fixed variable
+             messageEl.innerText = t('msg_wrong_code'); // ?? Fixed variable
              messageEl.style.color = "var(--et-red)";
              window.playSound('fail');
         } else if (error.message === "LIMIT_REACHED") {
@@ -11799,8 +12179,6 @@ window.cashoutMines = async () => {
 
  
 
-
-
 // ==========================================
 // 📺 LAUNCH AD SYSTEM INTEGRATION
 // ==========================================
@@ -11816,16 +12194,17 @@ async function initLaunchAd() {
         const docRef = doc(db, "app_settings", "launch_ad");
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
+                 if (docSnap.exists()) {
             const adData = docSnap.data();
+            if (adData.isActive && adData.ads && adData.ads.length > 0) {
+                const randomIndex = Math.floor(Math.random() * adData.ads.length);
+                const selectedAd = adData.ads[randomIndex];
 
-            if (adData.isActive) {
-                // ምስሉን Preload እናደርጋለን (ምስሉ መምጣቱን ለማረጋገጥ)
                 const img = new Image();
-                img.src = adData.imageUrl;
+                img.src = selectedAd.imageUrl;
                 img.onload = () => {
-                    showLaunchAdUI(adData);
-                };
+                   showLaunchAdUI(selectedAd);
+                };         
                 img.onerror = () => {
                     console.error("Ad Image failed to load:", adData.imageUrl);
                 };
@@ -11912,6 +12291,9 @@ window.handleAdClick = () => {
 };
 
 
+
+
+
 // =========================================================
 // ✅ MERGED P2P SYSTEM (MARKET + TRANSFER)
 // =========================================================
@@ -11931,6 +12313,20 @@ const DAILY_TRANSFER_LIMIT = 100000;
 const P2P_FEE_PERCENT = 0.05; 
 let p2pSearchType = 'id'; 
 let verifiedRecipientDoc = null; 
+window.checkUserStatus = (lastSeen) => {
+    if (!lastSeen) return { text: "Offline", class: "status-offline", dot: "dot-gray" };
+    
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    const diffMs = now - lastSeenDate;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 5) {
+        return { text: "Online", class: "status-online", dot: "dot-green" };
+    } else {
+        return { text: timeAgo(lastSeen), class: "status-offline", dot: "dot-gray" };
+    }
+};
 
 // --- 2. Switch Tab Logic (Unified) ---
 window.switchP2PTab = (tab) => {
@@ -11972,7 +12368,6 @@ window.switchP2PTab = (tab) => {
 // =========================================================
 // 🛒 MARKET FUNCTIONS
 // =========================================================
-
 window.fetchMarketOffers = async () => {
     const listContainer = document.getElementById('p2p-market-list');
     if(!listContainer) return;
@@ -11981,84 +12376,219 @@ window.fetchMarketOffers = async () => {
 
     try {
         const offersRef = collection(db, "p2p_market");
-        // እኔ መግዛት ከፈለግኩ (Buy Tab) -> የሚሸጡ ሰዎችን (Sell Ads) ማየት አለብኝ
-        const typeToShow = marketType === 'buy' ? 'sell' : 'buy';
+        const typeToShow = marketType === 'buy' ? 'sell' : 'buy'; 
         
         const q = query(offersRef, 
             where("type", "==", typeToShow),
             where("status", "==", "open"),
             orderBy("price", "asc"), 
-            limit(20)
+            limit(50)
         );
 
         const snapshot = await getDocs(q);
         
+        // Live Counter Update
+        const countDisplay = document.getElementById('offer-count-display');
+        if(countDisplay) countDisplay.innerText = snapshot.size;
+
         if (snapshot.empty) {
-            listContainer.innerHTML = `
-                <div style="text-align:center; padding:30px; color:#666;">
-                    <p style="font-size:40px;">📭</p>
-                    <p>ምንም ማስታወቂያ የለም።<br>የመጀመሪያውን ለጥፍ!</p>
-                </div>`;
+            listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#666;">No offers found.</div>`;
             return;
         }
 
         let html = '';
+        let index = 0;
+
+        // 🔥 CRITICAL FIX: ሁሉንም User Data መጀመሪያ ሰብስበን እናምጣ (Real-time Status ለማግኘት)
+        // ይህ ዘዴ "Online" እና "Stats" ትክክለኛ እንዲሆኑ ያደርጋል
+        const creatorIds = [...new Set(snapshot.docs.map(doc => doc.data().creator_id))];
+        const usersData = {};
+
+        // User Data Fetching (Parallel)
+        await Promise.all(creatorIds.map(async (uid) => {
+            const uSnap = await getDoc(doc(db, "users", uid));
+            if(uSnap.exists()) usersData[uid] = uSnap.data();
+        }));
+
         snapshot.forEach(doc => {
             const data = doc.data();     
-     const timeDisplay = timeAgo(data.created_at);
-
-const avgRating = (data.average_rating !== undefined && data.average_rating !== null) 
-    ? Number(data.average_rating).toFixed(1) 
-    : "0.0";
-const ratingCount = data.rating_count || 0;
-
-
-            const badgeClass = data.payment_method === 'Telebirr' ? 'pm-telebirr' : 'pm-cbe';
-            
             const isMyAd = data.creator_id === currentFirebaseUserId;
-            const btnText = isMyAd ? "Cancel" : (marketType === 'buy' ? "Buy" : "Sell");
-            const btnColor = isMyAd ? "#888" : (marketType === 'buy' ? "#4CAF50" : "#F44336");
+            
+            // 🔥 ከ User Table ላይ ትኩስ መረጃ እንወስዳለን (ከ Ad ላይ ሳይሆን)
+            const creator = usersData[data.creator_id] || {}; 
+            
+            // Real Stats Calculation
+            const completedTrades = creator.completed_trades_count || 0;
+            const totalAttempts = creator.total_attempts || 0;
+            
+            let successRate = "0%";
+            if (totalAttempts > 0) {
+                successRate = Math.floor((completedTrades / totalAttempts) * 100) + "%";
+            }
 
+            // Real Rating
+            const rating = creator.average_rating ? Number(creator.average_rating).toFixed(1) : "0.0";
+            const ratingCount = creator.rating_count || 0;
+
+            // Real Online Status
+            const statusObj = checkUserStatus(creator.last_seen); 
+
+            const isBestPrice = (index === 0);
+            const borderClass = isBestPrice ? 'border-green' : 'border-blue';
+            const bestPriceBadge = isBestPrice ? `<div class="best-price-tag">Best Price</div>` : '';
+const isVerified = creator.is_verified === true;
+
+const verifiedIcon = isVerified ? `
+<div title="Verified Merchant" style="display: inline-flex; align-items: center; vertical-align: middle;">
+
+    <svg class="verified-animated" style="width: 14px; height: 14px; margin-left: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.9664 2.8095C11.5164 2.14666 12.4836 2.14666 13.0336 2.8095L13.886 3.83709C14.1561 4.1627 14.5969 4.31295 15.0116 4.22097L16.3204 3.9306C17.1648 3.74326 17.9622 4.37989 17.9254 5.21129L17.8683 6.5001C17.8502 6.9085 18.0694 7.29176 18.4281 7.47953L19.5601 8.07223C20.2905 8.45465 20.5232 9.39055 20.0287 10.0515L19.2623 11.0759C19.0194 11.4005 19.0194 11.8415 19.2623 12.1661L20.0287 13.1904C20.5232 13.8514 20.2905 14.7873 19.5601 15.1697L18.4281 15.7624C18.0694 15.9502 17.8502 16.3335 17.8683 16.7419L17.9254 18.0307C17.9622 18.8621 17.1648 19.4987 16.3204 19.3114L15.0116 19.021C14.5969 18.929 14.1561 19.0793 13.886 19.4049L13.0336 20.4325C12.4836 21.0953 11.5164 21.0953 10.9664 20.4325L10.114 19.4049C9.84392 19.0793 9.4031 18.929 8.98842 19.021L7.67959 19.3114C6.83517 19.4987 6.03781 18.8621 6.07461 18.0307L6.13167 16.7419C6.14975 16.3335 5.93059 15.9502 5.57187 15.7624L4.43993 15.1697C3.70953 14.7873 3.47679 13.8514 3.97131 13.1904L4.73771 12.1661C4.98061 11.8415 4.98061 11.4005 4.73771 11.0759L3.97131 10.0515C3.47679 9.39055 3.70953 8.45465 4.43993 8.07223L5.57187 7.47953C5.93059 7.29176 6.14975 6.9085 6.13167 6.5001L6.07461 5.21129C6.03781 4.37989 6.83517 3.74326 7.67959 3.9306L8.98842 4.22097C9.4031 4.31295 9.84392 4.1627 10.114 3.83709L10.9664 2.8095Z" fill="#29B6F6"/>
+        <path d="M15.2071 9.29289C15.5976 9.68342 15.5976 10.3166 15.2071 10.7071L11.2071 14.7071C10.8166 15.0976 10.1834 15.0976 9.79289 14.7071L7.79289 12.7071C7.40237 12.3166 7.40237 11.6834 7.79289 11.2929C8.18342 10.9024 8.81658 10.9024 9.20711 11.2929L10.5 12.5858L13.7929 9.29289C14.1834 8.90237 14.8166 8.90237 15.2071 9.29289Z" fill="white"/>
+    </svg>
+    <span style="font-size: 10px; color: #29B6F6; font-weight: bold; margin-left: 3px; text-transform: uppercase;">Verified</span>
+</div>` : '';
+
+
+            // 🔥 FIX: 'offer-card' class እና 'data-bank' ተጨምሯል (ለ Filter እንዲያመች)
             html += `
-            <div class="offer-card ${data.type}-type">
-                <div class="offer-header">
-                    <div class="trader-name">
-    👤 ${data.creator_name} 
-    <span style="color: #FFD700; font-size: 11px; margin-left: 5px;">
-        ⭐ ${avgRating} (${data.rating_count || 0})
-    </span>
-    ${data.is_verified ? '<span class="verified-badge">✔</span>' : ''}
-</div>
-
-                    <div class="price-tag">
-                        ${data.price} <span class="price-currency">ETB/Coin</span>
-                    </div>
-                    <div style="font-size: 10px; color: #999; text-align: right; margin-top: 2px;">${timeDisplay}</div>
-
-                </div>
+            <div class="p2p-card-container offer-card ${borderClass}" data-bank="${data.payment_method}" data-fast="${successRate.replace('%','')}" >
+                ${bestPriceBadge}
                 
-                <div class="offer-limits">
-                    Limit: ${data.min_limit} - ${data.amount} Coins
+                <div class="card-top-row">
+                    <div class="user-info-group">
+                        <div class="avatar-circle">👤</div>
+                        <div>
+                            <div class="username-text">
+                                ${creator.first_name || data.creator_name} ${verifiedIcon} 
+                                <span class="rating-stars" style="display: flex; align-items: center; gap: 3px;">
+    <span style="font-size: 10px;">⭐</span> 
+    <span style="font-size: 5px; color: #ccc;">${rating} (${ratingCount})</span>
+</span>
+                            </div>
+                            
+                            <div class="status-row">
+    <div class="${statusObj.class}">
+        <div class="dot ${statusObj.dot}"></div> ${statusObj.text}
+    </div>
+    <span style="color:#555; margin: 0 5px;">|</span>
+    <span style="color:#888; font-size:11px;">${data.created_at ? timeAgo(data.created_at) : "Just now"}</span>
+</div>
+      </div>
+                    </div>
+
+                    <div class="price-box">
+                        <div class="price-main">${data.price} <small style="font-size:12px;">ETB</small></div>
+                        <div class="price-sub">/ Coin</div>
+                    </div>
                 </div>
 
-                <div class="offer-actions">
-                    <div class="payment-methods">
-                        <span class="pm-badge ${badgeClass}">${data.payment_method}</span>
+                <div class="stats-bar">
+                    <div class="stats-text">
+                        <span style="color:#FFD700;">⭐</span> ${rating} (${ratingCount})
+                        <span style="margin:0 5px; color:#444;">|</span>
+                        <span>${completedTrades} Trades</span>
+                        <span style="margin:0 5px; color:#444;">|</span>
+                        <span>${successRate} Success</span>
                     </div>
-                    <button class="trade-btn" 
-                        style="background: ${btnColor}"
-                        onclick="initiateTrade('${doc.id}', '${data.creator_id}', ${isMyAd})">
-                        ${btnText}
+                    <button class="buy-btn-small" onclick="initiateTrade('${doc.id}', '${data.creator_id}', ${isMyAd})">
+                        ${marketType === 'buy' ? 'Buy' : 'Sell'}
                     </button>
                 </div>
+
+                <div style="margin-top:10px; font-size:11px; color:#666; display:flex; align-items:center; gap:5px;">
+                    <span style="background:#222; padding:3px 6px; border-radius:4px; border-left:2px solid orange;">${data.payment_method}</span>
+                    <span>Limit: ${data.min_limit} - ${data.amount} Coins</span>
+                </div>
             </div>`;
+            
+            index++;
         });
 
         listContainer.innerHTML = html;
 
     } catch (e) {
         console.error("Market Error:", e);
-        listContainer.innerHTML = `<p style="color:red; text-align:center">Error loading market. Index required?</p>`;
+        listContainer.innerHTML = `<p style="color:red; text-align:center">Error loading market.</p>`;
+    }
+};
+
+// --- Helper Functions for #2 and #3 Filtering ---
+
+window.filterByBank = (bank, btn) => {
+    document.getElementById('no-fast-msg')?.remove();
+document.querySelectorAll('.offer-card').forEach(c => c.style.display = 'block');
+
+
+    
+document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active', 'yellow'); // ሁሉንም ቀለም ያጠፋል
+    b.classList.add('outline'); // ሁሉንም ወደ ነጭ (outline) ይቀይራል
+});
+
+btn.classList.remove('outline'); // የተመረጠው ላይ outline ያጠፋል
+btn.classList.add('active', 'yellow'); // የተመረጠው ላይ ቢጫ ቀለም ይጨምራል
+
+    // 2. Logic (Simple Client-side filtering for smooth UX)
+    const cards = document.querySelectorAll('.offer-card');
+    cards.forEach(card => {
+        if(bank === 'all' || card.getAttribute('data-bank') === bank) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+};
+
+// =========================================================
+// ⚡ FAST SELLER FILTER LOGIC
+// =========================================================
+
+window.toggleFastSeller = () => {
+    // 1. አሁን የተጫነውን Button እንፈልግ
+    const btn = document.querySelector("button[onclick='toggleFastSeller()']");
+    
+    // 2. የሌሎችን Buttons ቀለም እናጥፋ (Reset UI)
+    // ልክ እንደ filterByBank ሁሉንም ወደ ነጭ (outline) ይመልሳል
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active', 'yellow');
+        b.classList.add('outline');
+    });
+
+    // 3. የዚህን Button ቀለም እናብራ (Activate)
+    btn.classList.remove('outline', 'dark'); 
+    btn.classList.add('active', 'yellow');
+
+    // 4. የማጣራት ስራ (Filtering Logic)
+    const cards = document.querySelectorAll('.offer-card');
+    let foundCount = 0;
+
+    cards.forEach(card => {
+        // data-fast attribute ላይ የተቀመጠውን ቁጥር እናነባለን (ለምሳሌ 95)
+        const successRate = parseInt(card.getAttribute('data-fast')) || 0;
+
+        // ከ 90% በላይ ከሆነ ብቻ እንዲታይ እናደርጋለን
+        if(successRate >= 90) {
+            card.style.display = 'block';
+            foundCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // ከተጣራ በኋላ ምንም ሰው ካልተገኘ መልዕክት ለማሳየት (Optional)
+    const listContainer = document.getElementById('p2p-market-list');
+    // የድሮውን "No offers" መልዕክት ካለ እናጥፋ
+    const oldMsg = document.getElementById('no-fast-msg');
+    if(oldMsg) oldMsg.remove();
+
+    if(foundCount === 0) {
+        const msg = document.createElement('div');
+        msg.id = 'no-fast-msg';
+        msg.style.textAlign = 'center';
+        msg.style.padding = '20px';
+        msg.style.color = '#666';
+        msg.innerText = '⚠️ አሁን ላይ Fast Seller (ከ90% በላይ) የለም።';
+        listContainer.appendChild(msg);
     }
 };
 
@@ -12085,96 +12615,105 @@ window.toggleAccountInput = () => {
     }
 };
 
+
+
+// ✅ 1. የተስተካከለው የ postMarketAd function ይህ ነው፡
 window.postMarketAd = async () => {
-    const amount = Number(document.getElementById('ad-amount').value);
-    const price = Number(document.getElementById('ad-price').value);
+    // ከ Input ላይ መረጃዎችን መሰብሰብ
+    const amount = parseInt(document.getElementById('ad-amount').value);
+    const price = parseFloat(document.getElementById('ad-price').value);
     const payment = document.getElementById('ad-payment').value;
     const accountNumber = document.getElementById('ad-account-number').value;
-
-    if(!amount || !price || !accountNumber) {
-        return WebApp.showAlert("እባክዎ ሁሉንም መረጃዎች በትክክል ይሙሉ");
-    }
-    
-    // ከ 500 በታች መለጠፍ አይቻልም
-    if(amount < 500) return WebApp.showAlert("ዝቅተኛው መጠን 500 Coin ነው");
-
+const realName = document.getElementById('ad-real-name').value;
+const phoneNumber = document.getElementById('ad-phone').value;
+    if (!amount || !price || !accountNumber || !realName || !phoneNumber) {
+    return WebApp.showAlert("እባክዎ ሁሉንም መረጃዎች (ስም እና ስልክ ጨምሮ) ያስገቡ!");
+}
     WebApp.MainButton.showProgress();
 
     try {
         await runTransaction(db, async (transaction) => {
             const userRef = doc(db, "users", currentFirebaseUserId);
             const userSnap = await transaction.get(userRef);
-            const currentBalance = userSnap.data().total_score || 0;
+            
+            if (!userSnap.exists()) throw "User data not found!";
             const userData = userSnap.data();
-            const sellerAvg = userData.average_rating || 0;
-            const sellerCount = userData.rating_count || 0;
-            const sellerSum = userData.total_rating_sum || 0;
+            
+            // Check balance logic
+            if (adType === 'sell' && (userData.total_score || 0) < amount) {
+                throw "በቂ coin የለዎትም!";
+            }
 
-            // 1. መሸጥ ከሆነ ብቻ ነው ሳንቲም የምንቀንሰው
+            // Coin መቀነስ (መሸጥ ከሆነ)
             if (adType === 'sell') {
-                if (currentBalance < amount) {
-                    throw "በቂ coin የለዎትም!";
-                }
-                // ሳንቲሙን ከተጠቃሚው ላይ መቀነስ (Lock ማድረግ)
                 transaction.update(userRef, { total_score: increment(-amount) });
             }
 
-            // 2. ማስታወቂያውን መፍጠር
+            // ማስታወቂያውን መፍጠር
             const adRef = doc(collection(db, "p2p_market"));
             transaction.set(adRef, {
                 creator_id: currentFirebaseUserId,
-                creator_name: currentUserDocData.username || "User",
-                type: adType, 
+                creator_name: userData.username || currentUserDocData.first_name || "User",
+                real_name: realName,
+                phone_number: phoneNumber,
+                type: adType, // 'sell' or 'buy'
                 amount: amount,
                 min_limit: 500, 
                 price: price,
                 payment_method: payment,
                 payment_account: accountNumber,
                 status: 'open',
-                created_at: serverTimestamp(),          
-                average_rating: sellerAvg, 
-                rating_count: sellerCount, 
-                total_rating_sum: sellerSum,
+                created_at: serverTimestamp(),
+                
+                // User Stats
+                creator_last_seen: serverTimestamp(),
+                completed_trades_count: userData.completed_trades_count || 0,
+                total_attempts: userData.total_attempts || 0,
+                average_rating: userData.average_rating || 0, 
+                rating_count: userData.rating_count || 0, 
                 is_locked: adType === 'sell' ? true : false 
             });
         });
 
+        WebApp.MainButton.hideProgress();
+        WebApp.showAlert("ማስታወቂያው ተለጥፏል! ✅");
         document.getElementById('create-ad-modal').style.display = 'none';
-        WebApp.showAlert("✅ ማስታወቂያዎ በተሳካ ሁኔታ ተለጥፏል!");
-        fetchMarketOffers();
+        
+        // ገጹን Refresh ማድረግ
+        window.switchP2PTab('my-orders');
 
     } catch (e) {
-        WebApp.showAlert("ስህተት: " + e);
-        console.error(e);
-    } finally {
         WebApp.MainButton.hideProgress();
+        console.error(e);
+        WebApp.showAlert("Error: " + e);
     }
 };
 
+// =========================================================
+// ✅ FIX: initiateTrade አሁን በትክክል ይሰራል
+// =========================================================
 
 
-let currentTradeDocListener = null;
-let activeTradeId = null;
 
-// ገዢው "Buy" ሲል የሚጠራው Function
 window.initiateTrade = async (adId, sellerId, isMyAd) => {
     if (isMyAd) return WebApp.showAlert("የራስዎ ማስታወቂያ ነው።");
 
     WebApp.MainButton.showProgress();
-    
+
     try {
-        await runTransaction(db, async (transaction) => {
+        // ትራንዛክሽኑ የሻጩን መረጃ እንዲመልስ (return) እናደርጋለን
+        const tradeResult = await runTransaction(db, async (transaction) => {
             // 1. Get Ad Info
             const adRef = doc(db, "p2p_market", adId);
             const adSnap = await transaction.get(adRef);
             if (!adSnap.exists()) throw "Ad does not exist";
-            
+
             const adData = adSnap.data();
             if (adData.status !== 'open') throw "ይህ ማስታወቂያ ተሽጧል ወይም ተዘግቷል!";
-            
+
             const totalCost = adData.amount * adData.price;
 
-            // 2. Lock the Ad so no one else buys it
+            // 2. Lock the Ad
             transaction.update(adRef, { status: 'locked' });
 
             // 3. Create Trade Document
@@ -12189,26 +12728,56 @@ window.initiateTrade = async (adId, sellerId, isMyAd) => {
                 price: adData.price,
                 total_fiat: totalCost,
                 payment_method: adData.payment_method,
-                seller_bank_info: adData.payment_account || "አልተገኘም",                
-                status: 'pending', // pending -> paid -> completed
+                seller_bank_info: adData.payment_account || "አልተገኘም",
+                status: 'pending',
                 created_at: serverTimestamp(),
-                expires_at: new Date(Date.now() + 15 * 60000) // 15 Minutes Timer
+                expires_at: new Date(Date.now() + 15 * 60000)
             };
-            
+
             transaction.set(tradeRef, tradeData);
-            activeTradeId = tradeRef.id;
+            
+            // User Stats Update
+            const sellerUserRef = doc(db, "users", sellerId);
+            const buyerUserRef = doc(db, "users", currentFirebaseUserId);
+            transaction.update(sellerUserRef, { total_attempts: increment(1) });
+            transaction.update(buyerUserRef, { total_attempts: increment(1) });
+
+            // ወሳኙ ማስተካከያ፡ አስፈላጊውን ዳታ ከትራንዛክሽኑ ወደ ውጭ መላክ (Return)
+            return {
+                tradeId: tradeRef.id,
+                sellerName: adData.real_name || "ያልተጠቀሰ",
+                sellerPhone: adData.phone_number || "ያልተጠቀሰ"
+            };
         });
 
+        // አሁን tradeResult ከላይ return ያደረግነውን መረጃ ይይዛል
+        activeTradeId = tradeResult.tradeId;
         WebApp.MainButton.hideProgress();
-        // ቀጥታ ወደ Trade Room መግባት
-        openTradeRoom(activeTradeId);
+
+        WebApp.showConfirm(
+            `የሻጭ መረጃ:\n👤 ስም: ${tradeResult.sellerName}\n📞 ስልክ: ${tradeResult.sellerPhone}\n\nአሁን መደወል ይፈልጋሉ?`,
+            (isConfirmed) => {
+                if (isConfirmed && tradeResult.sellerPhone !== "ያልተጠቀሰ") {
+                    window.location.href = `tel:${tradeResult.sellerPhone}`;
+                }
+                // ወደ Trade Room መውሰድ
+                openTradeRoom(activeTradeId);
+            }
+        );
 
     } catch (e) {
         WebApp.MainButton.hideProgress();
-        WebApp.showAlert("Error: " + e);
-        console.error(e);
+        // Error object string ካልሆነ ወደ string መቀየር ጥሩ ነው
+        let errorMsg = typeof e === 'string' ? e : e.message;
+        WebApp.showAlert("Error: " + errorMsg);
+        console.error("Trade Error:", e);
     }
 };
+
+
+
+
+             
 // === CHAT FUNCTIONS ===
 window.handleChatEnter = (e) => {
     if(e.key === 'Enter') window.sendChatMessage();
@@ -12505,7 +13074,9 @@ window.releaseTradeCoins = async () => {
 
             // 3. ኮይኑን መጨመር
             transaction.update(buyerRef, { total_score: increment(tData.amount) });
-            
+            const sellerRefForStats = doc(db, "users", currentFirebaseUserId); 
+transaction.update(sellerRefForStats, { completed_trades_count: increment(1) });
+transaction.update(buyerRef, { completed_trades_count: increment(1) });
             // 4. ሁኔታውን ወደ Completed መቀየር
             transaction.update(tradeRef, { status: 'completed', completed_at: serverTimestamp() });
 
@@ -12733,9 +13304,30 @@ window.deleteMyAd = async (adId) => {
 
 
 window.filterMarket = (type) => {
+    // 1. Variable Update
     marketType = type;
-    document.querySelectorAll('.market-filter-btn').forEach(b => b.classList.remove('active'));
-    // አዝራሩን Active ለማድረግ (ሎጂክ ያስፈልጋል)
+
+    // 2. UI Update (የአዝራሮቹን ቀለም መቀየር)
+    const btnBuy = document.getElementById('market-btn-buy');
+    const btnSell = document.getElementById('market-btn-sell');
+
+    if (type === 'buy') {
+        // Buy Active
+        btnBuy.style.background = 'var(--et-yellow)';
+        btnBuy.style.color = 'black';
+        
+        btnSell.style.background = 'transparent';
+        btnSell.style.color = '#888';
+    } else {
+        // Sell Active
+        btnSell.style.background = 'var(--et-yellow)';
+        btnSell.style.color = 'black';
+        
+        btnBuy.style.background = 'transparent';
+        btnBuy.style.color = '#888';
+    }
+
+    // 3. Fetch Data
     fetchMarketOffers();
 };
 
