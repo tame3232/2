@@ -809,4 +809,4 @@ async function sendToAdmin(text, targetId = ADMIN_ID) {
     }
 }
 
-እሺ ቆ
+እሺ
