@@ -1,4 +1,3 @@
-   
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
@@ -78,6 +77,20 @@ exports.handler = async (event) => {
             user = body.message.from;
         }
 
+
+        // ==========================================
+        // 👥 MULTI-ADMIN (ተባባሪ አድሚን ማረጋገጫ)
+        // ==========================================
+        let isAdmin = (String(chatId) === String(ADMIN_ID));
+        if (!isAdmin) {
+            try {
+                const adminCheck = await db.collection('settings').doc('co_admins').get();
+                if (adminCheck.exists && adminCheck.data().admin_ids) {
+                    isAdmin = adminCheck.data().admin_ids.includes(String(chatId));
+                }
+            } catch (e) { console.error("Admin check error:", e); }
+        }
+
         // ============================================================
         // 🔥 MAINTENANCE CHECK (የጥገና ማጣሪያ)
         // ============================================================
@@ -87,7 +100,8 @@ exports.handler = async (event) => {
         const isMaintenance = configDoc.exists ? configDoc.data().maintenance_mode : false;
 
         // 2. ጥገና ላይ ከሆነ እና ተጠቃሚው Admin ካልሆነ
-        if (isMaintenance && String(chatId) !== String(ADMIN_ID)) {
+    if (isMaintenance && !isAdmin) {
+
             const maintenanceMsg = "🚧 <b>ቦቱ ለጊዜው በጥገና ላይ ነው!</b>\n\nእባክዎ ትንሽ ቆይተው ይመለሱ። አዳዲስ ነገሮችን እየጨመርን ነው። 🚀";
 
             if (isCallback) {
@@ -208,20 +222,42 @@ exports.handler = async (event) => {
 
 
         // --- የአስተዳዳሪ (Admin) ተግባራት ---
-        if (String(chatId) === String(ADMIN_ID)) {
+        
+if (isAdmin) {
+
+            // ዋና አድሚን ብቻ ተባባሪ መሾም/መሻር እንዲችል
+            if (text && text.startsWith('/add_admin ') && String(chatId) === String(ADMIN_ID)) {
+                const newAdminId = text.split(' ')[1].trim();
+                await db.collection('settings').doc('co_admins').set({
+                    admin_ids: admin.firestore.FieldValue.arrayUnion(newAdminId)
+                }, { merge: true });
+                await sendToAdmin(`✅ አዲስ አድሚን (ID: <code>${newAdminId}</code>) በተሳካ ሁኔታ ተሹሟል።`, chatId);
+                return { statusCode: 200, body: 'OK' };
+            }
+
+            if (text && text.startsWith('/remove_admin ') && String(chatId) === String(ADMIN_ID)) {
+                const oldAdminId = text.split(' ')[1].trim();
+                await db.collection('settings').doc('co_admins').set({
+                    admin_ids: admin.firestore.FieldValue.arrayRemove(oldAdminId)
+                }, { merge: true });
+                await sendToAdmin(`🚫 አድሚን (ID: <code>${oldAdminId}</code>) ከስልጣን ተነስቷል።`, chatId);
+                return { statusCode: 200, body: 'OK' };
+            }
 
             // 🔧 Maintenance ማዘዣዎች
             if (text === '/maintenance on') {
                 await db.collection('settings').doc('bot_config').set({ maintenance_mode: true }, { merge: true });
-                await sendToAdmin("🔴 <b>Maintenance Mode ON!</b>\n\nቦቱ ለተጠቃሚዎች ተዘግቷል። ለእርስዎ ግን ይሰራል::");
+                await sendToAdmin("🔴 <b>Maintenance Mode ON!</b>\n\nቦቱ ለተጠቃሚዎች ተዘግቷል። ለእርስዎ ግን ይሰራል::", chatId);
                 return { statusCode: 200, body: 'OK' };
             }
 
             if (text === '/maintenance off') {
                 await db.collection('settings').doc('bot_config').set({ maintenance_mode: false }, { merge: true });
-                await sendToAdmin("🟢 <b>Maintenance Mode OFF!</b>\n\nቦቱ ወደ መደበኛ ስራ ተመልሷል።");
+                await sendToAdmin("🟢 <b>Maintenance Mode OFF!</b>\n\nቦቱ ወደ መደበኛ ስራ ተመልሷል።", chatId);
                 return { statusCode: 200, body: 'OK' };
             }
+
+
             if (text === '/stats') {
                 try {
                     // 1. የጠቅላላ ተጠቃሚዎች ብዛት (በጣም ፈጣኑ መንገድ)
@@ -240,10 +276,116 @@ exports.handler = async (event) => {
                         `🚫 <b>የታገዱ ተጠቃሚዎች:</b> ${bannedUsers.toLocaleString()}\n` +
                         `✅ <b>ንቁ ተጠቃሚዎች:</b> ${activeUsers.toLocaleString()}`;
 
-                    await sendToAdmin(msg);
+                    await sendToAdmin(msg,chatId);
+              
+
                 } catch (error) {
                     console.error("Stats Error:", error);
-                    await sendToAdmin(`❌ ስታቲስቲክስ ለማምጣት ስህተት ተፈጥሯል: ${error.message}`);
+                    await sendToAdmin(`❌ ስታቲስቲክስ ለማምጣት ስህተት ተፈጥሯል: ${error.message}`, chatId);
+              
+                }
+                return { statusCode: 200, body: 'OK' };
+            }
+
+if (text === '/banned_list') {
+    try {
+        // በዳታቤዝ ውስጥ 'is_banned' እውነት (true) የሆኑትን ብቻ መፈለግ
+        const querySnapshot = await db.collection('users')
+            .where('is_banned', '==', true)
+            .get();
+
+        if (querySnapshot.empty) {
+            await sendToAdmin("✅ <b>እስካሁን የታገደ (Banned) ተጠቃሚ የለም።</b>",chatId);
+            return { statusCode: 200, body: 'No banned users' };
+        }
+
+        let msg = `🚫 <b>የታገዱ ተጠቃሚዎች ዝርዝር (ጠቅላላ: ${querySnapshot.size}):</b>\n\n`;
+        let counter = 1;
+
+        querySnapshot.forEach(doc => {
+            const uData = doc.data();
+            const name = uData.first_name || uData.username || 'ያልታወቀ';
+            msg += `${counter}. 👤 <b>${name}</b> | 🆔 <code>${doc.id}</code>\n`;
+            counter++;
+        });
+
+       
+    await sendToAdmin(msg, chatId);
+
+    
+    } catch (error) {
+        console.error("Banned List Error:", error);
+        await sendToAdmin(`❌ ዝርዝሩን ለማምጣት ስህተት ተፈጥሯል: ${error.message}`, chatId);
+    }
+
+
+
+    return { statusCode: 200, body: 'OK' };
+}
+            // ==========================================
+            // 1. TOP 10 INVITERS (የጋባዦች ደረጃ)
+            // ==========================================
+            if (text === '/top_inviters') {
+                try {
+                    const snapshot = await db.collection('users').orderBy('invite_count', 'desc').limit(10).get();
+                    if (snapshot.empty) {
+                        await sendToAdmin("⚠️ ማንም ሰው እስካሁን አልጋበዘም።",chatId);
+                        return { statusCode: 200, body: 'OK' };
+                    }
+                    
+                    let msg = "🏆 <b>ከፍተኛ ሰው የጋበዙ (Top 10):</b>\n\n";
+                    let rank = 1;
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        const name = d.first_name || 'ያልታወቀ';
+                        const uname = d.username ? `@${d.username}` : 'የለውም';
+                        const invites = d.invite_count || 0;
+                        msg += `${rank}. <b>${name}</b> (${uname})\n └ ID: <code>${doc.id}</code> | 👥 ጋበዘ: <b>${invites}</b>\n\n`;
+                        rank++;
+                    });
+                   await sendToAdmin(msg, chatId);
+                } catch (err) {
+                    await sendToAdmin(`❌ ስህተት: ${err.message}`,chatId);
+                }
+                return { statusCode: 200, body: 'OK' };
+            }
+
+            // ==========================================
+            // 4. USER HISTORY (የተጠቃሚ ታሪክ)
+            // ==========================================
+            if (text && text.startsWith('/user_history')) {
+                const targetId = text.split(' ')[1]?.trim();
+                if (!targetId) {
+                    await sendToAdmin("⚠️ አጠቃቀም: `/user_history [ID]`", chatId);
+                    return { statusCode: 200, body: 'Missing ID' };
+                }
+
+                try {
+                    const userDoc = await db.collection('users').doc(targetId).get();
+                    if (!userDoc.exists) {
+                        
+await sendToAdmin(`❌ ተጠቃሚ (ID: ${targetId}) አልተገኘም።`, chatId);
+
+                        return { statusCode: 200, body: 'Not found' };
+                    }
+                    
+                    const d = userDoc.data();
+                    const name = d.first_name || 'ያልታወቀ';
+                    const created = d.created_at ? d.created_at.toDate().toLocaleString('en-GB') : 'ያልተመዘገበ';
+                    const score = d.total_score || 0;
+                    const isKyc = d.kyc_status || 'አልተላከም'; // KYC ካለህ
+                    const lastActive = d.last_active ? d.last_active.toDate().toLocaleString('en-GB') : 'መረጃ የለም';
+
+                    const msg = `🕒 <b>የተጠቃሚ ታሪክ ማጠቃለያ:</b>\n\n` +
+                        `👤 <b>ስም:</b> ${name} (<code>${targetId}</code>)\n` +
+                        `📅 <b>የተመዘገበበት:</b> ${created}\n` +
+                        `💰 <b>ያለው ኮይን:</b> ${score.toLocaleString()}\n` +
+                        `🔒 <b>የ KYC ሁኔታ:</b> ${isKyc}\n` +
+                        `🎮 <b>ለመጨረሻ ጊዜ የታየው:</b> ${lastActive}`;
+                    
+                    await sendToAdmin(msg,chatId);
+                } catch (err) {
+                    await sendToAdmin(`❌ ስህተት ተፈጥሯል: ${err.message}`,chatId);
                 }
                 return { statusCode: 200, body: 'OK' };
             }
@@ -251,7 +393,7 @@ exports.handler = async (event) => {
             if (text && text.startsWith('/check_user')) {
                 const parts = text.split(' ');
                 if (parts.length < 2) {
-                    await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>");
+                    await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/check_user 123456789</code>",chatId);
                     return { statusCode: 200, body: 'Missing ID' };
                 }
 
@@ -282,7 +424,7 @@ exports.handler = async (event) => {
                     }
 
                     if (!userData) {
-                        await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetIdString}) ዳታቤዝ ውስጥ የለም።`);
+                        await sendToAdmin(`❌ ይህ ተጠቃሚ (ID: ${targetIdString}) ዳታቤዝ ውስጥ የለም።`,chatId);
                         return { statusCode: 200, body: 'User not found' };
                     }
 
@@ -311,14 +453,61 @@ exports.handler = async (event) => {
                         `🔗 <b>የጋበዘው:</b> <code>${invitedBy}</code>`;
 
 
-                    await sendToAdmin(msg);
+                    await sendToAdmin(msg, chatId);
 
                 } catch (error) {
                     console.error(error);
-                    await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`);
+                    await sendToAdmin(`❌ የፍለጋ ስህተት: ${error.message}`,chatId);
                 }
                 return { statusCode: 200, body: 'OK' };
             }
+
+
+if (text && text.startsWith('/invites')) {
+    const parts = text.split(' ');
+    if (parts.length < 2) {
+        await sendToAdmin("⚠️ እባክዎ የUser ID ያስገቡ።\nምሳሌ: <code>/invites 123456789</code>",chatId);
+        return { statusCode: 200, body: 'Missing ID' };
+    }
+
+    const targetIdString = parts[1].trim();
+
+    try {
+        // በ referrer_id ፊልድ ውስጥ የዚህን ሰው ID የያዙትን ተጠቃሚዎች በሙሉ መፈለግ
+        const querySnapshot = await db.collection('users')
+            .where('referrer_id', '==', targetIdString)
+            .get();
+
+        if (querySnapshot.empty) {
+            await sendToAdmin(`👥 <b>ID: ${targetIdString}</b> እስካሁን ማንም ሰው አልጋበዘም።`,chatId);
+            return { statusCode: 200, body: 'No invites found' };
+        }
+
+        let inviteList = `👥 <b>የ ID <code>${targetIdString}</code> የግብዣ ዝርዝር (ጠቅላላ: ${querySnapshot.size}):</b>\n\n`;
+        let counter = 1;
+
+        querySnapshot.forEach(doc => {
+            const uData = doc.data();
+            const uName = uData.first_name || uData.username || 'ያልታወቀ';
+            const uScore = uData.total_score || 0;
+            
+            inviteList += `${counter}. 👤 <b>${uName}</b> (ID: <code>${doc.id}</code>) - 💰 ${uScore.toLocaleString()} Coins\n`;
+            counter++;
+        });
+
+        // መልዕክቱ በጣም ረጅም ከሆነ ቴሌግራም እንዳይከለክለው ቁርጥራጭ አድርጎ መላክ
+        if (inviteList.length > 4000) {
+            inviteList = inviteList.substring(0, 3900) + "\n\n... እና ሌሎችም (ዝርዝሩ በጣም ረጅም ነው)";
+        }
+
+        await sendToAdmin(inviteList,chatId);
+
+    } catch (error) {
+        console.error("Invites Error:", error);
+        await sendToAdmin(`❌ ዝርዝሩን ለማምጣት ስህተት ተፈጥሯል: ${error.message}`,chatId);
+    }
+    return { statusCode: 200, body: 'OK' };
+}
 
             if (text === '/export') {
                 const usersSnapshot = await db.collection('users').get();
@@ -330,7 +519,7 @@ exports.handler = async (event) => {
                 const filePath = '/tmp/users.csv';
                 fs.writeFileSync(filePath, userData);
                 const form = new FormData();
-                form.append('chat_id', ADMIN_ID);
+                form.append('chat_id',  chatId);
                 form.append('document', fs.createReadStream(filePath));
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: form });
                 return { statusCode: 200, body: 'OK' };
@@ -347,7 +536,7 @@ exports.handler = async (event) => {
                         body: JSON.stringify({ chat_id: doc.id, text: msg, parse_mode: 'HTML' })
                     });
                 }
-                await sendToAdmin("✅ ስርጭቱ ለሁሉም ተጠቃሚዎች ተጠናቋል።");
+                await sendToAdmin("✅ ስርጭቱ ለሁሉም ተጠቃሚዎች ተጠናቋል።",chatId);
                 return { statusCode: 200, body: 'OK' };
             }
 
@@ -360,7 +549,7 @@ exports.handler = async (event) => {
                 const match = text.match(/^\/mreply\s+([\d,]+)\s+(.+)/s);
                 
                 if (!match) {
-                    await sendToAdmin("⚠️ <b>አጠቃቀም:</b> `/mreply id1,id2 message`\n\nምሳሌ:\n`/mreply 12345,67890 ሰላም እንዴት ነህ? [አዎ]{yes} [አይ]{no}`");
+                    await sendToAdmin("⚠️ <b>አጠቃቀም:</b> `/mreply id1,id2 message`\n\nምሳሌ:\n`/mreply 12345,67890 ሰላም እንዴት ነህ? [አዎ]{yes} [አይ]{no}`",chatId);
                     return { statusCode: 200, body: 'Invalid syntax' };
                 }
 
@@ -397,7 +586,7 @@ exports.handler = async (event) => {
                 let failCount = 0;
                 let errorReport = "";
 
-                await sendToAdmin("⏳ መልዕክት በመላክ ላይ... እባክዎ ይጠብቁ።");
+                await sendToAdmin("⏳ መልዕክት በመላክ ላይ... እባክዎ ይጠብቁ።",chatId);
 
                 for (const targetId of ids) {
                     try {
@@ -455,7 +644,7 @@ exports.handler = async (event) => {
                     summary += `\n\n<b>የስህተት ዝርዝር:</b>${errorReport}`;
                 }
 
-                await sendToAdmin(summary);
+                await sendToAdmin(summary,chatId);
                 return { statusCode: 200, body: 'OK' };
             }
 
@@ -579,24 +768,45 @@ if (text && text.startsWith('/start')) {
     return { statusCode: 200, body: 'OK' };
 }
 
-        return { statusCode: 200, body: 'OK' };
+                return { statusCode: 200, body: 'OK' };
     } catch (e) {
         console.error("Error:", e.message);
+        
+        // ==========================================
+        // 2. SYSTEM LOGS / ERROR ALERT
+        // ==========================================
+        if (ADMIN_ID) {
+            const errorMsg = `⚠️ <b>System Error Alert!</b>\n\n<b>ችግር:</b> <code>${e.message}</code>\n<b>የተፈጠረበት ቦታ:</b> Main Webhook Handler`;
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: errorMsg, parse_mode: 'HTML' })
+                });
+            } catch (alertErr) {
+                console.error("Alert delivery failed:", alertErr);
+            }
+        }
+        
         return { statusCode: 200, body: 'Error' };
     }
 };
 
+
+
 // 🔥 ይሄ Function አዲሱ ኮድ ላይ ጠፍቶ ነበር፣ አሁን ተመልሷል 🔥
-async function sendToAdmin(text) {
-    if(!ADMIN_ID) return;
+
+async function sendToAdmin(text, targetId = ADMIN_ID) {
+    if(!targetId) return;
     try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' }),
+            body: JSON.stringify({ chat_id: targetId, text: text, parse_mode: 'HTML' }),
         });
     } catch (e) {
         console.error("Failed to send to admin:", e);
     }
-   
 }
+
+እሺ ቆ
