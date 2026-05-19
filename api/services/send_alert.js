@@ -1,4 +1,4 @@
-​const fetch = require('node-fetch');
+const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const FormData = require('form-data');
