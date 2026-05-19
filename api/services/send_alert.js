@@ -1,3 +1,4 @@
+​
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
@@ -880,3 +881,5 @@ async function sendToAdmin(text, targetId = ADMIN_ID) {
         console.error("Failed to send to admin:", e);
     }
 }
+
+
