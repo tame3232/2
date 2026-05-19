@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+​const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const FormData = require('form-data');
@@ -40,6 +40,28 @@ exports.handler = async (event) => {
         if (!event.body) return { statusCode: 200, body: 'No body' };
         const body = JSON.parse(event.body);
 
+
+        // ============================================================
+        // 🚨 ከሚኒ አፑ የሚመጡ የችግር መልዕክቶችን ለአድሚን ማድረሻ (Error Handler)
+        // ============================================================
+        if (body.type === 'miniapp_error') {
+            const errorDetails = body.error || 'ያልታወቀ ስህተት';
+            const userDetails = body.user_id ? `\n👤 <b>የተጠቃሚ ID:</b> <code>${body.user_id}</code>` : '';
+            const pageDetails = body.page ? `\n📍 <b>የተከሰተበት ገጽ:</b> ${body.page}` : '';
+
+            const alertMsg = `⚠️ <b>Mini App Error Alert!</b>\n\n` +
+                             `❌ <b>ችግር:</b> <code>${errorDetails}</code>` + 
+                             `${pageDetails}${userDetails}\n` +
+                             `📅 <b>ጊዜ:</b> ${new Date().toLocaleString()}`;
+
+            await sendToAdmin(alertMsg);
+            return {
+                statusCode: 200,
+                headers: CORS_HEADERS,
+                body: JSON.stringify({ success: true, message: 'Error logged to admin' })
+            };
+        }
+
         if (body.message && typeof body.message === 'string') {
             const targetId = body.custom_chat_id || ADMIN_ID;
 
@@ -73,7 +95,8 @@ exports.handler = async (event) => {
             callbackId = body.callback_query.id;
         } else {
             chatId = body.message.chat.id;
-            text = body.message.text;
+                text = body.message.text || "";
+
             user = body.message.from;
         }
 
@@ -225,7 +248,56 @@ exports.handler = async (event) => {
         
 if (isAdmin) {
 
-            // ዋና አድሚን ብቻ ተባባሪ መሾም/መሻር እንዲችል
+       // 📢 1. ALERT ALL - በሚኒ አፑ ላይ አስቸኳይ ብቅ የሚል ማስታወቂያ (ለሁሉም ወይም ለተወሰነ ሰው በ ID)
+if (text && text.startsWith('/alert_all ')) {
+    const rawContent = text.substring(text.indexOf(' ') + 1).trim();
+    const parts = rawContent.split(' ');
+    
+    let targetUser = "all"; // በዲፎልት ለሁሉም ነው
+    let remainingText = rawContent;
+
+    // 🔍 የመጀመሪያው ቃል የተጠቃሚ ID (ቁጥር) መሆኑን መፈተሽ
+    if (/^\d+$/.test(parts[0])) {
+        targetUser = parts[0]; // የሰውየው የቴሌግราม ID ይሆናል
+        remainingText = parts.slice(1).join(' ').trim(); // የቀረው ፅሁፍ ይሆናል
+    }
+
+    let mediaUrl = "";
+    let alertMessage = remainingText;
+
+    // 🔗 ምስል ወይም ቪዲዮ ሊንክ ካለ ለይቶ መውሰጃ
+    if (remainingText.startsWith('http://') || remainingText.startsWith('https://')) {
+        const mediaParts = remainingText.split(' ');
+        mediaUrl = mediaParts[0];
+        alertMessage = mediaParts.slice(1).join(' ').trim();
+    }
+
+    // 💾 Firebase ላይ መረጃውን መጫን
+    await db.collection('settings').doc('popup_alert').set({
+        message: alertMessage,
+        image_url: mediaUrl,
+        target: targetUser, // 🎯 "all" ወይም የተጠቃሚው "ID" እዚህ ይቀመጣል
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        is_active: true
+    }, { merge: true });
+
+    let successMsg = `📢 <b>የአስቸኳይ ማስታወቂያ ስርጭት ተጭኗል!</b>\n\n`;
+    successMsg += `🎯 <b>ለማን:</b> ${targetUser === "all" ? "ለሁሉም ተጠቃሚዎች 👥" : `ለተጠቃሚ ID: <code>${targetUser}</code> 👤`}\n`;
+    successMsg += `📝 <b>መልዕክት:</b> "${alertMessage}"`;
+    if (mediaUrl) successMsg += `\n🖼 <b>የሚዲያ ሊንክ:</b> ${mediaUrl}`;
+    
+    await sendToAdmin(successMsg, chatId);
+    return { statusCode: 200, body: 'OK' };
+}
+
+// 📢 ALERT OFF - ማስታወቂያውን ለማጥፋት
+else if (text === '/alert_off') {
+    await db.collection('settings').doc('popup_alert').set({ is_active: false }, { merge: true });
+    await sendToAdmin(`📴 የPopup ማስታወቂያው በተሳካ ሁኔታ እንዲጠፋ ተደርጓል።`, chatId);
+    return { statusCode: 200, body: 'OK' };
+}
+
+ // ዋና አድሚን ብቻ ተባባሪ መሾም/መሻር እንዲችል
             if (text && text.startsWith('/add_admin ') && String(chatId) === String(ADMIN_ID)) {
                 const newAdminId = text.split(' ')[1].trim();
                 await db.collection('settings').doc('co_admins').set({
@@ -808,5 +880,3 @@ async function sendToAdmin(text, targetId = ADMIN_ID) {
         console.error("Failed to send to admin:", e);
     }
 }
-
-
