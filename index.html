@@ -5137,6 +5137,20 @@
     font-size: 13px !important;
     margin-bottom: 5px !important;
 }
+/* =========================================
+   === 📢 Alert Modal Styles ===
+   ========================================= */
+.alert-content {
+    background-color: #1b2129; /* ከሚኒ አፑ background ጋር አንድ አይነት */
+    padding: 25px;
+    border-radius: 15px;
+    width: 85%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.3); /* ወርቃማ ጥላ */
+    border: 1px solid #FFC107;
+    position: relative;
+}
 
 </style>
 <body>
@@ -6154,6 +6168,14 @@
     </div>
 </div>
 
+<div id="alertModal" class="modal-overlay" style="display: none; z-index: 9999999;">
+    <div class="alert-content">
+        <img id="alertImage" src="" alt="Alert Image" style="display: none; width: 100%; border-radius: 8px; margin-bottom: 15px;">
+        <h3 id="alertTitle" style="color: var(--et-yellow); margin-top: 0;">📢 ማስታወቂያ</h3>
+        <p id="alertMessage" style="color: var(--tg-text); font-size: 16px; line-height: 1.5; margin-bottom: 20px;">መልዕክቱ እዚህ ይገባል...</p>
+        <button id="closeAlertBtn" onclick="closeAlert()" style="background-color: var(--et-yellow); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%;">እሺ፣ ተረድቻለሁ</button>
+    </div>
+</div>
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">💣 Mines Rush</h2>
@@ -7975,6 +7997,7 @@ async function firebaseLogin() {
         // 4. Listener Setup (Real-time update ለመጀመር)
         if (currentFirebaseUserId) {
             setupCurrentUserListener(currentFirebaseUserId);
+            setupAlertListener(); 
         }
 
     } catch (error) {
@@ -13783,6 +13806,55 @@ if (!timestamp || !timestamp.toDate) return "Just now";
     if (diffInSeconds < 172800) return 'Yesterday';
     return Math.floor(diffInSeconds / 86400) + ' days ago';
 }
+// ======================================================================
+// 📢 ALERT / ማስታወቂያ LISTENER (FUNCTION)
+// ======================================================================
+window.setupAlertListener = () => {
+    const alertDoc = doc(db, 'settings', 'popup_alert');
+
+    onSnapshot(alertDoc, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const modal = document.getElementById('alertModal');
+            const msgEl = document.getElementById('alertMessage');
+            const imgEl = document.getElementById('alertImage');
+
+            // 🛑 ማስታወቂያው ደጋግሞ እንዳይረብሽ በ LocalStorage ማረጋገጫ
+            const lastSeenMsg = localStorage.getItem('last_seen_alert_msg');
+
+            if (data.is_active === true && lastSeenMsg !== data.message) {
+                // ለሁሉም ከተላከ ("all") ወይም ለዚህ የተወሰነ ተጠቃሚ ከሆነ
+                if (data.target === "all" || String(data.target) === String(telegramUserId)) {
+                    
+                    msgEl.innerHTML = data.message;
+                    
+                    if (data.image_url && data.image_url.trim() !== "") {
+                        imgEl.src = data.image_url;
+                        imgEl.style.display = 'block';
+                    } else {
+                        imgEl.style.display = 'none';
+                    }
+                    
+                    // ሞዳሉን አሳይ
+                    modal.style.display = 'flex';
+                }
+            } else if (data.is_active === false) {
+                // ማስታወቂያው በዳታቤዝ ከጠፋ ደብቀው
+                modal.style.display = 'none';
+            }
+        }
+    });
+};
+
+// ማስታወቂያ መዝጊያ ተግባር
+window.closeAlert = () => {
+    const msgEl = document.getElementById('alertMessage');
+    // ተጠቃሚው ማስታወቂያውን ሲዘጋው እንዳየው LocalStorage ላይ እንመዘግባለን
+    if (msgEl) {
+        localStorage.setItem('last_seen_alert_msg', msgEl.innerHTML);
+    }
+    document.getElementById('alertModal').style.display = 'none';
+};
 
         // ======================================================================
         //                         MAIN RENDER FUNCTION
@@ -13939,3 +14011,7 @@ window.onload = async () => {
  </script>
 </body>
 </html>
+
+
+
+
