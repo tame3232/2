@@ -10937,7 +10937,7 @@ window.removeSelfAd = () => {
 /**
  * ✅ ማስታወቂያ የሚጭን ዋና ተግባር
  */
-window.loadSelfAd = (containerId) => {
+window.loadSelfAd = async (containerId) => {
     const container = document.getElementById(containerId);
     if (!container) return;
     
@@ -10951,52 +10951,36 @@ window.loadSelfAd = (containerId) => {
     const adIntervalName = 'adInterval_' + uniqueIdSuffix;
     const skipTimerName = 'skipTimer_' + uniqueIdSuffix;
 
+    
+    
+    
+        // 🛑 አዲስ ክፍል፡ ለዚህ ማስታወቂያ ብቻ የሚሆን ዳታ ከ Firebase ማምጫ
+    let adsList = [];
     const SKIP_DELAY_SECONDS = 15; 
-    let secondsLeft = SKIP_DELAY_SECONDS; 
+    let secondsLeft = SKIP_DELAY_SECONDS;
 
-    // 1. የማስታወቂያዎች ዝርዝር
-    const adsList = [
-        {
-            id: 1,
-            title: "የአዳማ የስራ ማስታወቂያ ቻናል",
-            desc: "አዳዲስ የስራ ማስታወቂያዎችን ለማግኘት ይቀላቀሉ!",
-            image: "https://tame3232.github.io/2/adama-jobs-ad.jpg",
-            link: "https://t.me/adama_jobss",
-            btnText: "JOIN NOW"
-        },
-        {
-            id: 2,
-            title: "Smart Airdrop VIP",
-            desc: "ተጨማሪ ቦነስ እና ሽልማቶች!",
-            image: "https://tame3232.github.io/2/smart-airdrop-vip-ads.jpg",
-            link: "https://t.me/Smartairdrops_bot",
-            btnText: "UPGRADE"
-        },
-        {
-            id: 3,
-            title: "Crypto Trading Tips",
-            desc: "የክሪፕቶ ንግድ በነፃ ይማሩ",
-            image: "https://tame3232.github.io/2/smart-airdrop-crypto-ads.jpg",
-            link: "https://t.me/CryptoTradingTips2",
-            btnText: "LEARN MORE"
-        },
-        {
-            id: 4,
-            title: "Daily Bonus Shop",
-            desc: "እቃዎችን በቅናሽ ይግዙ",
-            image: "https://tame3232.github.io/2/smart-airdrop-sales-ads.jpg",
-            link: "https://t.me/Kidu_dani",
-            btnText: "SHOP NOW"
-        },
-        {
-            id: 5,
-            title: "Invite & Earn More",
-            desc: "ጓደኛ ጋብዘው ያግኙ",
-            image: "https://tame3232.github.io/2/smart-airdrop-invite-ads.jpg",
-            link: "samrtgame21_bot",
-            btnText: "INVITE"
+    try {
+        // Firebase ላይ "inner_ads" ከሚባል አዲስ ሰነድ ላይ ያመጣል
+        const docRef = doc(db, "app_settings", "inner_ads");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const adData = docSnap.data();
+            // ማስታወቂያው ክፍት ከሆነና በውስጡ ads ከተባለ array ውስጥ ዳታ ካለ
+            if (adData.isActive && adData.ads && adData.ads.length > 0) {
+                adsList = adData.ads;
+            }
         }
-    ];
+    } catch (error) {
+        console.warn("Inner Ads fetch failed:", error);
+    }
+
+    // ማስታወቂያ በ Firebase ላይ ከሌለ ወይም Off ከሆነ ምንም አታሳይ፣ አቁም
+    if (adsList.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
 
     // 2. የ HTML አወቃቀሩን መፍጠር
     let slidesHTML = '';
@@ -12207,8 +12191,9 @@ window.cashoutMines = async () => {
 // ==========================================
 
 let currentAdLink = ""; 
-let autoCloseTimer = null; // የ4 ሰከንዱን ቆጣሪ ለመያዝ
-
+let autoCloseTimer = null; 
+let cachedAdList = [];
+let midAppTimer = null;
 async function initLaunchAd() {
     // ቀድሞውኑ ክፍት ከሆነ መድገም አያስፈልግም
     if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
@@ -12217,26 +12202,56 @@ async function initLaunchAd() {
         const docRef = doc(db, "app_settings", "launch_ad");
         const docSnap = await getDoc(docRef);
 
-                 if (docSnap.exists()) {
+        if (docSnap.exists()) {
             const adData = docSnap.data();
-            if (adData.isActive && adData.ads && adData.ads.length > 0) {
-                const randomIndex = Math.floor(Math.random() * adData.ads.length);
-                const selectedAd = adData.ads[randomIndex];
+            
+            // 1. መጀመሪያ ማስታወቂያዎቹን ከ Firebase ወደ ሎካል (array) ማስቀመጥ
+            if (adData.ads && adData.ads.length > 0) {
+                cachedAdList = adData.ads;
+            }
 
-                const img = new Image();
-                img.src = selectedAd.imageUrl;
-                img.onload = () => {
-                   showLaunchAdUI(selectedAd);
-                };         
-                img.onerror = () => {
-                    console.error("Ad Image failed to load:", adData.imageUrl);
-                };
+            // 2. አፑ ሲከፈት የሚመጣው (በ isActive የሚቆጣጠረው)
+            if (adData.isActive && cachedAdList.length > 0) {
+                showRandomAd(); 
+            }
+
+            // 3. በመሃል የሚመጣው (በ showMidAppAds የሚቆጣጠረው)
+            if (adData.showMidAppAds && cachedAdList.length > 0) {
+                const intervalMins = adData.midAppIntervalMins || 5; // ካልተሰጠ በየ 5 ደቂቃው ይመጣል
+                const intervalMs = intervalMins * 60 * 1000;
+                
+                midAppTimer = setInterval(() => {
+                    showRandomAd();
+                }, intervalMs);
             }
         }
+
     } catch (error) {
         console.warn("Ad fetch skipped:", error);
     }
 }
+
+// ====== አዲስ የተጨመረ ፈንክሽን =======
+function showRandomAd() {
+    // ማስታወቂያው አስቀድሞ ክፍት ከሆነ ሌላ ላይደርብበት ይተወዋል
+    if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
+    
+    if(cachedAdList.length === 0) return;
+
+    const randomIndex = Math.floor(Math.random() * cachedAdList.length);
+    const selectedAd = cachedAdList[randomIndex];
+
+    const img = new Image();
+    img.src = selectedAd.imageUrl;
+    img.onload = () => {
+       showLaunchAdUI(selectedAd);
+    };         
+    img.onerror = () => {
+        console.error("Ad Image failed to load:", selectedAd.imageUrl);
+    };
+}
+// ====================================
+
 
 function showLaunchAdUI(data) {
     const overlay = document.getElementById('launch-ad-overlay');
@@ -14011,7 +14026,6 @@ window.onload = async () => {
  </script>
 </body>
 </html>
-
 
 
 
