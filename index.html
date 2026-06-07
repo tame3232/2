@@ -5137,20 +5137,40 @@
     font-size: 13px !important;
     margin-bottom: 5px !important;
 }
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75); /* ከጀርባ ያለውን ለማጨለም */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999999;
+}
+
 /* =========================================
    === 📢 Alert Modal Styles ===
    ========================================= */
 .alert-content {
-    background-color: #1b2129; /* ከሚኒ አፑ background ጋር አንድ አይነት */
+    background-color: #1b2129; 
     padding: 25px;
     border-radius: 15px;
     width: 85%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 0 20px rgba(255, 193, 7, 0.3); /* ወርቃማ ጥላ */
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.3); 
     border: 1px solid #FFC107;
     position: relative;
+    
+     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
 }
+
+
 
 </style>
 <body>
@@ -6167,15 +6187,14 @@
         <button onclick="submitUserRating()" class="confirm-btn" style="width: 100%; margin-top: 15px; background: var(--et-yellow); color: black;">ደረጃውን መዝግብ</button>
     </div>
 </div>
-
 <div id="alertModal" class="modal-overlay" style="display: none; z-index: 9999999;">
-    <div class="alert-content">
-        <img id="alertImage" src="" alt="Alert Image" style="display: none; width: 100%; border-radius: 8px; margin-bottom: 15px;">
-        <h3 id="alertTitle" style="color: var(--et-yellow); margin-top: 0;">📢 ማስታወቂያ</h3>
-        <p id="alertMessage" style="color: var(--tg-text); font-size: 16px; line-height: 1.5; margin-bottom: 20px;">መልዕክቱ እዚህ ይገባል...</p>
-        <button id="closeAlertBtn" onclick="closeAlert()" style="background-color: var(--et-yellow); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%;">እሺ፣ ተረድቻለሁ</button>
+    <div id="alertContentBox" class="alert-content">
+        <h3 id="alertTitle" style="color: var(--et-yellow); margin-top: 0; position: relative; z-index: 2;">📢 ማስታወቂያ</h3>
+        <p id="alertMessage" style="color: var(--tg-text); font-size: 16px; line-height: 1.5; margin-bottom: 20px; position: relative; z-index: 2;">መልዕክቱ እዚህ ይገባል...</p>
+        <button id="closeAlertBtn" onclick="closeAlert()" style="background-color: var(--et-yellow); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; position: relative; z-index: 2;">እሺ፣ ተረድቻለሁ</button>
     </div>
 </div>
+
 
 <div id="mines-game-page" class="game-page-container" style="display: none;">
     <h2 class="page-title">💣 Mines Rush</h2>
@@ -12186,7 +12205,7 @@ window.cashoutMines = async () => {
 
  
 
-// ==========================================
+==========================================
 // 📺 LAUNCH AD SYSTEM INTEGRATION
 // ==========================================
 
@@ -12194,6 +12213,8 @@ let currentAdLink = "";
 let autoCloseTimer = null; 
 let cachedAdList = [];
 let midAppTimer = null;
+let adDurationMs = 8000; // ከ Firebase ካልመጣ መነሻው 8 ሰከንድ ይሆናል
+
 async function initLaunchAd() {
     // ቀድሞውኑ ክፍት ከሆነ መድገም አያስፈልግም
     if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
@@ -12204,7 +12225,11 @@ async function initLaunchAd() {
 
         if (docSnap.exists()) {
             const adData = docSnap.data();
-            
+                        // የማስታወቂያ ቆይታን ከ Firebase መቀበል
+            if (adData.durationSeconds) {
+                adDurationMs = adData.durationSeconds * 1000; // ሰከንዱን ወደ ሚሊሰከንድ ለመቀየር
+            }
+
             // 1. መጀመሪያ ማስታወቂያዎቹን ከ Firebase ወደ ሎካል (array) ማስቀመጥ
             if (adData.ads && adData.ads.length > 0) {
                 cachedAdList = adData.ads;
@@ -12240,16 +12265,18 @@ function showRandomAd() {
 
     const randomIndex = Math.floor(Math.random() * cachedAdList.length);
     const selectedAd = cachedAdList[randomIndex];
+   // ፋይሉ ቪዲዮ መሆኑን ቼክ ማድረጊያ
+   if (selectedAd.imageUrl.includes('.mp4') || selectedAd.imageUrl.includes('.webm')) {
 
-    const img = new Image();
-    img.src = selectedAd.imageUrl;
-    img.onload = () => {
        showLaunchAdUI(selectedAd);
-    };         
-    img.onerror = () => {
-        console.error("Ad Image failed to load:", selectedAd.imageUrl);
-    };
+   } else {
+       const img = new Image();
+       img.src = selectedAd.imageUrl;
+       img.onload = () => { showLaunchAdUI(selectedAd); };         
+       img.onerror = () => { console.error("Ad Image failed to load:", selectedAd.imageUrl); };
+   }
 }
+    
 // ====================================
 
 
@@ -12263,7 +12290,22 @@ function showLaunchAdUI(data) {
     const adDesc = document.getElementById('launch-desc');
     const timerCircle = document.getElementById('launch-timer-circle');
 
-    if (adImg) adImg.src = data.imageUrl;
+   const adVideo = document.getElementById('launch-video');
+
+       const isVideo = data.imageUrl.includes('.mp4') || data.imageUrl.includes('.webm');
+
+   if (isVideo) {
+       if (adImg) adImg.style.display = 'none'; // ምስሉን ደብቅ
+       if (adVideo) {
+           adVideo.style.display = 'block'; // ቪዲዮውን አሳይ
+           adVideo.src = data.imageUrl;
+           adVideo.play().catch(e => console.log("Auto-play prevented:", e));
+       }
+   } else {
+       if (adVideo) { adVideo.style.display = 'none'; adVideo.pause(); adVideo.src = ""; }
+       if (adImg) { adImg.style.display = 'block'; adImg.src = data.imageUrl; }
+   }
+
     if (adTitle) adTitle.innerText = data.title || "Special Offer";
     if (adDesc) adDesc.innerText = data.description || "Check this out!";
     
@@ -12279,7 +12321,9 @@ function showLaunchAdUI(data) {
         timerCircle.style.strokeDashoffset = '0';
         
         setTimeout(() => {
-            timerCircle.style.transition = 'stroke-dashoffset 4s linear';
+                        const durationSec = adDurationMs / 1000;
+            timerCircle.style.transition = `stroke-dashoffset ${durationSec}s linear`;
+
             timerCircle.style.strokeDashoffset = '138'; 
         }, 50);
     }
@@ -12288,7 +12332,7 @@ function showLaunchAdUI(data) {
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     autoCloseTimer = setTimeout(() => {
         closeLaunchAd();
-    }, 8000); 
+    }, adDurationMs);
 }
 
 // መዝጊያ Function
@@ -12302,6 +12346,11 @@ window.closeLaunchAd = (event) => {
 
     const overlay = document.getElementById('launch-ad-overlay');
     if(!overlay) return;
+    const adVideo = document.getElementById('launch-video');
+    if (adVideo) {
+        adVideo.pause();
+        adVideo.src = ""; 
+    }
 
     overlay.style.transition = 'opacity 0.3s ease';
     overlay.style.opacity = '0';
@@ -12327,9 +12376,6 @@ window.handleAdClick = () => {
         closeLaunchAd();
     }
 };
-
-
-
 
 
 // =========================================================
@@ -13832,29 +13878,30 @@ window.setupAlertListener = () => {
             const data = docSnap.data();
             const modal = document.getElementById('alertModal');
             const msgEl = document.getElementById('alertMessage');
-            const imgEl = document.getElementById('alertImage');
+            
+            // አዲሱ ኮድ: ሳጥኑን እንመርጣለን
+            const contentBox = document.getElementById('alertContentBox');
 
-            // 🛑 ማስታወቂያው ደጋግሞ እንዳይረብሽ በ LocalStorage ማረጋገጫ
             const lastSeenMsg = localStorage.getItem('last_seen_alert_msg');
 
             if (data.is_active === true && lastSeenMsg !== data.message) {
-                // ለሁሉም ከተላከ ("all") ወይም ለዚህ የተወሰነ ተጠቃሚ ከሆነ
                 if (data.target === "all" || String(data.target) === String(telegramUserId)) {
                     
                     msgEl.innerHTML = data.message;
                     
+                    // ምስሉን ከጀርባ (background) ለማድረግ የተጨመረ አዲስ ኮድ
                     if (data.image_url && data.image_url.trim() !== "") {
-                        imgEl.src = data.image_url;
-                        imgEl.style.display = 'block';
+                        // ጽሑፉ እንዲነበብ ከምስሉ ላይ ጠቆር ያለ ጥላ (85%) እናደርጋለን
+                        contentBox.style.backgroundImage = `linear-gradient(rgba(27, 33, 41, 0.85), rgba(27, 33, 41, 0.85)), url('${data.image_url}')`;
                     } else {
-                        imgEl.style.display = 'none';
+                        // ምስል ከሌለ ወደ ነበረበት ጥቁር ቀለም ይመለሳል
+                        contentBox.style.backgroundImage = 'none';
+                        contentBox.style.backgroundColor = '#1b2129';
                     }
                     
-                    // ሞዳሉን አሳይ
                     modal.style.display = 'flex';
                 }
             } else if (data.is_active === false) {
-                // ማስታወቂያው በዳታቤዝ ከጠፋ ደብቀው
                 modal.style.display = 'none';
             }
         }
@@ -14026,6 +14073,5 @@ window.onload = async () => {
  </script>
 </body>
 </html>
-
 
 
