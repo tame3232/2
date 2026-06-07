@@ -6266,6 +6266,9 @@
     <div class="launch-card" onclick="handleAdClick()">
         <div class="launch-img-container">
             <img id="launch-image" src="" alt="Offer">
+            
+            <video id="launch-video" loop muted playsinline style="display:none; width:100%; height:100%; object-fit:cover; border-top-left-radius: inherit; border-top-right-radius: inherit;"></video>
+            
             <div class="launch-badge">SPONSORED</div>
         </div>
         
@@ -6287,7 +6290,6 @@
         <span class="close-text">Close</span>
     </div>
 </div>
-
 
     <div id="memory-game-page" class="game-page-container" style="display: none;">
         <h2 class="page-title" data-lang="card_memory_title">Memory Match 🃏</h2>
@@ -12205,6 +12207,8 @@ window.cashoutMines = async () => {
 
  
 
+
+
 // ==========================================
 // 📺 LAUNCH AD SYSTEM INTEGRATION
 // ==========================================
@@ -12283,6 +12287,7 @@ function showRandomAd() {
 function showLaunchAdUI(data) {
     const overlay = document.getElementById('launch-ad-overlay');
     if (!overlay) return;
+    const currentAdDurationMs = data.durationSeconds ? data.durationSeconds * 1000 : 8000;
 
     // ID ስሞቹን አሻሽለናል (launch- በሚል ጀምረናል)
     const adImg = document.getElementById('launch-image');
@@ -12299,6 +12304,8 @@ function showLaunchAdUI(data) {
        if (adVideo) {
            adVideo.style.display = 'block'; // ቪዲዮውን አሳይ
            adVideo.src = data.imageUrl;
+           adVideo.muted = true;
+           adVideo.playsInline = true;
            adVideo.play().catch(e => console.log("Auto-play prevented:", e));
        }
    } else {
@@ -12321,7 +12328,7 @@ function showLaunchAdUI(data) {
         timerCircle.style.strokeDashoffset = '0';
         
         setTimeout(() => {
-                        const durationSec = adDurationMs / 1000;
+                        const durationSec = currentAdDurationMs / 1000;
             timerCircle.style.transition = `stroke-dashoffset ${durationSec}s linear`;
 
             timerCircle.style.strokeDashoffset = '138'; 
@@ -12332,7 +12339,7 @@ function showLaunchAdUI(data) {
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     autoCloseTimer = setTimeout(() => {
         closeLaunchAd();
-    }, adDurationMs);
+    }, currentAdDurationMs);
 }
 
 // መዝጊያ Function
@@ -12376,6 +12383,7 @@ window.handleAdClick = () => {
         closeLaunchAd();
     }
 };
+
 
 
 // =========================================================
@@ -14073,5 +14081,4 @@ window.onload = async () => {
  </script>
 </body>
 </html>
-
 
