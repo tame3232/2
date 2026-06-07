@@ -6269,8 +6269,13 @@
             
             <video id="launch-video" loop muted playsinline style="display:none; width:100%; height:100%; object-fit:cover; border-top-left-radius: inherit; border-top-right-radius: inherit;"></video>
             
-            <div class="launch-badge">SPONSORED</div>
-        </div>
+                  <button id="volumeBtn" class="volume-btn muted" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.6); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 999; padding: 0; margin: 0;">
+    <span class="icon" style="font-size: 16px; color: #fff; line-height: 1;">🔇</span>
+</button>
+
+<div class="launch-badge" style="position: absolute; top: 10px; right: 10px; left: auto; z-index: 999;">SPONSORED</div>
+
+      </div>
         
         <div class="launch-content">
             <h3 id="launch-title">Special Bonus!</h3>
@@ -12384,6 +12389,27 @@ window.handleAdClick = () => {
     }
 };
 
+const video = document.getElementById('launch-video');
+const volumeBtn = document.getElementById('volumeBtn');
+const icon = volumeBtn ? volumeBtn.querySelector('.icon') : null;
+
+if (volumeBtn && video) {
+    volumeBtn.addEventListener('click', (e) => {
+        // 🌟 ይህ መስመር ክሊኩ ወደ ወላጁ (handleAdClick) እንዳይደርስ መንገድ ላይ ይይዘዋል!
+        e.stopPropagation(); 
+        e.preventDefault(); 
+        
+        if (video.muted) {
+            video.muted = false;
+            icon.textContent = '🔊';
+            volumeBtn.classList.remove('muted');
+        } else {
+            video.muted = true;
+            icon.textContent = '🔇';
+            volumeBtn.classList.add('muted');
+        }
+    });
+}
 
 
 // =========================================================
@@ -14081,4 +14107,3 @@ window.onload = async () => {
  </script>
 </body>
 </html>
-
