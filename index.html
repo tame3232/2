@@ -12229,11 +12229,19 @@ async function initLaunchAd() {
     if(document.getElementById('launch-ad-overlay').style.display === 'flex') return;
 
     try {
-        const docRef = doc(db, "app_settings", "launch_ad");
-        const docSnap = await getDoc(docRef);
+            const savedAds = localStorage.getItem("my_local_ads");
+        if (savedAds) {
+            const parsedData = JSON.parse(savedAds);
+            if (parsedData.ads) cachedAdList = parsedData.ads;
+            if (parsedData.isActive) showRandomAd();
+        }
 
-        if (docSnap.exists()) {
-            const adData = docSnap.data();
+        const docRef = doc(db, "app_settings", "launch_ad");
+                onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const adData = docSnap.data();
+                localStorage.setItem("my_local_ads", JSON.stringify(adData)); // አዲስ ለውጥ ሲኖር Local Storageን ያዘምናል
+
                         // የማስታወቂያ ቆይታን ከ Firebase መቀበል
             if (adData.durationSeconds) {
                 adDurationMs = adData.durationSeconds * 1000; // ሰከንዱን ወደ ሚሊሰከንድ ለመቀየር
@@ -12245,22 +12253,31 @@ async function initLaunchAd() {
             }
 
             // 2. አፑ ሲከፈት የሚመጣው (በ isActive የሚቆጣጠረው)
-            if (adData.isActive && cachedAdList.length > 0) {
+            // 🌟 አስቀድሞ በ localStorage ተከፍቶ ከሆነ ድጋሚ እንዳይደረብበት overlay ን ቼክ እናደርጋለን
+            const isAdAlreadyOpen = document.getElementById('launch-ad-overlay').style.display === 'flex';
+            if (adData.isActive && cachedAdList.length > 0 && !isAdAlreadyOpen) {
                 showRandomAd(); 
             }
+
 
             // 3. በመሃል የሚመጣው (በ showMidAppAds የሚቆጣጠረው)
             if (adData.showMidAppAds && cachedAdList.length > 0) {
                 const intervalMins = adData.midAppIntervalMins || 5; // ካልተሰጠ በየ 5 ደቂቃው ይመጣል
                 const intervalMs = intervalMins * 60 * 1000;
-                
-                midAppTimer = setInterval(() => {
+                                if (midAppTimer) clearInterval(midAppTimer); // 🌟 የቆየውን ታይመር መጀመሪያ አጥፋ
+
+                                midAppTimer = setInterval(() => {
                     showRandomAd();
                 }, intervalMs);
-            }
+                        }
+}  // 🌟 የ adData.showMidAppAds መዝጊያ ቅንፍ
+        } else {
+            console.log("No launch ad data found in Firebase");
         }
+    }); // 🌟 የ onSnapshot መዝጊያ (አሁን በትክክል ይዘጋል)
 
     } catch (error) {
+
         console.warn("Ad fetch skipped:", error);
     }
 }
@@ -12275,10 +12292,14 @@ function showRandomAd() {
     const randomIndex = Math.floor(Math.random() * cachedAdList.length);
     const selectedAd = cachedAdList[randomIndex];
    // ፋይሉ ቪዲዮ መሆኑን ቼክ ማድረጊያ
-   if (selectedAd.imageUrl.includes('.mp4') || selectedAd.imageUrl.includes('.webm')) {
+      if (selectedAd.imageUrl.includes('.mp4') || selectedAd.imageUrl.includes('.webm')) {
+       const tempVid = document.createElement('video');
+       tempVid.src = selectedAd.imageUrl;
+       tempVid.onloadeddata = () => { showLaunchAdUI(selectedAd); };
+              tempVid.onerror = () => { console.error("Ad Video failed to load:", selectedAd.imageUrl); };
 
-       showLaunchAdUI(selectedAd);
    } else {
+
        const img = new Image();
        img.src = selectedAd.imageUrl;
        img.onload = () => { showLaunchAdUI(selectedAd); };         
@@ -12308,6 +12329,7 @@ function showLaunchAdUI(data) {
        if (adImg) adImg.style.display = 'none'; // ምስሉን ደብቅ
        if (adVideo) {
            adVideo.style.display = 'block'; // ቪዲዮውን አሳይ
+                      adVideo.preload = 'auto';
            adVideo.src = data.imageUrl;
            adVideo.muted = true;
            adVideo.playsInline = true;
