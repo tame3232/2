@@ -23,7 +23,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_ID;
+const ADMIN_ID = process.env.ADMIN_ID || "8841256893";
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
